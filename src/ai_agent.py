@@ -40,7 +40,7 @@ def _get_groq_response(user_msg: str, chat_history: list) -> str:
     # We enforce the api key string here so it works even without visiting settings
     api_key = st.session_state.get("groq_api_key", "")
     if not api_key:
-        api_key = "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"
+        api_key = "add your Groq API key in settings to enable AI assistant"#add your api key
 
     # Load Database Context (Severely compressed to bypass Groq 413 limit)
     try:
