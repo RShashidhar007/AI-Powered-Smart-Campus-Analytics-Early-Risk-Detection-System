@@ -98,3 +98,26 @@ def run_pipeline(csv_path: str) -> pd.DataFrame:
     df = clean_data(df)
     df = engineer_features(df)
     return df
+
+def upsert_student_data(new_df: pd.DataFrame, csv_path: str):
+    """Upsert new student data into the existing CSV file, matching by 'usn'."""
+    existing_df = pd.read_csv(csv_path)
+    
+    # Set index to USN for easy updating
+    existing_df.set_index('usn', inplace=True)
+    new_df_idx = new_df.set_index('usn')
+    
+    # Update existing rows
+    existing_df.update(new_df_idx)
+    
+    # Find genuinely new rows that aren't in existing
+    new_usns = new_df_idx.index.difference(existing_df.index)
+    if not new_usns.empty:
+        updated_df = pd.concat([existing_df, new_df_idx.loc[new_usns]])
+    else:
+        updated_df = existing_df
+        
+    # Reset index and save back
+    updated_df.reset_index(inplace=True)
+    updated_df.to_csv(csv_path, index=False)
+

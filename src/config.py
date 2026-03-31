@@ -8,10 +8,6 @@ import streamlit as st
 BASE_DIR   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_PATH  = os.path.join(BASE_DIR, 'data', 'student_data_500.csv')
 
-# ── Constants (sidebar stats) ────────────────────────────────────────────────
-TOTAL_STUDENTS      = 500
-AT_RISK_STUDENTS    = 127
-ON_TRACK_STUDENTS   = 373
 PREDICTION_ACCURACY = 0.924
 
 

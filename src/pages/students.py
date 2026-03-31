@@ -6,8 +6,8 @@ import pandas as pd
 import plotly.express as px
 
 from config      import DATA_PATH
-from data_pro    import run_pipeline, get_at_risk_students
-from pdf_ingest  import extract_tables_from_pdf
+from data_pro    import run_pipeline, get_at_risk_students, upsert_student_data
+from file_ingest import process_uploaded_file
 from language    import TEXTS
 
 GRADE_COL = {"A": "#1e8449", "B": "#1a5276", "C": "#b7770d", "D": "#d35400", "F": "#c0392b"}
@@ -119,6 +119,9 @@ def render_students_page():
     # ── Add New Student ───────────────────────────────────────────────────────
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown('<div class="sh">➕ Add New Student</div>', unsafe_allow_html=True)
+    if 'student_added' in st.session_state:
+        st.success(st.session_state['student_added'])
+        del st.session_state['student_added']
 
     with st.form("add_student_form", clear_on_submit=True):
         fc1, fc2 = st.columns(2)
@@ -157,27 +160,27 @@ def render_students_page():
                     'semester_marks':   new_semester,
                     'study_hours':      new_study,
                 }])
-                # Append to CSV
-                new_row.to_csv(DATA_PATH, mode='a', header=False, index=False)
+                # Upsert into CSV
+                upsert_student_data(new_row, DATA_PATH)
                 # Clear all cached data so every page picks up the new student
                 st.cache_data.clear()
-                st.success(f"✅ Student **{new_name.strip()}** ({new_usn.strip()}) added successfully!")
+                st.session_state['student_added'] = f"✅ Student **{new_name.strip()}** ({new_usn.strip()}) added successfully! Note: Only 'At-Risk' students appear in the table above."
                 st.rerun()
 
-    # ── Upload PDF ────────────────────────────────────────────────────────────
+    # ── Upload File ────────────────────────────────────────────────────────────
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown('<div class="sh">📄 Upload Student Data (PDF)</div>', unsafe_allow_html=True)
-    st.caption("Upload a PDF containing student details in table format. "
+    st.markdown('<div class="sh">📄 Upload Student Data (PDF, CSV, Excel)</div>', unsafe_allow_html=True)
+    st.caption("Upload a PDF, CSV, or Excel file containing student details in table format. "
                "The system will auto-detect columns and fill defaults for any missing ones.")
 
-    uploaded_pdf = st.file_uploader(
-        "Choose a PDF file", type=["pdf"], key="pdf_uploader",
-        help="The PDF should contain tables with columns like USN, Name, Attendance, etc."
+    uploaded_file = st.file_uploader(
+        "Choose a file", type=["pdf", "csv", "xlsx", "xls"], key="file_uploader",
+        help="The file should contain tables with columns like USN, Name, Attendance, etc."
     )
 
-    if uploaded_pdf is not None:
-        with st.spinner("Extracting tables from PDF…"):
-            extracted_df, status_msg = extract_tables_from_pdf(uploaded_pdf.read())
+    if uploaded_file is not None:
+        with st.spinner("Processing file..."):
+            extracted_df, status_msg = process_uploaded_file(uploaded_file.read(), uploaded_file.name)
 
         st.markdown(status_msg)
 
@@ -189,9 +192,9 @@ def render_students_page():
             with col_add:
                 if st.button("✅ Add All to Dataset", use_container_width=True, type="primary",
                              key="pdf_add_btn"):
-                    extracted_df.to_csv(DATA_PATH, mode='a', header=False, index=False)
+                    upsert_student_data(extracted_df, DATA_PATH)
                     st.cache_data.clear()
-                    st.success(f"✅ **{len(extracted_df)} students** added to the dataset!")
+                    st.success(f"✅ **{len(extracted_df)} students** updated/added to the dataset!")
                     st.rerun()
             with col_cancel:
                 if st.button("❌ Cancel", use_container_width=True, key="pdf_cancel_btn"):

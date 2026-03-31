@@ -1,6 +1,6 @@
 """
-pdf_ingest.py — Extract student data tables from uploaded PDFs.
-Uses pdfplumber for table extraction. Handles missing columns gracefully.
+file_ingest.py — Extract student data tables from uploaded PDFs, CSVs, and Excel files.
+Uses pdfplumber for table extraction, and pandas for CSV/Excel reading. Handles missing columns gracefully.
 """
 import pandas as pd
 import pdfplumber
@@ -118,12 +118,40 @@ def extract_tables_from_pdf(file_bytes: bytes) -> tuple[pd.DataFrame | None, str
 
     # Build DataFrame
     raw_df = pd.DataFrame(all_rows, columns=header)
+    return _clean_and_map_dataframe(raw_df, "PDF")
 
+def process_uploaded_file(file_bytes: bytes, file_name: str) -> tuple[pd.DataFrame | None, str]:
+    """
+    Extract student data from an uploaded file (PDF, CSV, XLSX).
+    """
+    ext = file_name.lower().split('.')[-1]
+    
+    if ext == 'pdf':
+        return extract_tables_from_pdf(file_bytes)
+    elif ext == 'csv':
+        try:
+            raw_df = pd.read_csv(io.BytesIO(file_bytes))
+            return _clean_and_map_dataframe(raw_df, "CSV")
+        except Exception as e:
+            return None, f"❌ Could not read CSV: {e}"
+    elif ext in ['xlsx', 'xls']:
+        try:
+            raw_df = pd.read_excel(io.BytesIO(file_bytes))
+            return _clean_and_map_dataframe(raw_df, "Excel")
+        except Exception as e:
+            return None, f"❌ Could not read Excel: {e}"
+    else:
+        return None, f"❌ Unsupported file type: {ext}"
+
+
+def _clean_and_map_dataframe(raw_df: pd.DataFrame, source_type: str) -> tuple[pd.DataFrame | None, str]:
+    header = list(raw_df.columns)
+    
     # Map columns
     col_mapping = _map_columns(header)
     if not col_mapping:
         return None, (
-            f"❌ Could not map any columns. Found: **{', '.join(header)}**\n\n"
+            f"❌ Could not map any columns in the {source_type}. Found: **{', '.join(str(c) for c in header)}**\n\n"
             f"Expected columns like: usn, name, attendance, internal_marks, "
             f"assignment_score, quiz_score, lab_marks, semester_marks, study_hours"
         )
@@ -162,7 +190,7 @@ def extract_tables_from_pdf(file_bytes: bytes) -> tuple[pd.DataFrame | None, str
 
     # Build status message
     found_str = ", ".join(f"**{c}**" for c in mapped_cols)
-    status = f"✅ Extracted **{len(df)} students** from PDF.\n\n📋 Mapped columns: {found_str}"
+    status = f"✅ Extracted **{len(df)} students** from {source_type}.\n\n📋 Mapped columns: {found_str}"
     if missing:
         missing_str = ", ".join(f"`{c}`" for c in missing)
         status += f"\n\n⚠️ Missing columns (filled with defaults): {missing_str}"

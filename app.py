@@ -99,7 +99,18 @@ if st.session_state.get("authenticated", True):
             st.rerun()
 
     # 4. System Status (previously in sidebar, now at top of main view)
-    from config import TOTAL_STUDENTS, AT_RISK_STUDENTS, ON_TRACK_STUDENTS, PREDICTION_ACCURACY
+    from config import PREDICTION_ACCURACY, DATA_PATH
+    from data_pro import run_pipeline, get_summary_stats
+    
+    @st.cache_data(show_spinner=False)
+    def _get_system_stats():
+        _df = run_pipeline(DATA_PATH)
+        return get_summary_stats(_df)
+        
+    s_stats = _get_system_stats()
+    TOTAL_STUDENTS = s_stats['total_students']
+    AT_RISK_STUDENTS = s_stats['at_risk_count']
+    ON_TRACK_STUDENTS = TOTAL_STUDENTS - AT_RISK_STUDENTS
     
     st.markdown(f"<h3 style='color: var(--main-text-color); margin-bottom: 15px;'>{T['system_status']}</h3>", unsafe_allow_html=True)
     c1, c2, c3, c4 = st.columns(4)

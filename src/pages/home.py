@@ -42,8 +42,8 @@ def render_home_page():
 
     st.markdown("## Campus Overview")
     st.markdown(
-        "<div style='color:var(--muted-color,#888);font-size:13px;margin-bottom:20px'>"
-        "Real-time analytics · 500 students · CS Department</div>",
+        f"<div style='color:var(--muted-color,#888);font-size:13px;margin-bottom:20px'>"
+        f"Real-time analytics · {stats['total_students']} students · CS Department</div>",
         unsafe_allow_html=True,
     )
 
@@ -59,7 +59,7 @@ def render_home_page():
     # KPI row
     c1, c2, c3, c4, c5, c6 = st.columns(6)
     _kpi(c1, stats['total_students'],                          "Total",      "CS cohort",          "#5b5ef4")
-    _kpi(c2, stats['at_risk_count'],                           "At-Risk",    f"{stats['at_risk_count']/500*100:.1f}%", "#c0392b")
+    _kpi(c2, stats['at_risk_count'],                           "At-Risk",    f"{stats['at_risk_count']/stats['total_students']*100:.1f}%", "#c0392b")
     _kpi(c3, crit_n,                                           "Critical",   "immediate",          "#922b21")
     _kpi(c4, f"{df['semester_marks'].mean():.1f}",             "Avg Marks",  "out of 200",         "#1e8449")
     _kpi(c5, f"{df['attendance'].mean():.1f}%",                "Avg Attend", "threshold 65%",      "#d35400")
