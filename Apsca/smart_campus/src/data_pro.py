@@ -1,0 +1,100 @@
+import pandas as pd
+import numpy as np
+GRADE_THRESHOLDS = {
+    'A': (165, 200),
+    'B': (150, 165),
+    'C': (135, 150),
+    'D': (120, 135),
+    'F': (0,   120),
+}
+RISK_WEIGHTS = {
+    'attendance':       {'threshold': 65,  'weight': 30},
+    'internal_marks':   {'threshold': 25,  'weight': 25},
+    'semester_marks':   {'threshold': 120, 'weight': 25},
+    'study_hours':      {'threshold': 2.0, 'weight': 10},
+    'assignment_score': {'threshold': 25,  'weight': 10},
+}
+RISK_TIERS = [
+    (0,  20,  'Low',      '#27AE60'),
+    (21, 45,  'Moderate', '#F39C12'),
+    (46, 70,  'High',     '#E67E22'),
+    (71, 100, 'Critical', '#E74C3C'),
+]
+def load_data(path: str) -> pd.DataFrame:
+    df = pd.read_csv(path)
+    df.columns = [c.strip().lower().replace(' ', '_') for c in df.columns]
+    return df
+def clean_data(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.drop_duplicates()
+    numeric_cols = ['attendance', 'internal_marks', 'assignment_score',
+                    'quiz_score', 'lab_marks', 'semester_marks', 'study_hours']
+    for col in numeric_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
+    df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].median())
+    return df.reset_index(drop=True)
+def assign_grade(marks: float) -> str:
+    for grade, (lo, hi) in GRADE_THRESHOLDS.items():
+        if lo <= marks < hi:
+            return grade
+    return 'F'
+def assign_attendance_tier(att: float) -> str:
+    if att >= 85:
+        return 'Excellent'
+    elif att >= 75:
+        return 'Good'
+    elif att >= 65:
+        return 'Average'
+    elif att >= 50:
+        return 'Warning'
+    return 'Critical'
+def compute_risk_score(row: pd.Series) -> int:
+    score = 0
+    for col, cfg in RISK_WEIGHTS.items():
+        if col in row and row[col] < cfg['threshold']:
+            score += cfg['weight']
+    return min(score, 100)
+def assign_risk_tier(score: int) -> str:
+    for lo, hi, tier, _ in RISK_TIERS:
+        if lo <= score <= hi:
+            return tier
+    return 'Critical'
+def compute_performance_index(row: pd.Series) -> float:
+    """Composite index (0–100) from all academic features."""
+    att_norm   = min(row['attendance'] / 100, 1.0) * 20
+    int_norm   = min(row['internal_marks'] / 50, 1.0) * 20
+    asgn_norm  = min(row['assignment_score'] / 50, 1.0) * 15
+    quiz_norm  = min(row['quiz_score'] / 50, 1.0) * 15
+    lab_norm   = min(row['lab_marks'] / 50, 1.0) * 15
+    sem_norm   = min(row['semester_marks'] / 200, 1.0) * 15
+    return round(att_norm + int_norm + asgn_norm + quiz_norm + lab_norm + sem_norm, 2)
+def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    df['grade_label']        = df['semester_marks'].apply(assign_grade)
+    df['attendance_tier']    = df['attendance'].apply(assign_attendance_tier)
+    df['risk_score']         = df.apply(compute_risk_score, axis=1)
+    df['risk_tier']          = df['risk_score'].apply(assign_risk_tier)
+    df['performance_index']  = df.apply(compute_performance_index, axis=1)
+    df['total_continuous']   = df['internal_marks'] + df['assignment_score'] + df['quiz_score'] + df['lab_marks']
+    df['is_at_risk']         = (df['risk_tier'].isin(['High', 'Critical'])).astype(int)
+    return df
+def get_summary_stats(df: pd.DataFrame) -> dict:
+    numeric = ['attendance', 'internal_marks', 'assignment_score',
+               'quiz_score', 'lab_marks', 'semester_marks', 'study_hours']
+    stats = df[numeric].describe().round(2).to_dict()
+    stats['grade_distribution'] = df['grade_label'].value_counts().to_dict()
+    stats['risk_distribution']  = df['risk_tier'].value_counts().to_dict()
+    stats['at_risk_count']      = int(df['is_at_risk'].sum())
+    stats['total_students']     = len(df)
+    return stats
+def get_at_risk_students(df: pd.DataFrame) -> pd.DataFrame:
+    cols = ['usn', 'name', 'attendance', 'internal_marks', 'semester_marks',
+            'study_hours', 'risk_score', 'risk_tier', 'grade_label', 'performance_index']
+    return (df[df['is_at_risk'] == 1][cols]
+            .sort_values('risk_score', ascending=False)
+            .reset_index(drop=True))
+def run_pipeline(csv_path: str) -> pd.DataFrame:
+    df = load_data(csv_path)
+    df = clean_data(df)
+    df = engineer_features(df)
+    return df
