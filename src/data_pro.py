@@ -100,24 +100,25 @@ def run_pipeline(csv_path: str) -> pd.DataFrame:
     return df
 
 def upsert_student_data(new_df: pd.DataFrame, csv_path: str):
-    """Upsert new student data into the existing CSV file, matching by 'usn'."""
+    """Upsert new student data into the existing CSV file, matching by 'usn'.
+    
+    Drops any existing rows whose USN appears in new_df, then appends new_df.
+    Also removes any duplicate USNs already present in the file (keeps last).
+    """
     existing_df = pd.read_csv(csv_path)
+    existing_df.columns = [c.strip().lower().replace(' ', '_') for c in existing_df.columns]
     
-    # Set index to USN for easy updating
-    existing_df.set_index('usn', inplace=True)
-    new_df_idx = new_df.set_index('usn')
+    # Normalise the new data columns too
+    new_df = new_df.copy()
+    new_df.columns = [c.strip().lower().replace(' ', '_') for c in new_df.columns]
     
-    # Update existing rows
-    existing_df.update(new_df_idx)
+    # Remove rows from existing that will be replaced by new_df
+    incoming_usns = set(new_df['usn'].astype(str).str.strip())
+    mask = ~existing_df['usn'].astype(str).str.strip().isin(incoming_usns)
+    updated_df = pd.concat([existing_df[mask], new_df], ignore_index=True)
     
-    # Find genuinely new rows that aren't in existing
-    new_usns = new_df_idx.index.difference(existing_df.index)
-    if not new_usns.empty:
-        updated_df = pd.concat([existing_df, new_df_idx.loc[new_usns]])
-    else:
-        updated_df = existing_df
-        
-    # Reset index and save back
-    updated_df.reset_index(inplace=True)
+    # Drop any lingering duplicates (keep the last occurrence = the newest data)
+    updated_df = updated_df.drop_duplicates(subset='usn', keep='last').reset_index(drop=True)
+    
     updated_df.to_csv(csv_path, index=False)
 

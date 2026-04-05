@@ -1,9 +1,12 @@
+import os
 import streamlit as st
 import numpy as np
 import time
-import qrcode
-import io
 from language import TEXTS
+
+# Admin credentials — override via environment variables
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "teacher")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "team07pro")
 
 def render_login_page():
     # Get current language texts
@@ -39,7 +42,7 @@ def render_login_page():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         # Tab-based login mode selection
-        tab1, tab2, tab3, tab4, tab5 = st.tabs(["Username/Password", "OTP", T["qr_login_text"], "WeChat", "Register"])
+        tab1, tab2, tab3 = st.tabs(["Username/Password", "OTP", "Register"])
 
         with tab1:
             with st.form("login_form_user_pass"):
@@ -48,7 +51,10 @@ def render_login_page():
                 remember = st.checkbox(T["remember_text"])
                 submit_user_pass = st.form_submit_button(T["login_button_text"])
                 if submit_user_pass:
-                    if username == "teacher" and password == "team07pro":
+                    # Also check registered users
+                    registered = st.session_state.get("registered_users", {})
+                    if (username == ADMIN_USERNAME and password == ADMIN_PASSWORD) or \
+                       (username in registered and registered[username] == password):
                         st.session_state.authenticated = True
                         st.success(T["login_success"])
                         time.sleep(1)
@@ -74,40 +80,6 @@ def render_login_page():
                         st.error(T["invalid_otp"])
 
         with tab3:
-            with st.form("login_form_qr"):
-                # Generate QR Code for demo authentication
-                qr_data = f"TeacherLogin-{int(time.time())}"
-                qr_img = qrcode.make(qr_data)
-                buf = io.BytesIO()
-                qr_img.save(buf)
-                buf.seek(0)
-                st.image(buf, caption="Scan this QR with your mobile app")
-                submit_qr = st.form_submit_button(T["qr_scan_text"])
-                if submit_qr:
-                    # In real scenario, check QR scan authentication
-                    st.session_state.authenticated = True
-                    st.success(T["qr_verified"])
-                    time.sleep(1)
-                    st.rerun()
-
-        with tab4:
-            with st.form("login_form_wechat"):
-                col_wechat_left, col_wechat_right = st.columns(2)
-                with col_wechat_left:
-                    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/WeChat_logo.svg/1024px-WeChat_logo.svg.png", width=80)
-                    st.markdown("<p style='text-align:center; color:white; font-weight:600;'>WeChat</p>", unsafe_allow_html=True)
-                with col_wechat_right:
-                    # Display QR code for WeChat
-                    st.image("https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://yangzhou.edu/wechat-login", width=120, caption="Scan with WeChat")
-                st.markdown("Scan with WeChat to log in", unsafe_allow_html=True)
-                submit_wechat = st.form_submit_button("Login with WeChat")
-                if submit_wechat:
-                    # Placeholder for WeChat login logic
-                    st.success("WeChat login successful!")
-                    time.sleep(1)
-                    st.rerun()
-        
-        with tab5:
             st.markdown("### 📋 Create New Account")
             with st.form("registration_form"):
                 new_username = st.text_input("Choose Username", placeholder="Enter desired username", key="reg_username")

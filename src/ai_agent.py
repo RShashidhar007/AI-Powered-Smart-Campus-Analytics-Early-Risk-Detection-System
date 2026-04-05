@@ -3,6 +3,7 @@ ai_agent.py — Floating AI assistant chatbot widget.
 Uses Groq API (llama3) for universal question answering.
 Falls back gracefully if API key is not configured.
 """
+import os
 import streamlit as st
 from language import TEXTS
 
@@ -37,10 +38,10 @@ def _get_groq_response(user_msg: str, chat_history: list) -> str:
     import pandas as pd
     from config import DATA_PATH
     
-    # We enforce the api key string here so it works even without visiting settings
-    api_key = st.session_state.get("groq_api_key", "")
+    # Check session state first, then environment variable
+    api_key = st.session_state.get("groq_api_key", "") or os.environ.get("GROQ_API_KEY", "")
     if not api_key:
-        api_key = "add your Groq API key in settings to enable AI assistant"#add your api key
+        return _get_fallback_response(user_msg)
 
     # Load Database Context (Severely compressed to bypass Groq 413 limit)
     try:

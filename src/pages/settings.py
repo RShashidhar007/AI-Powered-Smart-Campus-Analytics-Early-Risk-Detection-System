@@ -45,12 +45,12 @@ def render_settings_page():
     st.markdown("#### 🤖 AI Assistant")
     api_key = st.text_input(
         "Groq API Key",
-        value=st.session_state.get("groq_api_key", ""),#add your api key
+        value=st.session_state.get("groq_api_key", ""),
         type="password",
         help="Get a key at https://console.groq.com",
         key="settings_api_key",
     )
-    if api_key != st.session_state.get("groq_api_key", ""):#add your api key
+    if api_key != st.session_state.get("groq_api_key", ""):
         st.session_state.groq_api_key = api_key
         st.success("✅ API key saved! The AI Assistant can now answer any question using Groq.")
 

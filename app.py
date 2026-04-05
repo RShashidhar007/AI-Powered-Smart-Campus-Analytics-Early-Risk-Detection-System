@@ -6,6 +6,11 @@ Install:  pip install streamlit plotly scikit-learn pandas numpy openpyxl qrcode
 """
 
 import sys, os
+
+# Load environment variables from .env file (if present)
+from dotenv import load_dotenv
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 import streamlit as st

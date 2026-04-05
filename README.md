@@ -93,7 +93,21 @@ pip install -r requirements.txt
 
 ### 4. Configuration
 
-To utilize the AI Agent capabilities, you will need to set up your API keys. Wait for configuration prompts inside the Settings page of the app, or add your API keys in your environment or Streamlit secrets (`.streamlit/secrets.toml`).
+Copy the example environment file and fill in your values:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your credentials:
+
+```env
+GROQ_API_KEY=your_groq_api_key_here     # Get one at https://console.groq.com
+ADMIN_USERNAME=teacher                    # Default admin username
+ADMIN_PASSWORD=your_secure_password       # Change this!
+```
+
+> **Note:** The `.env` file is git-ignored and will never be committed. You can also configure the Groq API key from the Settings page inside the app.
 
 ### 5. Run the Application
 
