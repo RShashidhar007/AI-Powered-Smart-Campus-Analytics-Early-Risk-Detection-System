@@ -11,23 +11,26 @@ SYSTEM_PROMPT = """You are the Smart Campus AI Assistant — a helpful, friendly
 virtual assistant embedded inside the "Smart Campus Analytics" dashboard. 
 
 About the platform:
-- It is an AI-Powered Early Risk Detection System for a CS Department with 500 students.
+- It is an AI-Powered Early Risk Detection System for a university with 5 departments:
+  CSE (Computer Science), ECE (Electronics), ME (Mechanical), CE (Civil), ISE (Information Science).
+- Each department has 4 semesters with ~100 students each = ~2000 students total.
 - It has 5 pages: Home (overview KPIs & charts), Predictions (ML models & single-student predictor), 
-  Students (at-risk student list with filters), Reports (EDA — distributions, correlations, box plots), 
+  Students (at-risk student list with filters), Reports (EDA — distributions, correlations, box plots, department comparison), 
   and Settings (theme & background customization).
+- Users can filter by Department and Semester from the sidebar.
 - Risk is calculated using attendance (<65%), internal marks (<25), semester marks (<120), 
   study hours (<2), and assignment scores (<25).
 - ML models include Linear Regression, Random Forest, Gradient Boosting for regression, 
   and Logistic Regression, Decision Tree, Random Forest for classification.
-- Supports English, Hindi (हिन्दी), and Kannada (ಕನ್ನಡ) languages.
+- Supports English, Hindi, and Kannada languages.
 
 Your role:
 - Answer ANY question the user asks — about the platform, academics, data science, 
   programming, general knowledge, or anything else.
 - Be concise but thorough. Use markdown formatting when helpful.
 - EXACT STUDENT DATA: You have direct access to the complete student database (provided below in CSV format).
-- If the user asks about a specific student, search the CSV data below. Provide their name, USN, risk tier, attendance, and semester marks.
-- You can also answer aggregate questions like "How many students have an F grade?" or "Who has the highest attendance?".
+- If the user asks about a specific student, search the CSV data below. Provide their name, USN, department, semester, risk tier, attendance, and semester marks.
+- You can also answer aggregate questions like "How many students in ECE have an F grade?" or "Which department has the highest at-risk rate?".
 - Be warm, professional, and encouraging.
 """
 
@@ -48,18 +51,19 @@ def _get_groq_response(user_msg: str, chat_history: list) -> str:
         from data_pro import run_pipeline
         df = run_pipeline(DATA_PATH)
         
-        # Keep only the bare essentials (Name, USN, Attendance, Sem Marks, Risk)
-        mini_df = df[['usn', 'name', 'attendance', 'semester_marks', 'risk_tier']].copy()
+        # Keep only the bare essentials (Name, USN, Dept, Sem, Attendance, Sem Marks, Risk)
+        mini_df = df[['usn', 'name', 'department', 'semester', 'attendance', 'semester_marks', 'risk_tier']].copy()
         
         # Round and convert numeric columns to save string space
         mini_df['attendance'] = mini_df['attendance'].round(0).astype(int)
         mini_df['semester_marks'] = mini_df['semester_marks'].round(0).astype(int)
+        mini_df['semester'] = mini_df['semester'].astype(int)
         
         # Rename columns to single/short characters to massively shrink CSV token size
-        mini_df.columns = ['U', 'N', 'A', 'M', 'R']
+        mini_df.columns = ['U', 'N', 'D', 'S', 'A', 'M', 'R']
         
         csv_data = mini_df.to_csv(index=False)
-        db_context = f"\n\n--- DATABASE ---\n(U=USN, N=Name, A=Attendance, M=SemMarks, R=Risk)\n{csv_data}\n--- END ---\n"
+        db_context = f"\n\n--- DATABASE ---\n(U=USN, N=Name, D=Dept, S=Sem, A=Attendance, M=SemMarks, R=Risk)\n{csv_data}\n--- END ---\n"
     except Exception:
         db_context = "\n\n(Student Database could not be loaded at this time.)"
 

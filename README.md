@@ -6,14 +6,15 @@
 ![Plotly](https://img.shields.io/badge/Plotly-%233F4F75.svg?style=for-the-badge&logo=plotly&logoColor=white)
 ![OpenAI](https://img.shields.io/badge/OpenAI-%23412991.svg?style=for-the-badge&logo=openai&logoColor=white)
 
-An advanced, comprehensive **Smart Campus Analytics** dashboard built with Streamlit. This platform leverages Machine Learning to predict student outcomes, functioning as an **Early Risk Detection System**. It provides actionable insights, beautiful visualizations, and AI-assisted analysis for campus administration and teaching staff.
+An advanced, comprehensive **Smart Campus Analytics** dashboard built with Streamlit. This platform leverages Machine Learning to predict student outcomes across **5 departments** and **4 semesters**, functioning as an **Early Risk Detection System**. It provides actionable insights, beautiful visualizations, and AI-assisted analysis for campus administration and teaching staff.
 
 ---
 
 ## 🌟 Key Features
 
 * **🤖 AI-Powered Early Risk Detection:** Employs Machine Learning models (`scikit-learn`) to classify student performance and predict individuals at risk of falling behind.
-* **📊 Interactive Dashboards:** Visually rich and dynamic data representations using `Plotly`. Heatmaps, risk distributions, and performance metrics are easy to explore.
+* **🏫 Multi-Department Support:** Tracks **5 departments** (CSE, ECE, ME, CE, ISE) across **4 semesters** with ~2,000 students. Filter analytics by department and/or semester.
+* **📊 Interactive Dashboards:** Visually rich and dynamic data representations using `Plotly`. Heatmaps, risk distributions, cross-department comparisons, and performance metrics.
 * **📂 Multi-Format Data Ingestion:** Seamlessly upload and process student data from a variety of file formats, including CSV, Excel, and PDF files.
 * **🌐 Multilingual Support:** Built-in localization for **English, Hindi, and Kannada**, ensuring accessibility across a broader user base.
 * **📝 Automated Reporting:** Generate comprehensive student reports with ease. Exports are fully supported in both Excel and PDF formats.
@@ -38,7 +39,7 @@ An advanced, comprehensive **Smart Campus Analytics** dashboard built with Strea
 ```text
 ├── .streamlit/             # Streamlit configuration for themes and server
 ├── assets/                 # Images, logos, and UI graphics
-├── data/                   # Sample datasets (e.g., student_data_500.csv)
+├── data/                   # Student dataset (5 depts × 4 sems × ~100 students)
 ├── models/                 # Serialized Machine Learning models
 ├── notebooks/              # Jupyter notebooks for data exploration & model training
 ├── outputs/                # System-generated outputs (reports, charts)
@@ -55,6 +56,7 @@ An advanced, comprehensive **Smart Campus Analytics** dashboard built with Strea
 │   ├── exel_repo.py        # Excel report generation system
 │   ├── styles.py           # Custom CSS and dashboard aesthetics
 │   └── visual.py           # Plotly charting wrappers
+├── scripts/                # Utility scripts (data generation)
 ├── app.py                  # Main application entry point
 ├── main.py                 # Alternative/CLI entry point
 └── requirements.txt        # Python dependencies

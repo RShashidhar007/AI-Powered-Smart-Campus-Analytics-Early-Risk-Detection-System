@@ -7,8 +7,8 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 
-from config    import DATA_PATH
-from data_pro  import run_pipeline
+from config    import DATA_PATH, DEPARTMENTS, SEMESTERS
+from data_pro  import run_pipeline, filter_dataframe
 from ml_models import (
     FEATURES, train_regression_models, train_classification_models,
 )
@@ -39,28 +39,43 @@ def _load_df():
     return run_pipeline(DATA_PATH)
 
 @st.cache_resource(show_spinner=False)
-def _train_reg():
-    return train_regression_models(_load_df())
+def _train_reg(dept, sem):
+    df = filter_dataframe(_load_df(), dept, sem)
+    if len(df) < 20:
+        df = _load_df()  # Fall back to full dataset if filtered is too small
+    return train_regression_models(df)
 
 @st.cache_resource(show_spinner=False)
-def _train_clf():
-    return train_classification_models(_load_df())
+def _train_clf(dept, sem):
+    df = filter_dataframe(_load_df(), dept, sem)
+    if len(df) < 20:
+        df = _load_df()
+    return train_classification_models(df)
 
 
 def render_predictions_page():
     T  = TEXTS[st.session_state.language]
-    df = _load_df()
+
+    sel_dept = st.session_state.get('selected_department', 'All')
+    sel_sem  = st.session_state.get('selected_semester', 'All')
+    df = filter_dataframe(_load_df(), sel_dept, sel_sem)
+
+    # Build filter label
+    filter_label = []
+    if sel_dept != 'All': filter_label.append(sel_dept)
+    if sel_sem != 'All': filter_label.append(f"Sem {sel_sem}")
+    filter_str = " · ".join(filter_label) if filter_label else "All Departments"
 
     st.markdown("## Predictions & ML Models")
     st.markdown(
-        "<div style='color:var(--muted-color,#888);font-size:13px;margin-bottom:20px'>"
-        "Regression · Classification · Feature importance · Single-student predictor</div>",
+        f"<div style='color:var(--muted-color,#888);font-size:13px;margin-bottom:20px'>"
+        f"Regression · Classification · Feature importance · Single-student predictor · {filter_str}</div>",
         unsafe_allow_html=True,
     )
 
     with st.spinner("Training models (first load ~5 s)…"):
-        reg = _train_reg()
-        clf = _train_clf()
+        reg = _train_reg(sel_dept, sel_sem)
+        clf = _train_clf(sel_dept, sel_sem)
 
     tab_reg, tab_clf, tab_fi, tab_pred = st.tabs(
         ["📉 Regression", "🏷 Classification", "⭐ Feature Importance", "🔮 Predict Student"]
@@ -87,7 +102,8 @@ def render_predictions_page():
         X_in       = reg['scaler'].transform(X_all) if is_lin else X_all
         preds      = best_model.predict(X_in)
         sdf        = df.copy(); sdf['predicted'] = np.round(preds, 2)
-        smp        = sdf.sample(150, random_state=42)
+        sample_n   = min(150, len(sdf))
+        smp        = sdf.sample(sample_n, random_state=42) if len(sdf) >= sample_n else sdf
         fap = px.scatter(smp, x='semester_marks', y='predicted',
                          color='grade_label', color_discrete_map=GRADE_COL, opacity=0.7,
                          labels={'semester_marks': 'Actual', 'predicted': 'Predicted'},

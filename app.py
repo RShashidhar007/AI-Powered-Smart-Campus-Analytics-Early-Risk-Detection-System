@@ -2,7 +2,7 @@
 Smart Campus Analytics — Streamlit Dashboard
 =============================================
 Run:      streamlit run app.py
-Install:  pip install streamlit plotly scikit-learn pandas numpy openpyxl qrcode
+Install:  pip install -r requirements.txt
 """
 
 import sys, os
@@ -18,7 +18,7 @@ import pandas as pd
 import time
 
 # Import modules
-from config import set_page_config, init_session_state
+from config import set_page_config, init_session_state, DEPARTMENTS, SEMESTERS, DEPT_FULL_NAMES
 from language import TEXTS
 from styles import set_styles, set_login_styles
 from auth import render_login_page
@@ -103,23 +103,38 @@ if st.session_state.get("authenticated", True):
             st.session_state.prediction_history = []
             st.rerun()
 
-    # 4. System Status (previously in sidebar, now at top of main view)
+    # 4. System Status — filtered by selected department & semester
     from config import PREDICTION_ACCURACY, DATA_PATH
-    from data_pro import run_pipeline, get_summary_stats
-    
+    from data_pro import run_pipeline, get_summary_stats, filter_dataframe
+
     @st.cache_data(show_spinner=False)
-    def _get_system_stats():
-        _df = run_pipeline(DATA_PATH)
-        return get_summary_stats(_df)
-        
-    s_stats = _get_system_stats()
+    def _get_full_df():
+        return run_pipeline(DATA_PATH)
+
+    full_df = _get_full_df()
+    sel_dept = st.session_state.selected_department
+    sel_sem  = st.session_state.selected_semester
+    filtered_df = filter_dataframe(full_df, sel_dept, sel_sem)
+    s_stats = get_summary_stats(filtered_df)
+
     TOTAL_STUDENTS = s_stats['total_students']
     AT_RISK_STUDENTS = s_stats['at_risk_count']
     ON_TRACK_STUDENTS = TOTAL_STUDENTS - AT_RISK_STUDENTS
-    
-    st.markdown(f"<h3 style='color: var(--main-text-color); margin-bottom: 15px;'>{T['system_status']}</h3>", unsafe_allow_html=True)
+
+    # Show active filter label
+    filter_label = ""
+    if sel_dept != "All":
+        filter_label += f"{sel_dept}"
+    if sel_sem != "All":
+        filter_label += f" · Sem {sel_sem}"
+    if not filter_label:
+        filter_label = "All Departments · All Semesters"
+
+    st.markdown(f"<h3 style='color: var(--main-text-color); margin-bottom: 5px;'>{T['system_status']}</h3>", unsafe_allow_html=True)
+    st.markdown(f"<div style='color:var(--muted-color,#888);font-size:12px;margin-bottom:12px'>📍 {filter_label}</div>", unsafe_allow_html=True)
+
     c1, c2, c3, c4 = st.columns(4)
-    
+
     with c1:
         st.markdown(f"""
         <div class="stat-card" style="margin-bottom: 0;">
@@ -127,7 +142,7 @@ if st.session_state.get("authenticated", True):
             <div class="stat-number" id="stat-total">{TOTAL_STUDENTS}</div>
         </div>
         """, unsafe_allow_html=True)
-        
+
     with c2:
         st.markdown(f"""
         <div class="stat-card" style="border-left: 6px solid #C0392B; margin-bottom: 0;">
@@ -135,7 +150,7 @@ if st.session_state.get("authenticated", True):
             <div class="stat-number" id="stat-at-risk">{AT_RISK_STUDENTS}</div>
         </div>
         """, unsafe_allow_html=True)
-        
+
     with c3:
         st.markdown(f"""
         <div class="stat-card" style="border-left: 6px solid #27AE60; margin-bottom: 0;">
@@ -143,7 +158,7 @@ if st.session_state.get("authenticated", True):
             <div class="stat-number" id="stat-on-track">{ON_TRACK_STUDENTS}</div>
         </div>
         """, unsafe_allow_html=True)
-        
+
     with c4:
         st.markdown(f"""
         <div class="stat-card" style="border-left: 6px solid #F39C12; margin-bottom: 0;">
@@ -154,10 +169,41 @@ if st.session_state.get("authenticated", True):
 
     st.divider()
 
-    # 5. Sidebar with Navigation (previously in main view)
+    # 5. Sidebar with Filters + Navigation
     with st.sidebar:
-        st.markdown(f"<h3 style='color: var(--main-text-color); margin-bottom: 15px;'>Menu</h3>", unsafe_allow_html=True)
-        # We don't need horizontal=True here since it's in the vertical sidebar
+        # ── Department & Semester Filters ──
+        st.markdown("<h4 style='color: var(--main-text-color); margin-bottom: 8px;'>🏫 Filters</h4>", unsafe_allow_html=True)
+
+        dept_options = ["All"] + DEPARTMENTS
+        def _on_dept_change():
+            st.session_state.selected_department = st.session_state._sidebar_dept
+
+        st.selectbox(
+            "Department",
+            dept_options,
+            key="_sidebar_dept",
+            index=dept_options.index(st.session_state.selected_department),
+            on_change=_on_dept_change,
+            format_func=lambda x: f"All Departments" if x == "All" else f"{x} — {DEPT_FULL_NAMES.get(x, x)}",
+        )
+
+        sem_options = ["All"] + [str(s) for s in SEMESTERS]
+        def _on_sem_change():
+            st.session_state.selected_semester = st.session_state._sidebar_sem
+
+        st.selectbox(
+            "Semester",
+            sem_options,
+            key="_sidebar_sem",
+            index=sem_options.index(str(st.session_state.selected_semester)),
+            on_change=_on_sem_change,
+            format_func=lambda x: "All Semesters" if x == "All" else f"Semester {x}",
+        )
+
+        st.markdown("<hr style='border: 1px solid var(--border-color); margin: 12px 0;'>", unsafe_allow_html=True)
+
+        # ── Navigation ──
+        st.markdown(f"<h4 style='color: var(--main-text-color); margin-bottom: 8px;'>Menu</h4>", unsafe_allow_html=True)
         st.session_state.page = st.radio(
             "Navigation",
             options=T["nav_options"],
@@ -166,7 +212,7 @@ if st.session_state.get("authenticated", True):
                   else 0,
             label_visibility="collapsed"
         )
-        
+
         st.markdown("<br><br><br>", unsafe_allow_html=True)
         st.markdown("<hr style='border: 1px solid var(--border-color);'>", unsafe_allow_html=True)
         st.caption(f"Current Theme: **{st.session_state.theme}**")

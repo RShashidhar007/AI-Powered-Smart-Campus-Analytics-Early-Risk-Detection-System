@@ -31,6 +31,11 @@ TEXTS = {
         "at_risk":         "At-Risk",
         "on_track":        "On Track",
         "accuracy":        "Model Accuracy",
+        # ── Filters ───────────────────────────────────────────────────
+        "department":       "Department",
+        "semester":         "Semester",
+        "all_departments":  "All Departments",
+        "all_semesters":    "All Semesters",
         "footer":          "© 2026 Smart Campus Analytics · AI-Powered Early Risk Detection System",
     },
     "हिन्दी": {
@@ -65,6 +70,11 @@ TEXTS = {
         "at_risk":         "जोखिम में",
         "on_track":        "सही रास्ते पर",
         "accuracy":        "मॉडल सटीकता",
+        # ── Filters ───────────────────────────────────────────────────
+        "department":       "विभाग",
+        "semester":         "सेमेस्टर",
+        "all_departments":  "सभी विभाग",
+        "all_semesters":    "सभी सेमेस्टर",
         "footer":          "© 2026 स्मार्ट कैंपस एनालिटिक्स · AI-संचालित प्रारंभिक जोखिम पहचान प्रणाली",
     },
     "ಕನ್ನಡ": {
@@ -99,6 +109,11 @@ TEXTS = {
         "at_risk":         "ಅಪಾಯದಲ್ಲಿ",
         "on_track":        "ಸರಿಯಾದ ಹಾದಿಯಲ್ಲಿ",
         "accuracy":        "ಮಾಡೆಲ್ ನಿಖರತೆ",
+        # ── Filters ───────────────────────────────────────────────────
+        "department":       "ವಿಭಾಗ",
+        "semester":         "ಸೆಮಿಸ್ಟರ್",
+        "all_departments":  "ಎಲ್ಲಾ ವಿಭಾಗಗಳು",
+        "all_semesters":    "ಎಲ್ಲಾ ಸೆಮಿಸ್ಟರ್",
         "footer":          "© 2026 ಸ್ಮಾರ್ಟ್ ಕ್ಯಾಂಪಸ್ ಅನಾಲಿಟಿಕ್ಸ್ · AI-ಚಾಲಿತ ಆರಂಭಿಕ ಅಪಾಯ ಪತ್ತೆ ವ್ಯವಸ್ಥೆ",
     },
 }

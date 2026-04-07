@@ -5,8 +5,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-from config      import DATA_PATH
-from data_pro    import run_pipeline, get_at_risk_students, upsert_student_data
+from config      import DATA_PATH, DEPARTMENTS, SEMESTERS
+from data_pro    import run_pipeline, get_at_risk_students, upsert_student_data, filter_dataframe
 from file_ingest import process_uploaded_file
 from language    import TEXTS
 
@@ -31,13 +31,18 @@ def _kpi(col, val, label, sub="", color="#4318ff", highlight=False):
 @st.cache_data(show_spinner=False)
 def _load():
     df      = run_pipeline(DATA_PATH)
-    at_risk = get_at_risk_students(df)
-    return df, at_risk
+    return df
 
 
 def render_students_page():
     T = TEXTS[st.session_state.language]
-    df, at_risk = _load()
+    full_df = _load()
+
+    # Apply global filters
+    sel_dept = st.session_state.get('selected_department', 'All')
+    sel_sem  = st.session_state.get('selected_semester', 'All')
+    df = filter_dataframe(full_df, sel_dept, sel_sem)
+    at_risk = get_at_risk_students(df)
 
     st.markdown("## At-Risk Students")
     st.markdown(
@@ -71,22 +76,24 @@ def render_students_page():
     ch1, ch2 = st.columns([1.8, 1])
     with ch1:
         st.markdown('<div class="sh">Risk score distribution</div>', unsafe_allow_html=True)
-        fh = px.histogram(at_risk, x='risk_score', nbins=10,
-                          color_discrete_sequence=['#5b5ef4'])
-        fh.update_layout(**PL, height=200,
-                         xaxis=dict(title='Risk Score', gridcolor='rgba(143, 155, 186, 0.1)'),
-                         yaxis=dict(title='Students', gridcolor='rgba(143, 155, 186, 0.1)'))
-        st.plotly_chart(fh, use_container_width=True, config={'displayModeBar': False})
+        if len(at_risk) > 0:
+            fh = px.histogram(at_risk, x='risk_score', nbins=10,
+                              color_discrete_sequence=['#5b5ef4'])
+            fh.update_layout(**PL, height=200,
+                             xaxis=dict(title='Risk Score', gridcolor='rgba(143, 155, 186, 0.1)'),
+                             yaxis=dict(title='Students', gridcolor='rgba(143, 155, 186, 0.1)'))
+            st.plotly_chart(fh, use_container_width=True, config={'displayModeBar': False})
 
     with ch2:
         st.markdown('<div class="sh">Grade breakdown (at-risk)</div>', unsafe_allow_html=True)
-        ag = at_risk['grade_label'].value_counts().reindex(['A', 'B', 'C', 'D', 'F']).fillna(0)
-        fa = px.bar(x=ag.index, y=ag.values, color=ag.index,
-                    color_discrete_map=GRADE_COL, text=ag.values.astype(int))
-        fa.update_traces(textposition='outside', marker_line_width=0)
-        fa.update_layout(**PL, height=200,
-                         xaxis=dict(showgrid=False), yaxis=dict(gridcolor='rgba(143, 155, 186, 0.1)'))
-        st.plotly_chart(fa, use_container_width=True, config={'displayModeBar': False})
+        if len(at_risk) > 0:
+            ag = at_risk['grade_label'].value_counts().reindex(['A', 'B', 'C', 'D', 'F']).fillna(0)
+            fa = px.bar(x=ag.index, y=ag.values, color=ag.index,
+                        color_discrete_map=GRADE_COL, text=ag.values.astype(int))
+            fa.update_traces(textposition='outside', marker_line_width=0)
+            fa.update_layout(**PL, height=200,
+                             xaxis=dict(showgrid=False), yaxis=dict(gridcolor='rgba(143, 155, 186, 0.1)'))
+            st.plotly_chart(fa, use_container_width=True, config={'displayModeBar': False})
 
     # Data table
     st.markdown('<div class="sh">Student list</div>', unsafe_allow_html=True)
@@ -100,17 +107,32 @@ def render_students_page():
         bg = {'A': '#e8f8f0', 'B': '#e8f2fc', 'C': '#fef9e0', 'D': '#fef0e0', 'F': '#fde8e8'}
         return f'background:{bg.get(v,"#fff")};color:{GRADE_COL.get(v,"#333")};font-weight:600'
 
-    sc = ['usn', 'name', 'attendance', 'internal_marks', 'semester_marks',
+    sc = ['usn', 'name', 'department', 'semester', 'attendance', 'internal_marks', 'semester_marks',
           'study_hours', 'risk_score', 'risk_tier', 'grade_label', 'performance_index']
-    disp = flt[sc].copy()
-    disp.columns = ['USN', 'Name', 'Attend %', 'Internals', 'Sem Marks',
-                    'Study Hrs', 'Risk Score', 'Tier', 'Grade', 'Perf Index']
+    available_sc = [c for c in sc if c in flt.columns]
+    disp = flt[available_sc].copy()
+
+    col_names = {
+        'usn': 'USN', 'name': 'Name', 'department': 'Dept', 'semester': 'Sem',
+        'attendance': 'Attend %', 'internal_marks': 'Internals',
+        'semester_marks': 'Sem Marks', 'study_hours': 'Study Hrs',
+        'risk_score': 'Risk Score', 'risk_tier': 'Tier',
+        'grade_label': 'Grade', 'performance_index': 'Perf Index',
+    }
+    disp.columns = [col_names.get(c, c) for c in available_sc]
+
+    fmt_dict = {}
+    for c in disp.columns:
+        if c in ('Attend %', 'Internals', 'Sem Marks', 'Study Hrs', 'Perf Index'):
+            fmt_dict[c] = '{:.1f}'
+        elif c == 'Risk Score':
+            fmt_dict[c] = '{:.0f}'
+
     styled = (disp.style
-              .applymap(_tc, subset=['Tier'])
-              .applymap(_gc, subset=['Grade'])
-              .format({'Attend %': '{:.1f}', 'Internals': '{:.1f}', 'Sem Marks': '{:.1f}',
-                       'Study Hrs': '{:.1f}', 'Risk Score': '{:.0f}', 'Perf Index': '{:.1f}'})
-              .bar(subset=['Risk Score'], color='#fde8e8', vmin=0, vmax=100)
+              .applymap(_tc, subset=['Tier'] if 'Tier' in disp.columns else [])
+              .applymap(_gc, subset=['Grade'] if 'Grade' in disp.columns else [])
+              .format(fmt_dict)
+              .bar(subset=['Risk Score'] if 'Risk Score' in disp.columns else [], color='#fde8e8', vmin=0, vmax=100)
               .set_properties(**{'font-size': '12px'}))
     st.dataframe(styled, use_container_width=True, height=420)
     st.download_button("⬇ Download CSV", flt.to_csv(index=False),
@@ -126,9 +148,11 @@ def render_students_page():
     with st.form("add_student_form", clear_on_submit=True):
         fc1, fc2 = st.columns(2)
         with fc1:
-            new_usn  = st.text_input("USN", placeholder="e.g. 1RV21CS501")
+            new_usn  = st.text_input("USN", placeholder="e.g. 1RV21CSE1001")
             new_name = st.text_input("Student Name", placeholder="e.g. Rahul Sharma")
+            new_dept = st.selectbox("Department", DEPARTMENTS, index=0)
         with fc2:
+            new_sem        = st.selectbox("Semester", SEMESTERS, index=0)
             new_attendance = st.number_input("Attendance %", 0.0, 100.0, 75.0, 0.5)
             new_internal   = st.number_input("Internal Marks (0-50)", 0.0, 50.0, 30.0, 0.5)
 
@@ -152,6 +176,8 @@ def render_students_page():
                 new_row = pd.DataFrame([{
                     'usn':              new_usn.strip(),
                     'name':             new_name.strip(),
+                    'department':       new_dept,
+                    'semester':         new_sem,
                     'attendance':       new_attendance,
                     'internal_marks':   new_internal,
                     'assignment_score': new_assignment,
@@ -164,7 +190,7 @@ def render_students_page():
                 upsert_student_data(new_row, DATA_PATH)
                 # Clear all cached data so every page picks up the new student
                 st.cache_data.clear()
-                st.session_state['student_added'] = f"✅ Student **{new_name.strip()}** ({new_usn.strip()}) added successfully! Note: Only 'At-Risk' students appear in the table above."
+                st.session_state['student_added'] = f"✅ Student **{new_name.strip()}** ({new_usn.strip()}) added to {new_dept} Sem {new_sem}!"
                 st.rerun()
 
     # ── Upload File ────────────────────────────────────────────────────────────
@@ -175,7 +201,7 @@ def render_students_page():
 
     uploaded_file = st.file_uploader(
         "Choose a file", type=["pdf", "csv", "xlsx", "xls"], key="file_uploader",
-        help="The file should contain tables with columns like USN, Name, Attendance, etc."
+        help="The file should contain tables with columns like USN, Name, Department, Semester, Attendance, etc."
     )
 
     if uploaded_file is not None:

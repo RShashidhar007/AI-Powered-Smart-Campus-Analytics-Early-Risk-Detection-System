@@ -95,7 +95,8 @@ def _header_footer(canvas, doc):
     canvas.rect(0, 0.43*inch, w, 0.02*inch, fill=1, stroke=0)
     canvas.setFont('Helvetica', 8)
     canvas.setFillColor(GRAY)
-    canvas.drawString(0.5*inch, 0.17*inch, 'Smart Campus Analytics System  |  CS Department')
+    dept_label = getattr(doc, '_dept_label', 'All Departments')
+    canvas.drawString(0.5*inch, 0.17*inch, f'Smart Campus Analytics System  |  {dept_label}')
     canvas.drawRightString(w - 0.5*inch, 0.17*inch, f'Page {doc.page}')
     canvas.restoreState()
 
@@ -277,7 +278,7 @@ def _at_risk_table(df, styles):
 
 
 def generate_pdf_report(df, reg_results, clf_results, clustering_result,
-                        chart_dir, output_path):
+                        chart_dir, output_path, **kwargs):
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     styles = _get_styles()
 
@@ -286,6 +287,8 @@ def generate_pdf_report(df, reg_results, clf_results, clustering_result,
         leftMargin=0.6*inch, rightMargin=0.6*inch,
         topMargin=0.75*inch, bottomMargin=0.65*inch,
     )
+    # Store dept_label on doc so the footer can access it
+    doc._dept_label = kwargs.get('dept_label', 'All Departments')
 
     story = []
 
@@ -307,7 +310,11 @@ def generate_pdf_report(df, reg_results, clf_results, clustering_result,
     story.append(cover_bg)
     story.append(Spacer(1, 0.25*inch))
     story.append(Paragraph('Executive Analytics Report', styles['subtitle']))
-    story.append(Paragraph(f'CS Department  |  500 Students  |  March 2025',
+
+    # Dynamic department/semester info
+    dept_label = kwargs.get('dept_label', 'All Departments')
+    total_students = len(df)
+    story.append(Paragraph(f'{dept_label}  |  {total_students} Students  |  2026',
                             ParagraphStyle('meta', fontName='Helvetica', fontSize=10,
                                            textColor=GRAY, alignment=TA_CENTER)))
     story.append(Spacer(1, 0.3*inch))
@@ -446,8 +453,8 @@ def generate_pdf_report(df, reg_results, clf_results, clustering_result,
     story.append(Spacer(1, 0.1*inch))
     story.append(Paragraph(
         'This report was generated automatically by the Smart Campus Analytics System. '
-        'All ML models were trained and evaluated on 500 CS student records. '
-        'For queries, contact the Analytics Team.',
+        f'All ML models were trained and evaluated on {len(df)} student records across '
+        f'5 departments and 4 semesters. For queries, contact the Analytics Team.',
         styles['footer']
     ))
 

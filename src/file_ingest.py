@@ -10,7 +10,7 @@ import re
 
 # Expected columns in our dataset
 EXPECTED_COLUMNS = [
-    'usn', 'name', 'attendance', 'internal_marks',
+    'usn', 'name', 'department', 'semester', 'attendance', 'internal_marks',
     'assignment_score', 'quiz_score', 'lab_marks',
     'semester_marks', 'study_hours',
 ]
@@ -48,6 +48,12 @@ COLUMN_ALIASES = {
     # Study hours
     'study_hours': 'study_hours', 'study': 'study_hours',
     'hours': 'study_hours', 'study_hrs': 'study_hours',
+    # Department
+    'department': 'department', 'dept': 'department', 'branch': 'department',
+    'dept_name': 'department', 'department_name': 'department',
+    # Semester
+    'semester': 'semester', 'sem': 'semester', 'sem_no': 'semester',
+    'semester_no': 'semester', 'term': 'semester',
 }
 
 
@@ -174,6 +180,7 @@ def _clean_and_map_dataframe(raw_df: pd.DataFrame, source_type: str) -> tuple[pd
     missing = [c for c in EXPECTED_COLUMNS if c not in mapped_cols]
     defaults = {
         'usn': 'UNKNOWN', 'name': 'Unknown Student',
+        'department': 'CSE', 'semester': 1,
         'attendance': 75.0, 'internal_marks': 30.0,
         'assignment_score': 30.0, 'quiz_score': 30.0,
         'lab_marks': 30.0, 'semester_marks': 140.0, 'study_hours': 3.0,

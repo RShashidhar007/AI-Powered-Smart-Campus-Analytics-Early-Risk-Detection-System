@@ -6,9 +6,21 @@ import streamlit as st
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 BASE_DIR   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_PATH  = os.path.join(BASE_DIR, 'data', 'student_data_500.csv')
+DATA_PATH  = os.path.join(BASE_DIR, 'data', 'student_data.csv')
 
 PREDICTION_ACCURACY = 0.924
+
+# ── Multi-Department / Multi-Semester Constants ──────────────────────────────
+DEPARTMENTS = ['CSE', 'ECE', 'ME', 'CE', 'ISE']
+SEMESTERS   = [1, 2, 3, 4]
+
+DEPT_FULL_NAMES = {
+    'CSE': 'Computer Science & Engineering',
+    'ECE': 'Electronics & Communication Engineering',
+    'ME':  'Mechanical Engineering',
+    'CE':  'Civil Engineering',
+    'ISE': 'Information Science & Engineering',
+}
 
 
 def set_page_config():
@@ -22,13 +34,15 @@ def set_page_config():
 
 def init_session_state():
     defaults = {
-        'language':           'English',
-        'authenticated':      False,
-        'registered_users':   {},
-        'theme':              'Dark',
-        'background_url':     '',
-        'page':               'Home',
-        'prediction_history': [],
+        'language':              'English',
+        'authenticated':         False,
+        'registered_users':      {},
+        'theme':                 'Dark',
+        'background_url':        '',
+        'page':                  'Home',
+        'prediction_history':    [],
+        'selected_department':   'All',
+        'selected_semester':     'All',
     }
     for key, val in defaults.items():
         if key not in st.session_state:
