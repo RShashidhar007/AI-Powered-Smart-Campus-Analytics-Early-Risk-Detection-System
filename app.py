@@ -28,7 +28,8 @@ from pages import (
     render_predictions_page,
     render_students_page,
     render_reports_page,
-    render_settings_page
+    render_settings_page,
+    render_year_comparison_page,
 )
 
 # Set page configuration
@@ -104,12 +105,20 @@ if st.session_state.get("authenticated", True):
             st.rerun()
 
     # 4. System Status — filtered by selected department & semester
-    from config import PREDICTION_ACCURACY, DATA_PATH
-    from data_pro import run_pipeline, get_summary_stats, filter_dataframe
+    from config import PREDICTION_ACCURACY, DATA_PATH, CURRENT_ACADEMIC_YEAR
+    from data_pro import run_pipeline, run_pipeline_from_db, get_summary_stats, filter_dataframe
+    from database import get_available_years, init_db
+
+    # Ensure DB is initialised
+    init_db()
 
     @st.cache_data(show_spinner=False)
     def _get_full_df():
-        return run_pipeline(DATA_PATH)
+        # Try loading from SQLite first; fall back to CSV if empty
+        df = run_pipeline_from_db(CURRENT_ACADEMIC_YEAR)
+        if df.empty:
+            df = run_pipeline(DATA_PATH)
+        return df
 
     full_df = _get_full_df()
     sel_dept = st.session_state.selected_department
@@ -202,6 +211,25 @@ if st.session_state.get("authenticated", True):
 
         st.markdown("<hr style='border: 1px solid var(--border-color); margin: 12px 0;'>", unsafe_allow_html=True)
 
+        # ── Academic Year Filter ──
+        available_years = get_available_years()
+        if len(available_years) > 1:
+            st.markdown("<h4 style='color: var(--main-text-color); margin-bottom: 8px;'>📅 Academic Year</h4>", unsafe_allow_html=True)
+            def _on_year_change():
+                st.session_state.selected_academic_year = st.session_state._sidebar_year
+
+            st.selectbox(
+                "Academic Year",
+                available_years,
+                key="_sidebar_year",
+                index=available_years.index(st.session_state.selected_academic_year)
+                    if st.session_state.selected_academic_year in available_years else len(available_years) - 1,
+                on_change=_on_year_change,
+                label_visibility="collapsed",
+            )
+
+        st.markdown("<hr style='border: 1px solid var(--border-color); margin: 12px 0;'>", unsafe_allow_html=True)
+
         # ── Navigation ──
         st.markdown(f"<h4 style='color: var(--main-text-color); margin-bottom: 8px;'>Menu</h4>", unsafe_allow_html=True)
         st.session_state.page = st.radio(
@@ -229,6 +257,8 @@ if st.session_state.get("authenticated", True):
         render_students_page()
     elif page_key == "Reports":
         render_reports_page()
+    elif page_key == "Year Comparison":
+        render_year_comparison_page()
     elif page_key == "Settings":
         render_settings_page()
 

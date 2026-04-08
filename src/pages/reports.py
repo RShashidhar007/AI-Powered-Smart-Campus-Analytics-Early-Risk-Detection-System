@@ -5,8 +5,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-from config    import DATA_PATH, DEPARTMENTS, DEPT_FULL_NAMES
-from data_pro  import run_pipeline, filter_dataframe
+from config    import DATA_PATH, DEPARTMENTS, DEPT_FULL_NAMES, CURRENT_ACADEMIC_YEAR
+from data_pro  import run_pipeline, run_pipeline_from_db, filter_dataframe
 from ml_models import FEATURES
 from language  import TEXTS
 
@@ -14,12 +14,16 @@ GRADE_COL = {"A": "#1e8449", "B": "#1a5276", "C": "#b7770d", "D": "#d35400", "F"
 DEPT_COL  = {"CSE": "#5b5ef4", "ECE": "#e84855", "ME": "#f4a261", "CE": "#2ec4b6", "ISE": "#9b59b6"}
 PL = dict(font_family="DM Sans,sans-serif", font_color="#8f9bba",
           plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-          margin=dict(l=8, r=8, t=32, b=8), showlegend=False)
+          margin=dict(l=8, r=8, t=32, b=8))
 
 
 @st.cache_data(show_spinner=False)
 def _load_all():
-    return run_pipeline(DATA_PATH)
+    year = st.session_state.get('selected_academic_year', CURRENT_ACADEMIC_YEAR)
+    df = run_pipeline_from_db(year)
+    if df.empty:
+        df = run_pipeline(DATA_PATH)
+    return df
 
 
 def render_reports_page():

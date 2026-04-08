@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 
+from database import load_students, upsert_students as db_upsert
+from config import CURRENT_ACADEMIC_YEAR
+
 GRADE_THRESHOLDS = {
     'A': (165, 200),
     'B': (150, 165),
@@ -145,12 +148,35 @@ def run_pipeline(csv_path: str) -> pd.DataFrame:
     return df
 
 
-def upsert_student_data(new_df: pd.DataFrame, csv_path: str):
-    """Upsert new student data into the existing CSV file, matching by 'usn'.
+def run_pipeline_from_db(academic_year: str | None = None) -> pd.DataFrame:
+    """Load student data from SQLite, clean, and engineer features.
+
+    If academic_year is None, loads the current year from config.
+    Pass academic_year='ALL' to load every year (useful for comparisons).
+    """
+    if academic_year == 'ALL':
+        df = load_students(academic_year=None)
+    else:
+        year = academic_year or CURRENT_ACADEMIC_YEAR
+        df = load_students(academic_year=year)
+
+    if len(df) == 0:
+        return pd.DataFrame()
+
+    df = clean_data(df)
+    df = engineer_features(df)
+    return df
+
+
+def upsert_student_data(new_df: pd.DataFrame, csv_path: str,
+                        academic_year: str | None = None):
+    """Upsert new student data into both CSV and SQLite.
 
     Drops any existing rows whose USN appears in new_df, then appends new_df.
-    Also removes any duplicate USNs already present in the file (keeps last).
+    Also writes to the SQLite database for the given academic year.
     """
+    import os
+
     existing_df = pd.read_csv(csv_path)
     existing_df.columns = [c.strip().lower().replace(' ', '_') for c in existing_df.columns]
 
@@ -173,3 +199,10 @@ def upsert_student_data(new_df: pd.DataFrame, csv_path: str):
     updated_df = updated_df.drop_duplicates(subset='usn', keep='last').reset_index(drop=True)
 
     updated_df.to_csv(csv_path, index=False)
+
+    # Also persist to SQLite
+    year = academic_year or CURRENT_ACADEMIC_YEAR
+    try:
+        db_upsert(new_df, year)
+    except Exception as e:
+        print(f"[WARN] SQLite upsert failed (CSV still updated): {e}")

@@ -5,15 +5,19 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-from config      import DATA_PATH, DEPARTMENTS, DEPT_FULL_NAMES
-from data_pro    import run_pipeline, get_summary_stats, get_at_risk_students, filter_dataframe
+from config      import DATA_PATH, DEPARTMENTS, DEPT_FULL_NAMES, CURRENT_ACADEMIC_YEAR
+from data_pro    import run_pipeline, run_pipeline_from_db, get_summary_stats, get_at_risk_students, filter_dataframe
 from ml_models   import FEATURES
 from language    import TEXTS
 
 # ── Cached loader ─────────────────────────────────────────────────────────────
 @st.cache_data(show_spinner=False)
 def _load_all():
-    return run_pipeline(DATA_PATH)
+    year = st.session_state.get('selected_academic_year', CURRENT_ACADEMIC_YEAR)
+    df = run_pipeline_from_db(year)
+    if df.empty:
+        df = run_pipeline(DATA_PATH)
+    return df
 
 # ── Colour maps ───────────────────────────────────────────────────────────────
 GRADE_COL = {"A": "#1e8449", "B": "#1a5276", "C": "#b7770d", "D": "#d35400", "F": "#c0392b"}
@@ -21,7 +25,7 @@ RISK_COL  = {"Low": "#1e8449", "Moderate": "#b7770d", "High": "#d35400", "Critic
 DEPT_COL  = {"CSE": "#5b5ef4", "ECE": "#e84855", "ME": "#f4a261", "CE": "#2ec4b6", "ISE": "#9b59b6"}
 PL = dict(font_family="DM Sans,sans-serif", font_color="#8f9bba",
           plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-          margin=dict(l=8, r=8, t=32, b=8), showlegend=False)
+          margin=dict(l=8, r=8, t=32, b=8))
 
 
 def _kpi(col, val, label, sub="", color="#4318ff", highlight=False):
@@ -95,7 +99,7 @@ def render_home_page():
         fig = px.bar(gd, x='Grade', y='Count', color='Grade',
                      color_discrete_map=GRADE_COL, text='Count')
         fig.update_traces(textposition='outside', marker_line_width=0)
-        fig.update_layout(**PL, height=260,
+        fig.update_layout(**PL, height=260, showlegend=False,
                           xaxis=dict(showgrid=False), yaxis=dict(gridcolor='rgba(143, 155, 186, 0.1)'))
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
@@ -109,7 +113,7 @@ def render_home_page():
                        color='Tier', color_discrete_map=RISK_COL)
         fig2.update_traces(textposition='outside', textinfo='label+percent',
                            marker=dict(line=dict(color='white', width=2)))
-        fig2.update_layout(**PL, height=260)
+        fig2.update_layout(**PL, height=260, showlegend=False)
         st.plotly_chart(fig2, use_container_width=True, config={'displayModeBar': False})
 
     with col3:
@@ -119,7 +123,7 @@ def render_home_page():
         fig3 = px.bar(x=am.values, y=am.index, orientation='h',
                       color=am.values,
                       color_continuous_scale=['#c0392b', '#d35400', '#b7770d', '#1e8449'])
-        fig3.update_layout(**PL, height=260, coloraxis_showscale=False,
+        fig3.update_layout(**PL, height=260, coloraxis_showscale=False, showlegend=False,
                            xaxis=dict(gridcolor='rgba(143, 155, 186, 0.1)'),
                            yaxis=dict(showgrid=False,
                                       categoryorder='array',
@@ -158,45 +162,10 @@ def render_home_page():
                           y=[f.replace('_', ' ').title() for f in corr.index],
                           orientation='h', color=corr.values,
                           color_continuous_scale=['#f5b7b1', '#fdebd0', '#1e8449'])
-            fig5.update_layout(**PL, height=280, coloraxis_showscale=False,
+            fig5.update_layout(**PL, height=280, coloraxis_showscale=False, showlegend=False,
                                xaxis=dict(gridcolor='rgba(143, 155, 186, 0.1)', range=[0, 0.7]),
                                yaxis=dict(showgrid=False))
             st.plotly_chart(fig5, use_container_width=True, config={'displayModeBar': False})
 
-    # ── Cross-Department Comparison ──────────────────────────────────────────
-    if sel_dept == 'All' and len(all_df) > 0:
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown('<div class="sh">📊 Cross-Department Comparison</div>', unsafe_allow_html=True)
 
-        dept_sem_filter = all_df.copy()
-        if sel_sem != 'All':
-            dept_sem_filter = dept_sem_filter[dept_sem_filter['semester'] == int(sel_sem)]
 
-        dept_stats = dept_sem_filter.groupby('department').agg(
-            students=('usn', 'count'),
-            avg_marks=('semester_marks', 'mean'),
-            avg_attendance=('attendance', 'mean'),
-            at_risk=('is_at_risk', 'sum'),
-        ).round(1).reset_index()
-
-        dc1, dc2 = st.columns(2)
-
-        with dc1:
-            fig_dept = px.bar(dept_stats, x='department', y='avg_marks',
-                              color='department', color_discrete_map=DEPT_COL,
-                              text='avg_marks', title="Avg Semester Marks by Department")
-            fig_dept.update_traces(textposition='outside', marker_line_width=0)
-            fig_dept.update_layout(**PL, height=280, showlegend=False,
-                                   xaxis=dict(showgrid=False, title=''),
-                                   yaxis=dict(gridcolor='rgba(143, 155, 186, 0.1)', title='Avg Marks'))
-            st.plotly_chart(fig_dept, use_container_width=True, config={'displayModeBar': False})
-
-        with dc2:
-            fig_risk = px.bar(dept_stats, x='department', y='at_risk',
-                              color='department', color_discrete_map=DEPT_COL,
-                              text='at_risk', title="At-Risk Students by Department")
-            fig_risk.update_traces(textposition='outside', marker_line_width=0)
-            fig_risk.update_layout(**PL, height=280, showlegend=False,
-                                   xaxis=dict(showgrid=False, title=''),
-                                   yaxis=dict(gridcolor='rgba(143, 155, 186, 0.1)', title='At-Risk Count'))
-            st.plotly_chart(fig_risk, use_container_width=True, config={'displayModeBar': False})

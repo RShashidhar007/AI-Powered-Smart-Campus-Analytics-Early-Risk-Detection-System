@@ -7,8 +7,8 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 
-from config    import DATA_PATH, DEPARTMENTS, SEMESTERS
-from data_pro  import run_pipeline, filter_dataframe
+from config    import DATA_PATH, DEPARTMENTS, SEMESTERS, CURRENT_ACADEMIC_YEAR
+from data_pro  import run_pipeline, run_pipeline_from_db, filter_dataframe
 from ml_models import (
     FEATURES, train_regression_models, train_classification_models,
 )
@@ -19,7 +19,7 @@ GRADE_COL = {"A": "#1e8449", "B": "#1a5276", "C": "#b7770d", "D": "#d35400", "F"
 RISK_COL  = {"Low": "#1e8449", "Moderate": "#b7770d", "High": "#d35400", "Critical": "#c0392b"}
 PL = dict(font_family="DM Sans,sans-serif", font_color="#8f9bba",
           plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-          margin=dict(l=8, r=8, t=32, b=8), showlegend=False)
+          margin=dict(l=8, r=8, t=32, b=8))
 
 
 def _kpi(col, val, label, sub="", color="#4318ff", highlight=False):
@@ -36,7 +36,11 @@ def _kpi(col, val, label, sub="", color="#4318ff", highlight=False):
 # ── Cached loaders ────────────────────────────────────────────────────────────
 @st.cache_data(show_spinner=False)
 def _load_df():
-    return run_pipeline(DATA_PATH)
+    year = st.session_state.get('selected_academic_year', CURRENT_ACADEMIC_YEAR)
+    df = run_pipeline_from_db(year)
+    if df.empty:
+        df = run_pipeline(DATA_PATH)
+    return df
 
 @st.cache_resource(show_spinner=False)
 def _train_reg(dept, sem):

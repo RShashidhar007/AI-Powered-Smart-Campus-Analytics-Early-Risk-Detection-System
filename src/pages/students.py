@@ -5,8 +5,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-from config      import DATA_PATH, DEPARTMENTS, SEMESTERS
-from data_pro    import run_pipeline, get_at_risk_students, upsert_student_data, filter_dataframe
+from config      import DATA_PATH, DEPARTMENTS, SEMESTERS, CURRENT_ACADEMIC_YEAR
+from data_pro    import run_pipeline, run_pipeline_from_db, get_at_risk_students, upsert_student_data, filter_dataframe
 from file_ingest import process_uploaded_file
 from language    import TEXTS
 
@@ -30,7 +30,10 @@ def _kpi(col, val, label, sub="", color="#4318ff", highlight=False):
 
 @st.cache_data(show_spinner=False)
 def _load():
-    df      = run_pipeline(DATA_PATH)
+    year = st.session_state.get('selected_academic_year', CURRENT_ACADEMIC_YEAR)
+    df = run_pipeline_from_db(year)
+    if df.empty:
+        df = run_pipeline(DATA_PATH)
     return df
 
 
