@@ -70,10 +70,10 @@ def render_predictions_page():
     if sel_sem != 'All': filter_label.append(f"Sem {sel_sem}")
     filter_str = " · ".join(filter_label) if filter_label else "All Departments"
 
-    st.markdown("## Predictions & ML Models")
+    st.markdown(f"## {T.get('predictions_title', 'Predictions & ML Models')}")
     st.markdown(
         f"<div style='color:var(--muted-color,#888);font-size:13px;margin-bottom:20px'>"
-        f"Regression · Classification · Feature importance · Single-student predictor · {filter_str}</div>",
+        f"{T.get('predictions_subtitle', 'Regression · Classification · Feature importance · Single-student predictor')} · {filter_str}</div>",
         unsafe_allow_html=True,
     )
 
@@ -81,13 +81,16 @@ def render_predictions_page():
         reg = _train_reg(sel_dept, sel_sem)
         clf = _train_clf(sel_dept, sel_sem)
 
-    tab_reg, tab_clf, tab_fi, tab_pred = st.tabs(
-        ["📉 Regression", "🏷 Classification", "⭐ Feature Importance", "🔮 Predict Student"]
-    )
+    tab_reg, tab_clf, tab_fi, tab_pred = st.tabs([
+        T.get('tab_reg', '📉 Regression'), 
+        T.get('tab_clf', '🏷 Classification'), 
+        T.get('tab_fi', '⭐ Feature Importance'), 
+        T.get('tab_pred', '🔮 Predict Student')
+    ])
 
     # ── Regression ────────────────────────────────────────────────────────────
     with tab_reg:
-        st.markdown("#### Predicting semester marks")
+        st.markdown(f"#### {T.get('pred_sem_marks', 'Predicting semester marks')}")
         results   = reg['results']
         best_name = reg['best_model']
         cols = st.columns(len(results))
@@ -111,7 +114,7 @@ def render_predictions_page():
         fap = px.scatter(smp, x='semester_marks', y='predicted',
                          color='grade_label', color_discrete_map=GRADE_COL, opacity=0.7,
                          labels={'semester_marks': 'Actual', 'predicted': 'Predicted'},
-                         title="Actual vs Predicted")
+                         title=T.get('actual_vs_predicted', 'Actual vs Predicted'))
         mn, mx = smp['semester_marks'].min(), smp['semester_marks'].max()
         fap.add_trace(go.Scatter(x=[mn, mx], y=[mn, mx], mode='lines',
                                  line=dict(color='#c0392b', dash='dash', width=1.5),
@@ -127,7 +130,7 @@ def render_predictions_page():
 
     # ── Classification ────────────────────────────────────────────────────────
     with tab_clf:
-        st.markdown("#### Predicting grade A–F")
+        st.markdown(f"#### {T.get('pred_grade_af', 'Predicting grade A–F')}")
         clf_results = clf['results']
         best_c      = clf['best_model']
         cols2 = st.columns(len(clf_results))
@@ -142,7 +145,7 @@ def render_predictions_page():
         fcm = px.imshow(best_cm, x=classes, y=classes,
                         color_continuous_scale='Blues',
                         text_auto=True, aspect='auto',
-                        title=f"Confusion Matrix — {best_c}")
+                        title=f"{T.get('confusion_matrix', 'Confusion Matrix')} — {best_c}")
         fcm.update_layout(**PL, height=360, coloraxis_showscale=False,
                           xaxis_title="Predicted", yaxis_title="Actual",
                           title_font_size=13)
@@ -156,7 +159,7 @@ def render_predictions_page():
             (cb, clf['feature_importance'], 'Classification', ['#e8f8f0', '#1e8449']),
         ]:
             with col_widget:
-                st.markdown(f"**{title} (Random Forest)**")
+                st.markdown(f"**{title} ({T.get('random_forest', 'Random Forest')})**")
                 fidf = pd.DataFrame({
                     'Feature':    [k.replace('_', ' ').title() for k in fi_data],
                     'Importance': list(fi_data.values()),
@@ -170,7 +173,7 @@ def render_predictions_page():
 
     # ── Predict single student ────────────────────────────────────────────────
     with tab_pred:
-        st.markdown("#### Enter student details")
+        st.markdown(f"#### {T.get('enter_student_details', 'Enter student details')}")
         rc1, rc2, rc3 = st.columns(3)
         attendance       = rc1.slider("Attendance %",       0.0, 100.0, 72.0, 0.5)
         internal_marks   = rc2.slider("Internal marks",     0.0,  50.0, 35.0, 0.5)
@@ -180,7 +183,7 @@ def render_predictions_page():
         lab_marks   = rc5.slider("Lab marks",       0.0, 50.0, 36.0, 0.5)
         study_hours = rc6.slider("Study hours/day", 0.0, 10.0,  3.5, 0.1)
 
-        if st.button("🔮  Run Prediction", use_container_width=True, type="primary"):
+        if st.button(T.get('run_prediction', '🔮  Run Prediction'), use_container_width=True, type="primary"):
             row = pd.DataFrame([{
                 'attendance': attendance, 'internal_marks': internal_marks,
                 'assignment_score': assignment_score, 'quiz_score': quiz_score,

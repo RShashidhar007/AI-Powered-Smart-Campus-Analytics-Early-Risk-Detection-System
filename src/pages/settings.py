@@ -8,39 +8,12 @@ from language import TEXTS
 def render_settings_page():
     T = TEXTS[st.session_state.language]
 
-    st.markdown("## Settings")
+    st.markdown(f"## {T.get('settings_title', 'Settings')}")
     st.markdown(
-        "<div style='color:var(--muted-color,#888);font-size:13px;margin-bottom:20px'>"
-        "Customize the dashboard appearance</div>",
+        f"<div style='color:var(--muted-color,#888);font-size:13px;margin-bottom:20px'>"
+        f"{T.get('settings_subtitle', 'Customize the dashboard appearance')}</div>",
         unsafe_allow_html=True,
     )
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.markdown("#### 🎨 Theme")
-        theme = st.selectbox(
-            "Select theme",
-            ["Dark", "Light"],
-            index=["Dark", "Light"].index(st.session_state.theme),
-            key="settings_theme",
-        )
-        if theme != st.session_state.theme:
-            st.session_state.theme = theme
-            st.rerun()
-
-    with col2:
-        st.markdown("#### 🖼️ Background")
-        bg_url = st.text_input(
-            "Background image URL (leave blank for default)",
-            value=st.session_state.background_url,
-            key="settings_bg_url",
-        )
-        if bg_url != st.session_state.background_url:
-            st.session_state.background_url = bg_url
-            st.rerun()
-
-    st.markdown("<br>", unsafe_allow_html=True)
 
     st.markdown("#### 🤖 AI Assistant")
     api_key = st.text_input(

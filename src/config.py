@@ -41,8 +41,6 @@ def init_session_state():
         'language':              'English',
         'authenticated':         False,
         'registered_users':      {},
-        'theme':                 'Dark',
-        'background_url':        '',
         'page':                  'Home',
         'prediction_history':    [],
         'selected_department':   'All',

@@ -138,6 +138,13 @@ def render_ai_agent():
         transform: scale(1.1);
         box-shadow: 0 6px 28px rgba(91, 94, 244, 0.6);
     }
+    /* Hide the dummy streamlit button */
+    [data-testid="stButton"] button p {
+        font-family: 'Outfit', sans-serif;
+    }
+    .stButton:has(p:contains("AI_HIDDEN")) {
+        display: none !important;
+    }
     .ai-fab-pulse {
         position: fixed;
         bottom: 28px;
@@ -159,12 +166,60 @@ def render_ai_agent():
     # Floating pulse ring
     st.markdown('<div class="ai-fab-pulse"></div>', unsafe_allow_html=True)
 
-    # Sidebar toggle
-    with st.sidebar:
-        st.markdown("---")
-        ai_open = st.toggle("🤖 AI Assistant", value=st.session_state.ai_chat_open,
-                            key="ai_toggle")
-        st.session_state.ai_chat_open = ai_open
+    # Sidebar toggle removed as per user request.
+    import streamlit.components.v1 as components
+
+    # Hidden Streamlit button to manage state
+    if st.button("AI_HIDDEN_TOGGLE", key="ai_hidden_toggle"):
+        st.session_state.ai_chat_open = not st.session_state.ai_chat_open
+        st.rerun()
+
+    components.html("""
+    <script>
+    const parentDoc = window.parent.document;
+    
+    // Hide the Streamlit button cleanly
+    const buttons = parentDoc.querySelectorAll('button');
+    let hiddenBtn = null;
+    buttons.forEach(b => {
+        if (b.innerText.includes('AI_HIDDEN_TOGGLE')) {
+            hiddenBtn = b;
+            const container = b.closest('.element-container');
+            if (container) container.style.display = 'none';
+        }
+    });
+
+    // Create persistent functional floating button
+    let fab = parentDoc.getElementById('ai-floating-btn');
+    if (!fab) {
+        fab = parentDoc.createElement('button');
+        fab.id = 'ai-floating-btn';
+        fab.className = 'ai-fab';
+        fab.innerHTML = '🤖';
+        fab.title = 'AI Assistant';
+        parentDoc.body.appendChild(fab);
+    }
+    
+    // Proxy click to hidden streamlit button
+    fab.onclick = function() {
+        const isChatOpen = parentDoc.querySelector('[data-testid="stChatInput"]') !== null;
+        // Only trigger click if chat is CLOSED
+        if (!isChatOpen && hiddenBtn) {
+            hiddenBtn.click();
+        }
+    };
+    
+    fab.ondblclick = function() {
+        const isChatOpen = parentDoc.querySelector('[data-testid="stChatInput"]') !== null;
+        // Only trigger click if chat is OPEN
+        if (isChatOpen && hiddenBtn) {
+            hiddenBtn.click();
+            // Prevent text selection from double click
+            parentDoc.getSelection().removeAllRanges();
+        }
+    };
+    </script>
+    """, height=0, width=0)
 
     if st.session_state.ai_chat_open:
         st.markdown("---")
@@ -208,8 +263,3 @@ def render_ai_agent():
             st.session_state.ai_chat_history.append({"role": "assistant", "content": response})
             st.rerun()
 
-    # Always show the visual floating button
-    st.markdown(
-        '<div class="ai-fab" title="AI Assistant">🤖</div>',
-        unsafe_allow_html=True,
-    )

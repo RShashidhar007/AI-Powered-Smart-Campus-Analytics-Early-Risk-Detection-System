@@ -12,6 +12,7 @@ import plotly.graph_objects as go
 from config   import CURRENT_ACADEMIC_YEAR, DEPARTMENTS, DEPT_FULL_NAMES
 from data_pro import run_pipeline_from_db, filter_dataframe, get_summary_stats
 from database import get_available_years
+from language import TEXTS
 
 # ── Colour maps ───────────────────────────────────────────────────────────────
 GRADE_COL = {"A": "#1e8449", "B": "#1a5276", "C": "#b7770d", "D": "#d35400", "F": "#c0392b"}
@@ -49,12 +50,13 @@ def _delta_kpi(col, label, curr_val, prev_val, suffix="", fmt=".1f",
 
 
 def render_year_comparison_page():
+    T  = TEXTS[st.session_state.language]
     years = get_available_years()
 
-    st.markdown("## 📅 Year-over-Year Comparison")
+    st.markdown(f"## {T.get('yoy_title', '📅 Year-over-Year Comparison')}")
     st.markdown(
-        "<div style='color:var(--muted-color,#888);font-size:13px;margin-bottom:20px'>"
-        "Compare academic performance across years · Identify trends · Track improvements</div>",
+        f"<div style='color:var(--muted-color,#888);font-size:13px;margin-bottom:20px'>"
+        f"{T.get('yoy_subtitle', 'Compare academic performance across years · Identify trends · Track improvements')}</div>",
         unsafe_allow_html=True,
     )
 
@@ -67,12 +69,12 @@ def render_year_comparison_page():
     # ── Year Selectors ────────────────────────────────────────────────────────
     yc1, yc2, yc3 = st.columns([1, 1, 2])
     with yc1:
-        curr_year = st.selectbox("Current Year", years,
+        curr_year = st.selectbox(T.get('curr_year', "Current Year"), years,
                                  index=years.index(CURRENT_ACADEMIC_YEAR)
                                  if CURRENT_ACADEMIC_YEAR in years else len(years) - 1)
     with yc2:
         prev_options = [y for y in years if y != curr_year]
-        prev_year = st.selectbox("Compare With", prev_options,
+        prev_year = st.selectbox(T.get('comp_year', "Compare With"), prev_options,
                                  index=0 if prev_options else 0)
 
     # Apply sidebar filters
@@ -138,8 +140,10 @@ def render_year_comparison_page():
 
     # ── Side-by-Side Charts ───────────────────────────────────────────────────
     tab_grade, tab_risk, tab_dept, tab_students = st.tabs([
-        "📊 Grade Distribution", "⚠️ Risk Tiers",
-        "🏫 Department Comparison", "👤 Student Tracking"
+        T.get("tab_y_grade", "📊 Grade Distribution"), 
+        T.get("tab_y_risk", "⚠️ Risk Tiers"),
+        T.get("tab_y_dept", "🏫 Department Comparison"), 
+        T.get("tab_y_student", "👤 Student Tracking")
     ])
 
     # ── Grade Distribution ────────────────────────────────────────────────────
@@ -307,10 +311,10 @@ def render_year_comparison_page():
 
     # ── Student-Level Tracking ────────────────────────────────────────────────
     with tab_students:
-        st.markdown("#### Student Improvement Tracking")
+        st.markdown(f"#### {T.get('student_imp', 'Student Improvement Tracking')}")
         st.markdown(
-            "<div style='color:var(--muted-color,#888);font-size:13px;margin-bottom:12px'>"
-            "Students present in both years — who improved the most and who declined</div>",
+            f"<div style='color:var(--muted-color,#888);font-size:13px;margin-bottom:12px'>"
+            f"{T.get('student_imp_sub', 'Students present in both years — who improved the most and who declined')}</div>",
             unsafe_allow_html=True,
         )
 

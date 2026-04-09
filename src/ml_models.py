@@ -107,7 +107,8 @@ def train_classification_models(df: pd.DataFrame):
         results[name] = {
             'Accuracy':  round(accuracy_score(y_test, preds), 4),
             'Report':    classification_report(y_test, preds,
-                             target_names=le.classes_, output_dict=True),
+                             labels=range(len(le.classes_)),
+                             target_names=le.classes_, output_dict=True, zero_division=0),
             'Confusion': confusion_matrix(y_test, preds).tolist(),
         }
         trained[name] = model

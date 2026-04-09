@@ -23,7 +23,7 @@ def _load_all():
 GRADE_COL = {"A": "#1e8449", "B": "#1a5276", "C": "#b7770d", "D": "#d35400", "F": "#c0392b"}
 RISK_COL  = {"Low": "#1e8449", "Moderate": "#b7770d", "High": "#d35400", "Critical": "#c0392b"}
 DEPT_COL  = {"CSE": "#5b5ef4", "ECE": "#e84855", "ME": "#f4a261", "CE": "#2ec4b6", "ISE": "#9b59b6"}
-PL = dict(font_family="DM Sans,sans-serif", font_color="#8f9bba",
+PL = dict(font_family="Inter,sans-serif", font_color="#94a3b8",
           plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
           margin=dict(l=8, r=8, t=32, b=8))
 
@@ -145,7 +145,7 @@ def render_home_page():
             fig4.add_vline(x=65, line_dash='dash', line_color='#c0392b',
                            annotation_text='65%', annotation_font_size=10,
                            annotation_font_color='#c0392b')
-            fig4.update_layout(font_family="DM Sans,sans-serif", font_color="#8f9bba",
+            fig4.update_layout(font_family="Inter,sans-serif", font_color="#94a3b8",
                                plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
                                margin=dict(l=8, r=8, t=32, b=8),
                                height=280, showlegend=True,

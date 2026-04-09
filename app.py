@@ -38,6 +38,10 @@ set_page_config()
 # Initialize session state
 init_session_state()
 
+if "reset" in st.query_params:
+    st.session_state.page = TEXTS["English"]["nav_options"][0]
+    st.query_params.clear()
+
 # ======================================================
 # LOGIN PAGE
 # ======================================================
@@ -54,31 +58,23 @@ if st.session_state.get("authenticated", True):
     T = TEXTS[st.session_state.language]
 
     # 1. Apply Dynamic CSS based on state
-    set_styles(st.session_state.theme, st.session_state.background_url)
+    set_styles()
 
     # 2. Professional Header Section with Logo (clickable → Home)
     header_col1, header_col2 = st.columns([0.5, 5])
     with header_col1:
         logo_path = os.path.join(os.path.dirname(__file__), "assets", "yangzhou_logo.png")
         if os.path.exists(logo_path):
-            if st.button("🏠", key="logo_home_btn", help="Go to Home"):
-                st.session_state.page = T["nav_options"][0]
-                st.rerun()
             st.image(logo_path, width=80)
         else:
-            if st.button("🎓", key="logo_home_btn2", help="Go to Home"):
-                st.session_state.page = T["nav_options"][0]
-                st.rerun()
+            st.markdown("<div style='font-size: 60px; margin-top: -15px;'>🎓</div>", unsafe_allow_html=True)
     with header_col2:
         st.markdown(f"""
-        <div class="dashboard-header" style="cursor:pointer;" onclick="window.location.reload();">
+        <div class="dashboard-header" style="cursor:pointer;" onclick="window.parent.location.assign(window.parent.location.pathname + '?reset=1');">
             <div class="header-title">{T['main_title']}</div>
             <div class="header-subtitle">{T['subtitle']}</div>
         </div>
         """, unsafe_allow_html=True)
-        if st.button("🏠 Home", key="title_home_btn", type="tertiary"):
-            st.session_state.page = T["nav_options"][0]
-            st.rerun()
 
     # 3. Top Controls Row (User Info, Language, Logout)
     col_spacer, col_user, col_lang, col_logout = st.columns([4, 1.5, 1, 1])
@@ -242,8 +238,6 @@ if st.session_state.get("authenticated", True):
         )
 
         st.markdown("<br><br><br>", unsafe_allow_html=True)
-        st.markdown("<hr style='border: 1px solid var(--border-color);'>", unsafe_allow_html=True)
-        st.caption(f"Current Theme: **{st.session_state.theme}**")
 
     # 6. Render Selected Page Content
     page_index = T["nav_options"].index(st.session_state.page)
