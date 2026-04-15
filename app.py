@@ -30,6 +30,7 @@ from pages import (
     render_reports_page,
     render_settings_page,
     render_year_comparison_page,
+    render_student_dashboard,
 )
 
 # Set page configuration
@@ -51,7 +52,63 @@ if not st.session_state.get("authenticated", False):
     st.stop()
 
 # ======================================================
-# MAIN APPLICATION
+# STUDENT DASHBOARD (restricted view)
+# ======================================================
+if st.session_state.get("user_role") == "student":
+    T = TEXTS[st.session_state.language]
+    set_styles()
+
+    # ── Header ──
+    header_col1, header_col2 = st.columns([0.5, 5])
+    with header_col1:
+        logo_path = os.path.join(os.path.dirname(__file__), "assets", "yangzhou_logo.png")
+        if os.path.exists(logo_path):
+            st.image(logo_path, width=80)
+        else:
+            st.markdown("<div style='font-size: 60px; margin-top: -15px;'>🎓</div>", unsafe_allow_html=True)
+    with header_col2:
+        st.markdown(f"""
+        <div class="dashboard-header">
+            <div class="header-title">{T['main_title']}</div>
+            <div class="header-subtitle">{T.get('student_portal_text', 'Student Portal')}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # ── Top Controls Row ──
+    col_spacer, col_lang, col_logout = st.columns([5, 1, 1])
+    with col_lang:
+        lang_options = ["English", "हिन्दी", "ಕನ್ನಡ"]
+
+        def _on_lang_change():
+            st.session_state.language = st.session_state.student_language_selector
+
+        st.selectbox(
+            "Select Language",
+            lang_options,
+            key="student_language_selector",
+            label_visibility="collapsed",
+            index=lang_options.index(st.session_state.language),
+            on_change=_on_lang_change,
+        )
+    with col_logout:
+        if st.button(T["logout"], key="student_logout_btn"):
+            st.session_state.authenticated = False
+            st.session_state.user_role = "teacher"
+            st.session_state.student_usn = None
+            st.session_state.prediction_history = []
+            st.rerun()
+
+    st.divider()
+
+    # ── Render Student Dashboard ──
+    render_student_dashboard()
+
+    st.markdown("<hr style='border: 1px solid #2874A6;'>", unsafe_allow_html=True)
+    st.caption(T["footer"])
+    st.stop()
+
+# ======================================================
+# MAIN APPLICATION (Teacher / Admin)
 # ======================================================
 if st.session_state.get("authenticated", True):
     # Get the current language texts for the main app
@@ -97,6 +154,8 @@ if st.session_state.get("authenticated", True):
     with col_logout:
         if st.button(T["logout"], key="logout_btn"):
             st.session_state.authenticated = False
+            st.session_state.user_role = "teacher"
+            st.session_state.student_usn = None
             st.session_state.prediction_history = []
             st.rerun()
 
@@ -207,24 +266,7 @@ if st.session_state.get("authenticated", True):
 
         st.markdown("<hr style='border: 1px solid var(--border-color); margin: 12px 0;'>", unsafe_allow_html=True)
 
-        # ── Academic Year Filter ──
-        available_years = get_available_years()
-        if len(available_years) > 1:
-            st.markdown("<h4 style='color: var(--main-text-color); margin-bottom: 8px;'>📅 Academic Year</h4>", unsafe_allow_html=True)
-            def _on_year_change():
-                st.session_state.selected_academic_year = st.session_state._sidebar_year
 
-            st.selectbox(
-                "Academic Year",
-                available_years,
-                key="_sidebar_year",
-                index=available_years.index(st.session_state.selected_academic_year)
-                    if st.session_state.selected_academic_year in available_years else len(available_years) - 1,
-                on_change=_on_year_change,
-                label_visibility="collapsed",
-            )
-
-        st.markdown("<hr style='border: 1px solid var(--border-color); margin: 12px 0;'>", unsafe_allow_html=True)
 
         # ── Navigation ──
         st.markdown(f"<h4 style='color: var(--main-text-color); margin-bottom: 8px;'>Menu</h4>", unsafe_allow_html=True)

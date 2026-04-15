@@ -8,33 +8,33 @@ def set_login_styles():
     """Inject CSS specific to the login page."""
     st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
     html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
+        font-family: 'Plus Jakarta Sans', sans-serif;
     }
     h1, h2, h3, h4, h5, h6, .login-title, .teacher-header {
-        font-family: 'Outfit', sans-serif;
+        font-family: 'Plus Jakarta Sans', sans-serif;
     }
     #MainMenu, footer, header { visibility: hidden; }
 
     .block-container {
-        padding: 2rem 2rem;
-        max-width: 900px;
+        padding: 2rem 2rem 0rem 2rem !important;
+        max-width: 1000px;
         margin: auto;
     }
 
-    /* Login box with Glassmorphism */
+    /* Login box with Vision UI Glassmorphism */
     .login-box {
-        margin-top: 3rem;
+        margin-top: 1rem;
         margin-bottom: 1rem;
-        background: rgba(17, 25, 40, 0.75);
-        backdrop-filter: blur(16px) saturate(180%);
-        -webkit-backdrop-filter: blur(16px) saturate(180%);
-        border: 1px solid rgba(255, 255, 255, 0.125);
-        border-radius: 24px;
-        padding: 40px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        background: linear-gradient(127.09deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%);
+        backdrop-filter: blur(120px);
+        -webkit-backdrop-filter: blur(120px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 20px 30px;
+        box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.2);
         animation: float-up 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         opacity: 0;
         transform: translateY(20px);
@@ -50,14 +50,14 @@ def set_login_styles():
     .login-title {
         font-size: 38px;
         font-weight: 800;
-        background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+        background: linear-gradient(135deg, #0075FF 0%, #2CD9FF 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin-bottom: 8px;
     }
     .login-subtitle {
         font-size: 15px;
-        color: #a0aec0;
+        color: #A0AEC0;
         margin-bottom: 24px;
         line-height: 1.5;
     }
@@ -65,7 +65,7 @@ def set_login_styles():
     .teacher-header {
         font-size: 22px;
         font-weight: 600;
-        color: #e2e8f0;
+        color: #FFFFFF;
         margin-bottom: 20px;
         letter-spacing: -0.01em;
     }
@@ -73,22 +73,21 @@ def set_login_styles():
     .footer {
         text-align: center;
         font-size: 13px;
-        color: #4a5568;
+        color: #A0AEC0;
         margin-top: 40px;
-        font-family: 'Outfit', sans-serif;
     }
 
     /* Dark sidebar for login */
     [data-testid="stSidebar"] { 
-        background: rgba(10, 15, 30, 0.9) !important;
-        backdrop-filter: blur(12px);
-        border-right: 1px solid rgba(255,255,255,0.05); 
+        background: linear-gradient(127.09deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%) !important;
+        backdrop-filter: blur(120px);
+        border-right: 1px solid rgba(255,255,255,0.1); 
     }
-    [data-testid="stSidebar"] * { color: #cbd5e1 !important; }
+    [data-testid="stSidebar"] * { color: #FFFFFF !important; }
 
-    /* Animated deep space background */
+    /* Vision UI deep space background */
     .stApp {
-        background: radial-gradient(circle at 50% -20%, #1e1b4b, #0f172a 60%, #020617 100%);
+        background: linear-gradient(159.02deg, #0f123b 14.25%, #090d2e 56.45%, #020515 86.14%);
         background-attachment: fixed;
     }
     </style>
@@ -98,31 +97,31 @@ def set_login_styles():
 def set_styles():
     """Inject CSS for the main dashboard"""
 
-    bg_color       = "#020617"
-    card_bg        = "rgba(15, 23, 42, 0.6)"
-    card_bg_hover  = "rgba(30, 41, 59, 0.8)"
-    text_color     = "#ffffff"
-    text_accent    = "#38bdf8"
-    muted_color    = "#94a3b8"
-    border_color   = "rgba(255, 255, 255, 0.08)"
-    border_glow    = "rgba(56, 189, 248, 0.5)"
-    accent         = "linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%)"
-    accent_flat    = "#3b82f6"
-    sidebar_bg     = "rgba(2, 6, 23, 0.85)"
-    box_shadow     = "0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.18)"
-    shadow_hover   = "0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2)"
-    gradient_bg    = "radial-gradient(circle at top right, #1e1b4b 0%, #0f172a 40%, #020617 100%)"
-    alert_bg       = "rgba(220, 38, 38, 0.1)"
+    bg_color       = "#020515"
+    card_bg        = "linear-gradient(127.09deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%)"
+    card_bg_hover  = "linear-gradient(127.09deg, rgba(16, 21, 50, 0.94) 19.41%, rgba(20, 24, 45, 0.49) 76.65%)"
+    text_color     = "#FFFFFF"
+    text_accent    = "#FFFFFF"
+    muted_color    = "#A0AEC0"
+    border_color   = "rgba(255, 255, 255, 0.1)"
+    border_glow    = "rgba(0, 117, 255, 0.5)"
+    accent         = "linear-gradient(135deg, #0075FF 0%, #2CD9FF 100%)"
+    accent_flat    = "#0075FF"
+    sidebar_bg     = "linear-gradient(127.09deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%)"
+    box_shadow     = "0px 20px 40px rgba(0, 0, 0, 0.2)"
+    shadow_hover   = "0px 20px 40px rgba(0, 117, 255, 0.1)"
+    gradient_bg    = "linear-gradient(159.02deg, #0f123b 14.25%, #090d2e 56.45%, #020515 86.14%)"
+    alert_bg       = "linear-gradient(127.09deg, rgba(220, 38, 38, 0.3) 19.41%, rgba(220, 38, 38, 0.1) 76.65%)"
     alert_text     = "#fca5a5"
     alert_border   = "rgba(220, 38, 38, 0.3)"
-    input_bg       = "rgba(15, 23, 42, 0.8)"
+    input_bg       = "rgba(15, 23, 42, 0.4)"
 
     bg_image = gradient_bg
     bg_size = "cover"
 
     st.markdown(f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
     :root {{
         --main-bg: {bg_color};
@@ -145,7 +144,7 @@ def set_styles():
 
     html, body, [class*="css"], .stMarkdown, p, div, span, label {{ 
         color: var(--main-text-color);
-        font-family: 'Inter', sans-serif; 
+        font-family: 'Plus Jakarta Sans', sans-serif; 
     }}
     
     /* Ensure Plotly chart text colors adapt generally where streamlits theme variables leak */
@@ -154,7 +153,7 @@ def set_styles():
     /* Text overrides specifically for Light mode legibility against white */
     .stDataFrame, .stTable {{ color: var(--main-text-color) !important; }}
 
-    h1, h2, h3, h4, h5, h6, .header-title, .stat-title, .kv, .sh {{ font-family: 'Outfit', sans-serif; color: var(--main-text-color); }}
+    h1, h2, h3, h4, h5, h6, .header-title, .stat-title, .kv, .sh {{ font-family: 'Plus Jakarta Sans', sans-serif; color: var(--main-text-color); }}
     
     #MainMenu, footer {{ visibility: hidden; }}
 
@@ -209,11 +208,28 @@ def set_styles():
     /* Glassmorphic Sidebar */
     [data-testid="stSidebar"] {{
         background: {sidebar_bg} !important;
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(120px);
+        -webkit-backdrop-filter: blur(120px);
         border-right: 1px solid var(--border-color);
     }}
     [data-testid="stSidebar"] * {{ color: var(--main-text-color); }}
+    
+    /* Hide Sidebar Scrollbar robustly */
+    [data-testid="stSidebar"]::-webkit-scrollbar,
+    [data-testid="stSidebar"] *::-webkit-scrollbar,
+    [data-testid="stSidebarUserContent"]::-webkit-scrollbar,
+    [data-testid="stSidebarNav"]::-webkit-scrollbar {{
+        display: none !important;
+        width: 0px !important;
+        height: 0px !important;
+        background: transparent !important;
+    }}
+    [data-testid="stSidebar"],
+    [data-testid="stSidebar"] *,
+    [data-testid="stSidebarUserContent"] {{
+        -ms-overflow-style: none !important;  /* IE and Edge */
+        scrollbar-width: none !important;  /* Firefox */
+    }}
     
     /* Input Boxes (Selectbox & Text Input) */
     .stTextInput>div>div>input, .stSelectbox>div>div>div {{
@@ -250,38 +266,40 @@ def set_styles():
 
     /* Main Navigation Pills */
     div.stRadio > div[role="radiogroup"] > label {{
-        background: var(--card-bg) !important;
-        backdrop-filter: blur(8px);
-        border: 1px solid var(--border-color) !important;
+        background: transparent !important;
+        border: none !important;
         color: var(--muted-color) !important;
-        font-weight: 500 !important;
-        padding: 10px 20px !important;
-        border-radius: 30px !important; /* Pill shape */
+        font-weight: 600 !important;
+        padding: 12px 20px !important;
+        border-radius: 12px !important;
         transition: all 0.3s ease !important;
-        margin-right: 8px !important;
-        font-family: 'Outfit', sans-serif !important;
+        margin-right: 0 !important;
+        margin-bottom: 8px !important;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+    }}
+    div.stRadio > div[role="radiogroup"] > label > div:first-child {{
+        display: none !important; /* hide default radio indicator */
     }}
     div.stRadio > div[role="radiogroup"] > label[data-checked="true"] {{
         background: var(--accent) !important;
         color: white !important;
         border-color: transparent !important;
         box-shadow: 0 4px 15px var(--border-glow) !important;
-        transform: translateY(-2px);
+        transform: translateY(0px) !important;
     }}
     div.stRadio > div[role="radiogroup"] > label:hover:not([data-checked="true"]) {{
-        background: var(--card-bg-hover) !important;
+        background: rgba(255, 255, 255, 0.05) !important;
         color: var(--main-text-color) !important;
-        border-color: var(--border-glow) !important;
     }}
 
     /* Stat cards & KPI cards with Glassmorphism */
     .stat-card, .kpi, .pr {{
         background: var(--card-bg);
-        backdrop-filter: blur(16px) saturate(180%);
-        -webkit-backdrop-filter: blur(16px) saturate(180%);
+        backdrop-filter: blur(120px);
+        -webkit-backdrop-filter: blur(120px);
         border: 1px solid var(--border-color);
         border-radius: 20px;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy hover */
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
         box-shadow: var(--box-shadow);
         position: relative;
         overflow: hidden;
@@ -394,15 +412,15 @@ def set_styles():
     /* Streamlit tabs override for Glass UI */
     button[data-baseweb="tab"] {{
         background: transparent !important;
-        font-family: 'Outfit', sans-serif !important;
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
         font-weight: 600 !important;
         color: var(--muted-color) !important;
         border-radius: 12px 12px 0 0 !important;
         font-size: 16px !important;
     }}
     button[data-baseweb="tab"][aria-selected="true"] {{
-        color: var(--text-accent) !important;
-        border-bottom-color: var(--text-accent) !important;
+        color: var(--main-text-color) !important;
+        border-bottom-color: var(--main-text-color) !important;
         text-shadow: 0 0 12px var(--border-glow);
     }}
     

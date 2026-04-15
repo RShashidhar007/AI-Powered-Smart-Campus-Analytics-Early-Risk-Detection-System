@@ -40,6 +40,8 @@ def init_session_state():
     defaults = {
         'language':              'English',
         'authenticated':         False,
+        'user_role':             'teacher',   # 'teacher' or 'student'
+        'student_usn':           None,        # USN of logged-in student
         'registered_users':      {},
         'page':                  'Home',
         'prediction_history':    [],

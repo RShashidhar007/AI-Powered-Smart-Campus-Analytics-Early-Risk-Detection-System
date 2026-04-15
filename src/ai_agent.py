@@ -54,18 +54,25 @@ def _get_groq_response(user_msg: str, chat_history: list) -> str:
         # Keep only the bare essentials (Name, USN, Dept, Sem, Attendance, Sem Marks, Risk)
         mini_df = df[['usn', 'name', 'department', 'semester', 'attendance', 'semester_marks', 'risk_tier']].copy()
         
-        # Round and convert numeric columns to save string space
-        mini_df['attendance'] = mini_df['attendance'].round(0).astype(int)
-        mini_df['semester_marks'] = mini_df['semester_marks'].round(0).astype(int)
-        mini_df['semester'] = mini_df['semester'].astype(int)
+        # Calculate swift aggregate statistics to provide contextual knowledge without exceeding token limits
+        dept_stats = mini_df.groupby('department').agg(
+            total_students=('usn', 'count'),
+            avg_marks=('semester_marks', 'mean'),
+            avg_att=('attendance', 'mean'),
+            critical_count=('risk_tier', lambda x: (x=="Critical").sum())
+        ).round(1).to_csv()
         
-        # Rename columns to single/short characters to massively shrink CSV token size
-        mini_df.columns = ['U', 'N', 'D', 'S', 'A', 'M', 'R']
+        # Filter for top 20 most critical students only, instead of dumping all 2000 rows
+        critical_df = mini_df[mini_df['risk_tier'] == 'Critical'].head(20).copy()
+        critical_df['attendance'] = critical_df['attendance'].round(0).astype(int)
+        critical_df['semester_marks'] = critical_df['semester_marks'].round(0).astype(int)
+        critical_df['semester'] = critical_df['semester'].astype(int)
+        critical_df.columns = ['U', 'N', 'D', 'S', 'A', 'M', 'R']
         
-        csv_data = mini_df.to_csv(index=False)
-        db_context = f"\n\n--- DATABASE ---\n(U=USN, N=Name, D=Dept, S=Sem, A=Attendance, M=SemMarks, R=Risk)\n{csv_data}\n--- END ---\n"
-    except Exception:
-        db_context = "\n\n(Student Database could not be loaded at this time.)"
+        csv_data = critical_df.to_csv(index=False)
+        db_context = f"\n\n--- AGGREGATE STATS ---\n{dept_stats}\n\n--- TOP CRITICAL STUDENTS (Limit 20) ---\n(U=USN, N=Name, D=Dept, S=Sem, A=Attendance, M=SemMarks, R=Risk)\n{csv_data}\n--- END ---\n"
+    except Exception as e:
+        db_context = f"\n\n(Student Database could not be loaded: {str(e)})"
 
     # Build conversation history for context
     system_prompt_with_data = SYSTEM_PROMPT + db_context

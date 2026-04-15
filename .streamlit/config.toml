@@ -7,10 +7,10 @@ enableXsrfProtection = true
 gatherUsageStats = false
 
 [theme]
-primaryColor = "#5b5ef4"
-backgroundColor = "#0d1117"
-secondaryBackgroundColor = "#161b22"
-textColor = "#e6edf3"
+primaryColor = "#0075FF"
+backgroundColor = "#020515"
+secondaryBackgroundColor = "#0a0e23"
+textColor = "#FFFFFF"
 font = "sans serif"
 
 [client]

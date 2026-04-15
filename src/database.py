@@ -7,6 +7,7 @@ replacing the old CSV-only data flow.
 import os
 import sqlite3
 import pandas as pd
+import hashlib
 
 # ── Path ──────────────────────────────────────────────────────────────────────
 _BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -33,12 +34,28 @@ CREATE TABLE IF NOT EXISTS students (
 );
 """
 
+_CREATE_FACULTY_USERS = """
+CREATE TABLE IF NOT EXISTS faculty_users (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    username         TEXT    NOT NULL UNIQUE,
+    email            TEXT    NOT NULL,
+    password_hash    TEXT    NOT NULL,
+    department       TEXT,
+    created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+"""
+
 STUDENT_COLUMNS = [
     'usn', 'name', 'department', 'semester',
     'attendance', 'internal_marks', 'assignment_score',
     'quiz_score', 'lab_marks', 'semester_marks', 'study_hours',
     'academic_year',
 ]
+
+
+def _hash_password(password: str) -> str:
+    """Return a SHA-256 hash of the password."""
+    return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
 
 def get_connection(db_path: str = DB_PATH) -> sqlite3.Connection:
@@ -50,9 +67,10 @@ def get_connection(db_path: str = DB_PATH) -> sqlite3.Connection:
 
 
 def init_db(db_path: str = DB_PATH):
-    """Create the students table if it does not exist."""
+    """Create the required core database tables if they do not exist."""
     conn = get_connection(db_path)
     conn.execute(_CREATE_STUDENTS)
+    conn.execute(_CREATE_FACULTY_USERS)
     conn.commit()
     conn.close()
 
@@ -160,3 +178,38 @@ def delete_year(academic_year: str, db_path: str = DB_PATH):
     conn.execute("DELETE FROM students WHERE academic_year = ?", (academic_year,))
     conn.commit()
     conn.close()
+
+
+def create_faculty_user(username: str, email: str, password: str, department: str, db_path: str = DB_PATH) -> bool:
+    """Insert a new user into the database securely. Returns True if successful, False if username exists."""
+    conn = get_connection(db_path)
+    try:
+        pw_hash = _hash_password(password)
+        conn.execute(
+            "INSERT INTO faculty_users (username, email, password_hash, department) VALUES (?, ?, ?, ?)",
+            (username, email, pw_hash, department)
+        )
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        # Catching IntegrityError handles the UNIQUE constraint on username naturally
+        return False
+    finally:
+        conn.close()
+
+
+def authenticate_faculty_user(username: str, password: str, db_path: str = DB_PATH) -> bool:
+    """Verify the provided login credentials against the database securely."""
+    conn = get_connection(db_path)
+    cursor = conn.execute(
+        "SELECT password_hash FROM faculty_users WHERE username = ?",
+        (username,)
+    )
+    result = cursor.fetchone()
+    conn.close()
+    
+    if result is None:
+        return False
+        
+    stored_hash = result[0]
+    return stored_hash == _hash_password(password)
