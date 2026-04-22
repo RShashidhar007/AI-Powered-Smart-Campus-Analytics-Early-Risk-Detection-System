@@ -1,328 +1,199 @@
 """
-pages/student_dashboard.py — Read-only student portal.
-Shows only the logged-in student's marks, attendance, and results.
+pages/student_dashboard.py — Student-specific portal.
+Restricted view of just their own data + gauge charts + predicted future.
 """
 import streamlit as st
 import pandas as pd
-import plotly.graph_objects as go
 import plotly.express as px
-
-from config   import DATA_PATH, CURRENT_ACADEMIC_YEAR
-from data_pro import run_pipeline, run_pipeline_from_db
+import plotly.graph_objects as go
+from config import CURRENT_ACADEMIC_YEAR
+from data_pro import run_pipeline_from_db
 from language import TEXTS
+from ui_theme import PAGE_CSS, GRADE_COL, RISK_COL, DEPT_COL, PL as _PL, PL, kpi_card as _kpi, section_header as _sh
+from ml_models import train_regression_models, train_classification_models
 
-# ── Plot defaults ────────────────────────────────────────────────────────────
-PL = dict(
-    font_family="Plus Jakarta Sans, DM Sans, sans-serif",
-    font_color="#8f9bba",
-    plot_bgcolor="rgba(0,0,0,0)",
-    paper_bgcolor="rgba(0,0,0,0)",
-    margin=dict(l=8, r=8, t=32, b=8),
-    showlegend=False,
-)
+# ── Design system ─────────────────────────────────────────────────────────────
+
+# ── Colour maps & Plotly Theme ────────────────────────────────────────────────
 
 
 @st.cache_data(show_spinner=False)
-def _load_all():
+def _load_all_data():
     year = st.session_state.get('selected_academic_year', CURRENT_ACADEMIC_YEAR)
-    df = run_pipeline_from_db(year)
-    if df.empty:
-        df = run_pipeline(DATA_PATH)
-    return df
+    return run_pipeline_from_db(year)
 
-
-def _gauge(value, title, max_val, suffix="", color="#0075FF"):
-    """Create a sleek gauge chart."""
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=value,
-        number={"suffix": suffix, "font": {"size": 32, "color": "#FFFFFF", "family": "Plus Jakarta Sans"}},
-        title={"text": title, "font": {"size": 14, "color": "#A0AEC0", "family": "Plus Jakarta Sans"}},
-        gauge={
-            "axis": {"range": [0, max_val], "tickcolor": "#A0AEC0", "tickfont": {"color": "#A0AEC0"}},
-            "bar": {"color": color, "thickness": 0.7},
-            "bgcolor": "rgba(255,255,255,0.05)",
-            "borderwidth": 0,
-            "steps": [
-                {"range": [0, max_val * 0.5], "color": "rgba(255,255,255,0.02)"},
-                {"range": [max_val * 0.5, max_val * 0.75], "color": "rgba(255,255,255,0.04)"},
-                {"range": [max_val * 0.75, max_val], "color": "rgba(255,255,255,0.06)"},
-            ],
-        },
-    ))
-    fig.update_layout(height=200, **PL)
-    return fig
-
+@st.cache_resource(show_spinner=False)
+def _get_models():
+    """Load fully trained models for accurate predictions."""
+    df = _load_all_data()
+    reg = train_regression_models(df)
+    clf = train_classification_models(df)
+    return reg, clf
 
 def render_student_dashboard():
-    """Render the student-only dashboard."""
+    st.markdown(PAGE_CSS, unsafe_allow_html=True)
+    
     T = TEXTS[st.session_state.language]
-    usn = st.session_state.get("student_usn")
+    usn = st.session_state.get('student_usn')
 
     if not usn:
-        st.error("No student USN found. Please log in again.")
+        st.error(" Not logged in as a student.")
         return
 
-    full_df = _load_all()
+    df = _load_all_data()
+    student_df = df[df['usn'] == usn]
 
-    # Find this student's row
-    student_rows = full_df[full_df['usn'].astype(str).str.strip().str.upper() == usn.strip().upper()]
-
-    if student_rows.empty:
-        st.error(f"No data found for USN: **{usn}**")
+    if student_df.empty:
+        st.error(f" Could not find data for USN: {usn}")
         return
 
-    s = student_rows.iloc[0]  # student record
+    student = student_df.iloc[0]
 
-    # ─── Inject CSS for hover effects (Streamlit strips JS event handlers) ────
-    st.markdown("""
-    <style>
-        @keyframes student-float-up {
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .student-welcome {
-            background: linear-gradient(127.09deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%);
-            backdrop-filter: blur(120px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 28px 32px;
-            margin-bottom: 24px;
-            box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.2);
-            animation: student-float-up 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        .student-kpi {
-            background: linear-gradient(127.09deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%);
-            backdrop-filter: blur(120px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 22px 24px;
-            box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.2);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-            overflow: hidden;
-        }
-        .student-kpi:hover {
-            transform: translateY(-6px) scale(1.01);
-            border-color: rgba(0, 117, 255, 0.5);
-        }
-        .student-profile {
-            background: linear-gradient(127.09deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%);
-            backdrop-filter: blur(120px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.2);
-        }
-        .student-profile-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 14px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-            transition: background 0.2s;
-        }
-        .student-profile-row:hover {
-            background: rgba(255, 255, 255, 0.03);
-        }
-        .student-profile-row:last-child {
-            border-bottom: none;
-        }
-        .profile-label {
-            color: #A0AEC0;
-            font-size: 14px;
-            font-weight: 500;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
-        .profile-value {
-            color: #FFFFFF;
-            font-size: 15px;
-            font-weight: 700;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
-    </style>
-    """, unsafe_allow_html=True)
+    # Generate Profile Sidebar
+    st.sidebar.markdown(f"### 👤 {T.get('student_profile', 'Student Profile')}")
+    st.sidebar.markdown(f"**Name:** {student['name']}")
+    st.sidebar.markdown(f"**USN:** {student['usn']}")
+    st.sidebar.markdown(f"**Department:** {student['department']}")
+    st.sidebar.markdown(f"**Semester:** {student['semester']}")
+    st.sidebar.markdown("---")
 
-    # ─── Welcome Header ──────────────────────────────────────────────────────
-    st.markdown(f"""
-    <div class="student-welcome">
-        <div style="display: flex; align-items: center; gap: 20px;">
-            <div style="
-                width: 64px; height: 64px;
-                background: linear-gradient(135deg, #0075FF 0%, #2CD9FF 100%);
-                border-radius: 16px;
-                display: flex; align-items: center; justify-content: center;
-                font-size: 28px; flex-shrink: 0;
-            ">🎓</div>
-            <div>
-                <div style="
-                    font-size: 28px; font-weight: 800; color: #FFFFFF;
-                    font-family: 'Plus Jakarta Sans', sans-serif;
-                    letter-spacing: -0.02em;
-                ">{T.get('welcome_student', 'Welcome')}, {s['name']}</div>
-                <div style="
-                    font-size: 14px; color: #A0AEC0; margin-top: 4px;
-                    font-family: 'Plus Jakarta Sans', sans-serif;
-                ">USN: {s['usn']}  ·  {s.get('department', 'N/A')}  ·  Semester {s.get('semester', 'N/A')}</div>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    # Safe get of predicted_marks and predicted_grade if the pipeline added them
+    pred_marks = student.get('predicted_marks', None)
+    pred_grade = student.get('predicted_grade', None)
 
-    # ─── KPI Cards Row ────────────────────────────────────────────────────────
-    att_val = round(s['attendance'], 1)
-    int_val = round(s['internal_marks'], 1)
-    sem_val = round(s['semester_marks'], 1)
-    perf_val = round(s.get('performance_index', 0), 1)
+    # ── Page Header ──────────────────────────────────────────────────────────
+    st.markdown(f'<div class="page-title">{T.get("welcome", "Welcome")}, {student["name"]}</div>', unsafe_allow_html=True)
+    st.markdown(
+        f"<div class='page-subtitle'>{T.get('student_portal_text', 'Student Dashboard')} — {student['usn']}</div>",
+        unsafe_allow_html=True,
+    )
 
-    # Attendance tier coloring
-    if att_val >= 85:
-        att_color, att_tier = "#27AE60", "Excellent"
-    elif att_val >= 75:
-        att_color, att_tier = "#2ECC71", "Good"
-    elif att_val >= 65:
-        att_color, att_tier = "#F39C12", "Average"
-    elif att_val >= 50:
-        att_color, att_tier = "#E67E22", "Warning"
-    else:
-        att_color, att_tier = "#E74C3C", "Critical"
+    if student['is_at_risk']:
+         st.markdown(
+            f'<div class="al"> {T.get("at_risk_alert", "You are currently flagged as At-Risk. Please focus on improving attendance and internals.")}</div>',
+            unsafe_allow_html=True,
+         )
+    elif student['grade_label'] in ['A', 'B']:
+         st.markdown(
+            f'<div class="al-success">Exploring excellence! Keep up the good work.</div>',
+            unsafe_allow_html=True,
+         )
 
-    # Grade and Risk
-    grade = s.get('grade_label', 'N/A')
-    risk_tier = s.get('risk_tier', 'N/A')
-    risk_score = int(s.get('risk_score', 0))
-
-    grade_colors = {"A": "#27AE60", "B": "#2980B9", "C": "#F39C12", "D": "#E67E22", "F": "#E74C3C"}
-    risk_colors = {"Low": "#27AE60", "Moderate": "#F39C12", "High": "#E67E22", "Critical": "#E74C3C"}
-
-    def _kpi_card(icon, value, label, sub, color, border_color):
-        return f"""
-        <div class="student-kpi" style="border-left: 5px solid {border_color};">
-            <div style="font-size: 22px; margin-bottom: 8px;">{icon}</div>
-            <div style="font-size: 32px; font-weight: 800; color: {color};
-                        font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.02em;">{value}</div>
-            <div style="font-size: 13px; color: #A0AEC0; text-transform: uppercase; letter-spacing: 0.1em;
-                        font-weight: 700; margin-top: 6px; font-family: 'Plus Jakarta Sans', sans-serif;">{label}</div>
-            <div style="font-size: 12px; color: #718096; margin-top: 4px;
-                        font-family: 'Plus Jakarta Sans', sans-serif;">{sub}</div>
-        </div>"""
-
+    # ── KPI Row ───────────────────────────────────────────────────────────────
     c1, c2, c3, c4 = st.columns(4)
-    with c1:
-        st.markdown(_kpi_card("📊", f"{att_val}%", T.get("your_attendance", "Attendance"), att_tier, att_color, att_color), unsafe_allow_html=True)
-    with c2:
-        st.markdown(_kpi_card("📝", f"{int_val}/50", T.get("your_internals", "Internal Marks"), "Out of 50", "#FFFFFF", "#0075FF"), unsafe_allow_html=True)
-    with c3:
-        st.markdown(_kpi_card("🏆", f"{sem_val}/200", T.get("your_semester_marks", "Semester Marks"), f"Grade: {grade}", grade_colors.get(grade, "#FFF"), grade_colors.get(grade, "#0075FF")), unsafe_allow_html=True)
-    with c4:
-        st.markdown(_kpi_card("⚡", f"{perf_val}", T.get("your_performance", "Performance Index"), f"Risk: {risk_tier}", risk_colors.get(risk_tier, "#FFF"), risk_colors.get(risk_tier, "#0075FF")), unsafe_allow_html=True)
+    r_color = RISK_COL.get(student['risk_tier'], "var(--accent)")
+    g_color = GRADE_COL.get(student['grade_label'], "var(--accent)")
+
+    _kpi(c1, f"{student['attendance']:.1f}%", T.get('attendance', 'Attendance'), "Target: > 75%", "var(--accent-amber)" if student['attendance'] < 75 else "var(--accent-teal)")
+    _kpi(c2, f"{student['semester_marks']:.0f}", T.get('total_marks', 'Semester Marks'), "/ 200", "var(--accent)")
+    _kpi(c3, student['grade_label'], T.get('current_grade', 'Grade'), "", g_color)
+    _kpi(c4, student['risk_tier'], T.get('risk_status', 'Risk Status'), "", r_color)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ─── Charts Row ───────────────────────────────────────────────────────────
-    col_left, col_right = st.columns([1.6, 1])
+    # ── Main Charts Area ──────────────────────────────────────────────────────
+    col1, col2 = st.columns([1, 1.2])
 
-    with col_left:
-        st.markdown('<div class="sh">📊 ' + T.get("marks_breakdown", "Marks Breakdown") + '</div>', unsafe_allow_html=True)
+    with col1:
+        st.markdown(f'<div class="sh">{T.get("attendance", "Attendance")} & {T.get("risk_status", "Risk")}</div>', unsafe_allow_html=True)
 
-        categories = ["Internal\nMarks", "Assignment\nScore", "Quiz\nScore", "Lab\nMarks"]
+        fig_gauge = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=student['attendance'],
+            domain={'x': [0, 1], 'y': [0, 1]},
+            title={'text': "Attendance %", 'font': {'size': 14, 'family': 'Inter'}},
+            gauge={
+                'axis': {'range': [None, 100], 'tickwidth': 1},
+                'bar': {'color': "var(--accent-teal)"},
+                'bgcolor': 'rgba(128,128,128,0.1)',
+                'borderwidth': 0,
+                'steps': [
+                    {'range': [0, 65], 'color': "rgba(224, 108, 117, 0.4)"},  # Muted pastel red
+                    {'range': [65, 75], 'color': "rgba(229, 192, 123, 0.4)"}, # Muted pastel yellow
+                    {'range': [75, 100], 'color': "rgba(129, 199, 132, 0.4)"}], # Muted pastel green
+                'threshold': {
+                    'line': {'color': "rgba(128,128,128,0.8)", 'width': 3},
+                    'thickness': 0.75,
+                    'value': 75}
+            }))
+        fig_gauge.update_layout(**_PL)
+        fig_gauge.update_layout(height=220)
+        st.plotly_chart(fig_gauge, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
+
+        st.caption("Required threshold is 75%. Minimum exam requirement is 65%.")
+
+    with col2:
+        st.markdown(f'<div class="sh">{T.get("performance_breakdown", "Performance Breakdown")}</div>', unsafe_allow_html=True)
+
+        categories = ['Internal Marks', 'Assignment', 'Quiz', 'Lab Marks']
         values = [
-            round(s['internal_marks'], 1),
-            round(s['assignment_score'], 1),
-            round(s['quiz_score'], 1),
-            round(s['lab_marks'], 1),
+            (student['internal_marks'] / 50) * 100,
+            (student['assignment_score'] / 50) * 100,
+            (student['quiz_score'] / 50) * 100,
+            (student['lab_marks'] / 50) * 100
         ]
-        max_val = 50
 
-        colors = []
-        for v in values:
-            pct = v / max_val
-            if pct >= 0.7:
-                colors.append("#27AE60")
-            elif pct >= 0.5:
-                colors.append("#F39C12")
-            else:
-                colors.append("#E74C3C")
+        # Close the radar loop
+        categories.append(categories[0])
+        values.append(values[0])
 
-        fig_marks = go.Figure()
-        fig_marks.add_trace(go.Bar(
-            x=categories, y=values,
-            marker_color=colors,
-            marker_line_width=0,
-            text=[f"{v:.1f}" for v in values],
-            textposition='outside',
-            textfont=dict(color='#A0AEC0', size=13, family='Plus Jakarta Sans'),
+        fig_radar = go.Figure(go.Scatterpolar(
+            r=values,
+            theta=categories,
+            fill='toself',
+            fillcolor='rgba(129,161,193,0.3)', # Soft Nord Blue
+            line=dict(color='var(--accent)', width=2)
         ))
-        # Add max line
-        fig_marks.add_hline(y=max_val, line_dash="dash", line_color="rgba(255,255,255,0.2)", annotation_text="Max: 50")
-        fig_marks.update_layout(
-            **PL, height=320,
-            xaxis=dict(showgrid=False, tickfont=dict(color="#A0AEC0", size=11)),
-            yaxis=dict(range=[0, max_val + 10], gridcolor="rgba(143, 155, 186, 0.1)", tickfont=dict(color="#A0AEC0")),
+
+        fig_radar.update_layout(**_PL)
+        fig_radar.update_layout(
+            height=260,
+            polar=dict(
+                bgcolor="rgba(0,0,0,0)",
+                angularaxis=dict(showline=False, gridcolor="rgba(128,128,128,0.2)"),
+                radialaxis=dict(showline=False, gridcolor="rgba(128,128,128,0.2)", range=[0, 100])
+            )
         )
-        st.plotly_chart(fig_marks, use_container_width=True, config={"displayModeBar": False})
+        st.plotly_chart(fig_radar, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
-    with col_right:
-        st.markdown('<div class="sh">📈 ' + T.get("your_attendance", "Attendance") + ' & ' + T.get("your_results", "Results") + '</div>', unsafe_allow_html=True)
-        fig_gauge = _gauge(att_val, T.get("your_attendance", "Attendance"), 100, "%", att_color)
-        st.plotly_chart(fig_gauge, use_container_width=True, config={"displayModeBar": False})
-
-    # ─── Semester Marks Gauge ─────────────────────────────────────────────────
-    col_g1, col_g2 = st.columns(2)
-    with col_g1:
-        fig_sem = _gauge(sem_val, T.get("your_semester_marks", "Semester Marks"), 200, "", grade_colors.get(grade, "#0075FF"))
-        st.plotly_chart(fig_sem, use_container_width=True, config={"displayModeBar": False})
-    with col_g2:
-        fig_perf = _gauge(perf_val, T.get("your_performance", "Performance Index"), 100, "", risk_colors.get(risk_tier, "#0075FF"))
-        st.plotly_chart(fig_perf, use_container_width=True, config={"displayModeBar": False})
-
-    # ─── Academic Profile Card ────────────────────────────────────────────────
+    # ── AI Predictions ────────────────────────────────────────────────────────
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown('<div class="sh">🎓 ' + T.get("academic_profile", "Academic Profile") + '</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="sh">🔮 {T.get("ai_predictions", "AI Performance Predictions")}</div>', unsafe_allow_html=True)
 
-    study_hrs = round(s.get('study_hours', 0), 1)
-    assignment_val = round(s['assignment_score'], 1)
-    quiz_val = round(s['quiz_score'], 1)
-    lab_val = round(s['lab_marks'], 1)
-    total_cont = round(s.get('total_continuous', 0), 1)
+    if pd.isna(pred_marks) or pd.isna(pred_grade):
+        try:
+            reg, clf = _get_models()
+            FEATURES = ['attendance', 'internal_marks', 'assignment_score', 'quiz_score', 'lab_marks', 'study_hours']
+            row = student_df[FEATURES]
 
-    # Build profile data as a table — Streamlit handles <table> reliably
-    profile_rows = [
-        ("🆔", T.get("usn_label", "USN"), str(s['usn'])),
-        ("👤", T.get("name_label", "Name"), str(s['name'])),
-        ("🏢", T.get("department_label", "Department"), str(s.get('department', 'N/A'))),
-        ("📚", T.get("semester_label", "Semester"), str(s.get('semester', 'N/A'))),
-        ("📊", T.get("your_attendance", "Attendance"), f"{att_val}% ({att_tier})"),
-        ("📝", T.get("your_internals", "Internal Marks"), f"{int_val} / 50"),
-        ("📋", "Assignment Score", f"{assignment_val} / 50"),
-        ("❓", "Quiz Score", f"{quiz_val} / 50"),
-        ("🔬", "Lab Marks", f"{lab_val} / 50"),
-        ("🏆", T.get("your_semester_marks", "Semester Marks"), f"{sem_val} / 200"),
-        ("📐", "Total Continuous Assessment", f"{total_cont} / 200"),
-        ("⏰", "Study Hours / Day", f"{study_hrs} hrs"),
-        ("🅰️", "Grade", str(grade)),
-        ("⚠️", "Risk Level", str(risk_tier)),
-        ("⚡", T.get("your_performance", "Performance Index"), f"{perf_val} / 100"),
-    ]
+            best_reg = reg['trained_models'][reg['best_model']]
+            is_lin   = reg['best_model'] == 'Linear Regression'
+            X_in     = reg['scaler'].transform(row) if is_lin else row
+            pred_marks = float(best_reg.predict(X_in)[0])
 
-    table_rows_html = ""
-    for icon, label, value in profile_rows:
-        table_rows_html += f"""<tr>
-            <td style="padding:14px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); color:#A0AEC0; font-size:14px; font-weight:500;">{icon} {label}</td>
-            <td style="padding:14px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); color:#FFFFFF; font-size:15px; font-weight:700; text-align:right;">{value}</td>
-        </tr>"""
+            best_clf_m = clf['trained_models'][clf['best_model']]
+            is_log     = clf['best_model'] == 'Logistic Regression'
+            X_clf      = clf['scaler'].transform(row) if is_log else row
+            pred_grade = clf['label_encoder'].inverse_transform(best_clf_m.predict(X_clf))[0]
+        except Exception as e:
+            pred_marks = 0
+            pred_grade = "N/A"
 
-    profile_table = f"""<table style="
-        width: 100%;
-        border-collapse: collapse;
-        background: linear-gradient(127.09deg, rgba(6,11,40,0.94) 19.41%, rgba(10,14,35,0.49) 76.65%);
-        backdrop-filter: blur(120px);
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 20px;
-        overflow: hidden;
-        box-shadow: 0px 20px 40px rgba(0,0,0,0.2);
-        font-family: 'Plus Jakarta Sans', sans-serif;
-    ">{table_rows_html}</table>"""
+    pc1, pc2, pc3 = st.columns(3)
+    _kpi(pc1, f"{pred_marks:.1f}", "Predicted Marks", "End of semester model estimate", "var(--accent-light)")
+    _kpi(pc2, pred_grade, "Predicted Grade", "", GRADE_COL.get(pred_grade, "#FFFFFF"))
 
-    st.markdown(profile_table, unsafe_allow_html=True)
+    # Construct recommendation text based on models
+    with pc3:
+        st.markdown('<div class="glass-card" style="padding: 16px;">', unsafe_allow_html=True)
+        st.markdown("**Personalized Recommendation**", unsafe_allow_html=True)
+        if pred_grade in ['D', 'F'] or student['is_at_risk']:
+            st.markdown("<span style='color:#fca5a5;font-size:13px'>Focus immediately on improving internal marks. "
+                        "Seek help from faculty for upcoming assignments. Your current trajectory indicates a significant risk of failing.</span>", unsafe_allow_html=True)
+        elif pred_grade == 'C':
+            st.markdown("<span style='color:#A0AEC0;font-size:13px'>You are on track to pass, but margins are thin. "
+                        "A slight increase in study hours (try +1 hr/day) could confidently push you to a B.</span>", unsafe_allow_html=True)
+        else:
+            st.markdown("<span style='color:#86efac;font-size:13px'>Subject mastery is excellent. "
+                        "Maintain current attendance and study habits. Consider participating in advanced labs.</span>", unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)

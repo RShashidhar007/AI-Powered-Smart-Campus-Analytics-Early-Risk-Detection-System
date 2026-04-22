@@ -9,23 +9,12 @@ from config      import DATA_PATH, DEPARTMENTS, SEMESTERS, CURRENT_ACADEMIC_YEAR
 from data_pro    import run_pipeline, run_pipeline_from_db, get_at_risk_students, upsert_student_data, filter_dataframe
 from file_ingest import process_uploaded_file
 from language    import TEXTS
+from ui_theme import PAGE_CSS, GRADE_COL, RISK_COL, DEPT_COL, PL as _PL, PL, kpi_card as _kpi, section_header as _sh
 
-GRADE_COL = {"A": "#1e8449", "B": "#1a5276", "C": "#b7770d", "D": "#d35400", "F": "#c0392b"}
-RISK_COL  = {"Low": "#1e8449", "Moderate": "#b7770d", "High": "#d35400", "Critical": "#c0392b"}
-PL = dict(font_family="DM Sans,sans-serif", font_color="#8f9bba",
-          plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-          margin=dict(l=8, r=8, t=32, b=8), showlegend=False)
+# ── Design system ─────────────────────────────────────────────────────────────
 
+# ── Colour maps & Plotly Theme ────────────────────────────────────────────────
 
-def _kpi(col, val, label, sub="", color="#4318ff", highlight=False):
-    style_str = "border-left: 6px solid #4318ff;" if highlight else ""
-    col.markdown(
-        f'<div class="kpi" style="{style_str}">'
-        f'<div class="kv" style="color:{color}">{val}</div>'
-        f'<div class="kl">{label}</div>'
-        f'<div class="ks">{sub}</div></div>',
-        unsafe_allow_html=True,
-    )
 
 
 @st.cache_data(show_spinner=False)
@@ -36,8 +25,8 @@ def _load():
         df = run_pipeline(DATA_PATH)
     return df
 
-
 def render_students_page():
+    st.markdown(PAGE_CSS, unsafe_allow_html=True)
     T = TEXTS[st.session_state.language]
     full_df = _load()
 
@@ -47,9 +36,9 @@ def render_students_page():
     df = filter_dataframe(full_df, sel_dept, sel_sem)
     at_risk = get_at_risk_students(df)
 
-    st.markdown("## At-Risk Students")
+    st.markdown('<div class="page-title">At-Risk Students</div>', unsafe_allow_html=True)
     st.markdown(
-        "<div style='color:var(--muted-color,#888);font-size:13px;margin-bottom:20px'>"
+        "<div class='page-subtitle'>"
         "Early warning list · sorted by risk score</div>",
         unsafe_allow_html=True,
     )
@@ -67,11 +56,11 @@ def render_students_page():
 
     # Summary KPIs
     s1, s2, s3, s4 = st.columns(4)
-    _kpi(s1, len(flt),                                     "Students",       "", "#5b5ef4")
-    _kpi(s2, int((flt['risk_tier'] == 'Critical').sum()),   "Critical",       "", "#c0392b")
-    _kpi(s3, int((flt['risk_tier'] == 'High').sum()),       "High Risk",      "", "#d35400")
+    _kpi(s1, len(flt),                                     "Students",       "", "var(--accent)")
+    _kpi(s2, int((flt['risk_tier'] == 'Critical').sum()),   "Critical",       "", "var(--accent-red)")
+    _kpi(s3, int((flt['risk_tier'] == 'High').sum()),       "High Risk",      "", "var(--accent-amber)")
     _kpi(s4, f"{flt['attendance'].mean():.1f}%" if len(flt) else "—",
-         "Avg Attendance", "", "#b7770d")
+         "Avg Attendance", "", "var(--accent-amber)")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -81,11 +70,12 @@ def render_students_page():
         st.markdown('<div class="sh">Risk score distribution</div>', unsafe_allow_html=True)
         if len(at_risk) > 0:
             fh = px.histogram(at_risk, x='risk_score', nbins=10,
-                              color_discrete_sequence=['#5b5ef4'])
-            fh.update_layout(**PL, height=200,
-                             xaxis=dict(title='Risk Score', gridcolor='rgba(143, 155, 186, 0.1)'),
-                             yaxis=dict(title='Students', gridcolor='rgba(143, 155, 186, 0.1)'))
-            st.plotly_chart(fh, use_container_width=True, config={'displayModeBar': False})
+                              color_discrete_sequence=['var(--accent)'])
+            fh.update_layout(**_PL)
+            fh.update_layout(height=200,
+                             xaxis=dict(title='Risk Score', showgrid=True),
+                             yaxis=dict(title='Students', showgrid=True))
+            st.plotly_chart(fh, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
     with ch2:
         st.markdown('<div class="sh">Grade breakdown (at-risk)</div>', unsafe_allow_html=True)
@@ -93,22 +83,21 @@ def render_students_page():
             ag = at_risk['grade_label'].value_counts().reindex(['A', 'B', 'C', 'D', 'F']).fillna(0)
             fa = px.bar(x=ag.index, y=ag.values, color=ag.index,
                         color_discrete_map=GRADE_COL, text=ag.values.astype(int))
-            fa.update_traces(textposition='outside', marker_line_width=0)
-            fa.update_layout(**PL, height=200,
-                             xaxis=dict(showgrid=False), yaxis=dict(gridcolor='rgba(143, 155, 186, 0.1)'))
-            st.plotly_chart(fa, use_container_width=True, config={'displayModeBar': False})
+            fa.update_traces(textposition='outside', marker_line_width=1, marker_line_color='rgba(0,0,0,0.1)')
+            fa.update_layout(**_PL)
+            fa.update_layout(height=200, xaxis=dict(showgrid=False))
+            st.plotly_chart(fa, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
     # Data table
     st.markdown('<div class="sh">Student list</div>', unsafe_allow_html=True)
 
     def _tc(v):
-        bg = {'Critical': '#fde8e8', 'High': '#fef0e0', 'Moderate': '#fef9e0', 'Low': '#e8f8f0'}
-        fg = {'Critical': '#c0392b', 'High': '#d35400', 'Moderate': '#b7770d', 'Low': '#1e8449'}
-        return f'background:{bg.get(v,"#fff")};color:{fg.get(v,"#333")};font-weight:600'
+        bg = {'Critical': 'rgba(231,76,60,0.2)', 'High': 'rgba(230,126,34,0.2)', 'Moderate': 'rgba(243,156,18,0.2)', 'Low': 'rgba(39,174,96,0.2)'}
+        return f'background:{bg.get(v,"transparent")};color:{RISK_COL.get(v,"#FFFFFF")};font-weight:600;border:1px solid {RISK_COL.get(v,"#E2E8F0")}'
 
     def _gc(v):
-        bg = {'A': '#e8f8f0', 'B': '#e8f2fc', 'C': '#fef9e0', 'D': '#fef0e0', 'F': '#fde8e8'}
-        return f'background:{bg.get(v,"#fff")};color:{GRADE_COL.get(v,"#333")};font-weight:600'
+        bg = {'A': 'rgba(39,174,96,0.2)', 'B': 'rgba(46,134,171,0.2)', 'C': 'rgba(244,162,97,0.2)', 'D': 'rgba(230,126,34,0.2)', 'F': 'rgba(231,76,60,0.2)'}
+        return f'background:{bg.get(v,"transparent")};color:{GRADE_COL.get(v,"#FFFFFF")};font-weight:600;border:1px solid {GRADE_COL.get(v,"#E2E8F0")}'
 
     sc = ['usn', 'name', 'department', 'semester', 'attendance', 'internal_marks', 'semester_marks',
           'study_hours', 'risk_score', 'risk_tier', 'grade_label', 'performance_index']
@@ -131,12 +120,23 @@ def render_students_page():
         elif c == 'Risk Score':
             fmt_dict[c] = '{:.0f}'
 
-    styled = (disp.style
-              .applymap(_tc, subset=['Tier'] if 'Tier' in disp.columns else [])
-              .applymap(_gc, subset=['Grade'] if 'Grade' in disp.columns else [])
-              .format(fmt_dict)
-              .bar(subset=['Risk Score'] if 'Risk Score' in disp.columns else [], color='#fde8e8', vmin=0, vmax=100)
-              .set_properties(**{'font-size': '12px'}))
+    styled = disp.style
+    
+    # Handle pandas 2.1+ applymap deprecation safely by using .map if available, else .applymap
+    map_func = styled.map if hasattr(styled, 'map') else styled.applymap
+    
+    if 'Tier' in disp.columns:
+        styled = map_func(_tc, subset=['Tier'])
+    if 'Grade' in disp.columns:
+        styled = map_func(_gc, subset=['Grade'])
+        
+    styled = styled.format(fmt_dict)
+    
+    if 'Risk Score' in disp.columns:
+        styled = styled.bar(subset=['Risk Score'], color='rgba(231,76,60,0.6)', vmin=0, vmax=100)
+        
+    styled = styled.set_properties(**{'font-size': '12px', 'background-color': 'transparent', 'color': '#F8FAFC'})
+              
     st.dataframe(styled, use_container_width=True, height=420)
     st.download_button("⬇ Download CSV", flt.to_csv(index=False),
                        "at_risk_students.csv", "text/csv")
@@ -189,7 +189,7 @@ def render_students_page():
                     'semester_marks':   new_semester,
                     'study_hours':      new_study,
                 }])
-                # Upsert into CSV
+                # Upsert into CSV (Legacy fallback if needed, but db handled in upsert_student_data)
                 upsert_student_data(new_row, DATA_PATH)
                 # Clear all cached data so every page picks up the new student
                 st.cache_data.clear()

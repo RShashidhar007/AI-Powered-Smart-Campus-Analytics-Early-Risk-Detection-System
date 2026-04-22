@@ -1,5 +1,5 @@
-"""
-Smart Campus Analytics — Streamlit Dashboard
+﻿"""
+Smart Campus Analytics â€” Streamlit Dashboard
 =============================================
 Run:      streamlit run app.py
 Install:  pip install -r requirements.txt
@@ -58,26 +58,17 @@ if st.session_state.get("user_role") == "student":
     T = TEXTS[st.session_state.language]
     set_styles()
 
-    # ── Header ──
-    header_col1, header_col2 = st.columns([0.5, 5])
-    with header_col1:
-        logo_path = os.path.join(os.path.dirname(__file__), "assets", "yangzhou_logo.png")
-        if os.path.exists(logo_path):
-            st.image(logo_path, width=80)
-        else:
-            st.markdown("<div style='font-size: 60px; margin-top: -15px;'>🎓</div>", unsafe_allow_html=True)
-    with header_col2:
-        st.markdown(f"""
-        <div class="dashboard-header">
-            <div class="header-title">{T['main_title']}</div>
-            <div class="header-subtitle">{T.get('student_portal_text', 'Student Portal')}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # ── Top Controls Row ──
+    # Header
+    st.markdown(f"""
+    <div class="dashboard-header">
+        <div class="header-title">{T['main_title']}</div>
+        <div class="header-subtitle">{T.get('student_portal_text', 'Student Portal')}</div>
+    </div>
+    """, unsafe_allow_html=True)
+    # Top Controls Row â”€â”€
     col_spacer, col_lang, col_logout = st.columns([5, 1, 1])
     with col_lang:
-        lang_options = ["English", "हिन्दी", "ಕನ್ನಡ"]
+        lang_options = ["English", "à¤¹à¤¿à¤¨à¥à¤¦à¥€", "à²•à²¨à³à²¨à²¡"]
 
         def _on_lang_change():
             st.session_state.language = st.session_state.student_language_selector
@@ -100,10 +91,10 @@ if st.session_state.get("user_role") == "student":
 
     st.divider()
 
-    # ── Render Student Dashboard ──
+    # â”€â”€ Render Student Dashboard â”€â”€
     render_student_dashboard()
 
-    st.markdown("<hr style='border: 1px solid #2874A6;'>", unsafe_allow_html=True)
+    st.markdown("<hr style='border: 1px solid var(--border);'>", unsafe_allow_html=True)
     st.caption(T["footer"])
     st.stop()
 
@@ -117,28 +108,19 @@ if st.session_state.get("authenticated", True):
     # 1. Apply Dynamic CSS based on state
     set_styles()
 
-    # 2. Professional Header Section with Logo (clickable → Home)
-    header_col1, header_col2 = st.columns([0.5, 5])
-    with header_col1:
-        logo_path = os.path.join(os.path.dirname(__file__), "assets", "yangzhou_logo.png")
-        if os.path.exists(logo_path):
-            st.image(logo_path, width=80)
-        else:
-            st.markdown("<div style='font-size: 60px; margin-top: -15px;'>🎓</div>", unsafe_allow_html=True)
-    with header_col2:
-        st.markdown(f"""
-        <div class="dashboard-header" style="cursor:pointer;" onclick="window.parent.location.assign(window.parent.location.pathname + '?reset=1');">
-            <div class="header-title">{T['main_title']}</div>
-            <div class="header-subtitle">{T['subtitle']}</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # 3. Top Controls Row (User Info, Language, Logout)
+    # Header
+    st.markdown(f"""
+    <div class="dashboard-header" style="cursor:pointer;" onclick="window.parent.location.assign(window.parent.location.pathname + '?reset=1');">
+        <div class="header-title">{T['main_title']}</div>
+        <div class="header-subtitle">{T['subtitle']}</div>
+    </div>
+    """, unsafe_allow_html=True)
+    # Top Controls Row (User Info, Language, Logout)
     col_spacer, col_user, col_lang, col_logout = st.columns([4, 1.5, 1, 1])
     with col_user:
         st.markdown(f"<p style='text-align: right; margin-top: 10px; font-weight: 600;'>{T['hi_teacher']}</p>", unsafe_allow_html=True)
     with col_lang:
-        lang_options = ["English", "हिन्दी", "ಕನ್ನಡ"]
+        lang_options = ["English", "à¤¹à¤¿à¤¨à¥à¤¦à¥€", "à²•à²¨à³à²¨à²¡"]
 
         def _on_lang_change():
             st.session_state.language = st.session_state.dashboard_language_selector
@@ -159,7 +141,7 @@ if st.session_state.get("authenticated", True):
             st.session_state.prediction_history = []
             st.rerun()
 
-    # 4. System Status — filtered by selected department & semester
+    # 4. System Status â€” filtered by selected department & semester
     from config import PREDICTION_ACCURACY, DATA_PATH, CURRENT_ACADEMIC_YEAR
     from data_pro import run_pipeline, run_pipeline_from_db, get_summary_stats, filter_dataframe
     from database import get_available_years, init_db
@@ -190,12 +172,12 @@ if st.session_state.get("authenticated", True):
     if sel_dept != "All":
         filter_label += f"{sel_dept}"
     if sel_sem != "All":
-        filter_label += f" · Sem {sel_sem}"
+        filter_label += f" Â· Sem {sel_sem}"
     if not filter_label:
-        filter_label = "All Departments · All Semesters"
+        filter_label = "All Departments Â· All Semesters"
 
-    st.markdown(f"<h3 style='color: var(--main-text-color); margin-bottom: 5px;'>{T['system_status']}</h3>", unsafe_allow_html=True)
-    st.markdown(f"<div style='color:var(--muted-color,#888);font-size:12px;margin-bottom:12px'>📍 {filter_label}</div>", unsafe_allow_html=True)
+    st.markdown(f"<h3 style='color: var(--text-primary); margin-bottom: 5px;'>{T['system_status']}</h3>", unsafe_allow_html=True)
+    st.markdown(f"<div style='color: var(--text-muted); font-size:12px; margin-bottom:12px'>ðŸ“ {filter_label}</div>", unsafe_allow_html=True)
 
     c1, c2, c3, c4 = st.columns(4)
 
@@ -209,7 +191,7 @@ if st.session_state.get("authenticated", True):
 
     with c2:
         st.markdown(f"""
-        <div class="stat-card" style="border-left: 6px solid #C0392B; margin-bottom: 0;">
+        <div class="stat-card" style="border-left: 4px solid var(--accent-red); margin-bottom: 0;">
             <div class="stat-title">{T['at_risk']}</div>
             <div class="stat-number" id="stat-at-risk">{AT_RISK_STUDENTS}</div>
         </div>
@@ -217,7 +199,7 @@ if st.session_state.get("authenticated", True):
 
     with c3:
         st.markdown(f"""
-        <div class="stat-card" style="border-left: 6px solid #27AE60; margin-bottom: 0;">
+        <div class="stat-card" style="border-left: 4px solid var(--accent-teal); margin-bottom: 0;">
             <div class="stat-title">{T['on_track']}</div>
             <div class="stat-number" id="stat-on-track">{ON_TRACK_STUDENTS}</div>
         </div>
@@ -225,7 +207,7 @@ if st.session_state.get("authenticated", True):
 
     with c4:
         st.markdown(f"""
-        <div class="stat-card" style="border-left: 6px solid #F39C12; margin-bottom: 0;">
+        <div class="stat-card" style="border-left: 4px solid var(--accent-amber); margin-bottom: 0;">
             <div class="stat-title">{T['accuracy']}</div>
             <div class="stat-number" id="stat-accuracy">{PREDICTION_ACCURACY}</div>
         </div>
@@ -235,8 +217,8 @@ if st.session_state.get("authenticated", True):
 
     # 5. Sidebar with Filters + Navigation
     with st.sidebar:
-        # ── Department & Semester Filters ──
-        st.markdown("<h4 style='color: var(--main-text-color); margin-bottom: 8px;'>🏫 Filters</h4>", unsafe_allow_html=True)
+        # â”€â”€ Department & Semester Filters â”€â”€
+        st.markdown("<h4 style='color: var(--text-primary); margin-bottom: 8px;'>ðŸ« Filters</h4>", unsafe_allow_html=True)
 
         dept_options = ["All"] + DEPARTMENTS
         def _on_dept_change():
@@ -248,7 +230,7 @@ if st.session_state.get("authenticated", True):
             key="_sidebar_dept",
             index=dept_options.index(st.session_state.selected_department),
             on_change=_on_dept_change,
-            format_func=lambda x: f"All Departments" if x == "All" else f"{x} — {DEPT_FULL_NAMES.get(x, x)}",
+            format_func=lambda x: f"All Departments" if x == "All" else f"{x} â€” {DEPT_FULL_NAMES.get(x, x)}",
         )
 
         sem_options = ["All"] + [str(s) for s in SEMESTERS]
@@ -264,12 +246,12 @@ if st.session_state.get("authenticated", True):
             format_func=lambda x: "All Semesters" if x == "All" else f"Semester {x}",
         )
 
-        st.markdown("<hr style='border: 1px solid var(--border-color); margin: 12px 0;'>", unsafe_allow_html=True)
+        st.markdown("<hr style='border: 1px solid var(--border); margin: 12px 0;'>", unsafe_allow_html=True)
 
 
 
-        # ── Navigation ──
-        st.markdown(f"<h4 style='color: var(--main-text-color); margin-bottom: 8px;'>Menu</h4>", unsafe_allow_html=True)
+        # â”€â”€ Navigation â”€â”€
+        st.markdown(f"<h4 style='color: var(--text-primary); margin-bottom: 8px;'>Menu</h4>", unsafe_allow_html=True)
         st.session_state.page = st.radio(
             "Navigation",
             options=T["nav_options"],
@@ -298,8 +280,9 @@ if st.session_state.get("authenticated", True):
     elif page_key == "Settings":
         render_settings_page()
 
-    st.markdown("<hr style='border: 1px solid #2874A6;'>", unsafe_allow_html=True)
+    st.markdown("<hr style='border: 1px solid var(--border);'>", unsafe_allow_html=True)
     st.caption(T["footer"])
 
     # Floating AI Agent (visible on every page)
     render_ai_agent()
+

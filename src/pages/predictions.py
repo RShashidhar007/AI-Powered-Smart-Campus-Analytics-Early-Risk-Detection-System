@@ -13,24 +13,11 @@ from ml_models import (
     FEATURES, train_regression_models, train_classification_models,
 )
 from language  import TEXTS
+from ui_theme import PAGE_CSS, GRADE_COL, RISK_COL, DEPT_COL, PL as _PL, PL, kpi_card as _kpi, section_header as _sh
 
-# ── Colour maps ───────────────────────────────────────────────────────────────
-GRADE_COL = {"A": "#1e8449", "B": "#1a5276", "C": "#b7770d", "D": "#d35400", "F": "#c0392b"}
-RISK_COL  = {"Low": "#1e8449", "Moderate": "#b7770d", "High": "#d35400", "Critical": "#c0392b"}
-PL = dict(font_family="DM Sans,sans-serif", font_color="#8f9bba",
-          plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-          margin=dict(l=8, r=8, t=32, b=8))
+# ── Design system ─────────────────────────────────────────────────────────────
 
-
-def _kpi(col, val, label, sub="", color="#4318ff", highlight=False):
-    style_str = "border-left: 6px solid #4318ff;" if highlight else ""
-    col.markdown(
-        f'<div class="kpi" style="{style_str}">'
-        f'<div class="kv" style="color:{color}">{val}</div>'
-        f'<div class="kl">{label}</div>'
-        f'<div class="ks">{sub}</div></div>',
-        unsafe_allow_html=True,
-    )
+# ── Colour maps & Plotly Theme ────────────────────────────────────────────────
 
 
 # ── Cached loaders ────────────────────────────────────────────────────────────
@@ -56,8 +43,9 @@ def _train_clf(dept, sem):
         df = _load_df()
     return train_classification_models(df)
 
-
 def render_predictions_page():
+    st.markdown(PAGE_CSS, unsafe_allow_html=True)
+    
     T  = TEXTS[st.session_state.language]
 
     sel_dept = st.session_state.get('selected_department', 'All')
@@ -70,9 +58,9 @@ def render_predictions_page():
     if sel_sem != 'All': filter_label.append(f"Sem {sel_sem}")
     filter_str = " · ".join(filter_label) if filter_label else "All Departments"
 
-    st.markdown(f"## {T.get('predictions_title', 'Predictions & ML Models')}")
+    st.markdown(f'<div class="page-title">{T.get("predictions_title", "Predictions & ML Models")}</div>', unsafe_allow_html=True)
     st.markdown(
-        f"<div style='color:var(--muted-color,#888);font-size:13px;margin-bottom:20px'>"
+        f"<div class='page-subtitle'>"
         f"{T.get('predictions_subtitle', 'Regression · Classification · Feature importance · Single-student predictor')} · {filter_str}</div>",
         unsafe_allow_html=True,
     )
@@ -81,15 +69,15 @@ def render_predictions_page():
         reg = _train_reg(sel_dept, sel_sem)
         clf = _train_clf(sel_dept, sel_sem)
 
-    tab_reg, tab_clf, tab_fi, tab_pred = st.tabs([
-        T.get('tab_reg', '📉 Regression'), 
-        T.get('tab_clf', '🏷 Classification'), 
-        T.get('tab_fi', '⭐ Feature Importance'), 
-        T.get('tab_pred', '🔮 Predict Student')
-    ])
+    tab_reg_name  = T.get('tab_reg', ' Regression')
+    tab_clf_name  = T.get('tab_clf', ' Classification')
+    tab_fi_name   = T.get('tab_fi', ' Feature Importance')
+    tab_pred_name = T.get('tab_pred', ' Predict Student')
 
-    # ── Regression ────────────────────────────────────────────────────────────
-    with tab_reg:
+    active_tab = st.radio("View", [tab_reg_name, tab_clf_name, tab_fi_name, tab_pred_name], horizontal=True, label_visibility="collapsed")
+
+    # ── Regression ─────────────────────────────────────────────────────────────
+    if active_tab == tab_reg_name:
         st.markdown(f"#### {T.get('pred_sem_marks', 'Predicting semester marks')}")
         results   = reg['results']
         best_name = reg['best_model']
@@ -97,9 +85,9 @@ def render_predictions_page():
         for i, (name, m) in enumerate(results.items()):
             ib = name == best_name
             _kpi(cols[i], m['R2'], name, f"RMSE {m['RMSE']} · MAE {m['MAE']}",
-                 "#1e8449" if ib else "#333", ib)
+                 "var(--accent-teal)" if ib else "#FFFFFF", ib)
         st.markdown("<br>", unsafe_allow_html=True)
-        st.success(f"✅ Best: **{best_name}** — R² = **{results[best_name]['R2']}** "
+        st.success(f"Best: **{best_name}** — R² = **{results[best_name]['R2']}** "
                    f"(explains {results[best_name]['R2']*100:.1f}% of variance)")
 
         # Actual vs Predicted scatter
@@ -117,19 +105,18 @@ def render_predictions_page():
                          title=T.get('actual_vs_predicted', 'Actual vs Predicted'))
         mn, mx = smp['semester_marks'].min(), smp['semester_marks'].max()
         fap.add_trace(go.Scatter(x=[mn, mx], y=[mn, mx], mode='lines',
-                                 line=dict(color='#c0392b', dash='dash', width=1.5),
+                                 line=dict(color='rgba(255,100,100,0.8)', dash='dash', width=2),
                                  name='Perfect fit', showlegend=True))
-        fap.update_layout(font_family="DM Sans,sans-serif", font_color="#8f9bba",
-                          plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-                          margin=dict(l=8, r=8, t=32, b=8),
+        fap.update_layout(**_PL)
+        fap.update_layout(
                           height=340, showlegend=True,
                           legend=dict(orientation='h', y=-0.2, font_size=11),
-                          xaxis=dict(gridcolor='rgba(143, 155, 186, 0.1)'), yaxis=dict(gridcolor='rgba(143, 155, 186, 0.1)'),
-                          title_font_size=13)
-        st.plotly_chart(fap, use_container_width=True, config={'displayModeBar': False})
+                          title_font_size=13,
+                          xaxis=dict(showgrid=True), yaxis=dict(showgrid=True))
+        st.plotly_chart(fap, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
-    # ── Classification ────────────────────────────────────────────────────────
-    with tab_clf:
+    # ── Classification ─────────────────────────────────────────────────────────
+    elif active_tab == tab_clf_name:
         st.markdown(f"#### {T.get('pred_grade_af', 'Predicting grade A–F')}")
         clf_results = clf['results']
         best_c      = clf['best_model']
@@ -137,7 +124,7 @@ def render_predictions_page():
         for i, (name, m) in enumerate(clf_results.items()):
             ib = name == best_c
             _kpi(cols2[i], f"{m['Accuracy']*100:.1f}%", name, "Accuracy",
-                 "#1a5276" if ib else "#333", ib)
+                 "var(--accent-light)" if ib else "#FFFFFF", ib)
         st.markdown("<br>", unsafe_allow_html=True)
 
         best_cm = np.array(clf_results[best_c]['Confusion'])
@@ -146,17 +133,18 @@ def render_predictions_page():
                         color_continuous_scale='Blues',
                         text_auto=True, aspect='auto',
                         title=f"{T.get('confusion_matrix', 'Confusion Matrix')} — {best_c}")
-        fcm.update_layout(**PL, height=360, coloraxis_showscale=False,
+        fcm.update_layout(**_PL)
+        fcm.update_layout(height=360, coloraxis_showscale=False,
                           xaxis_title="Predicted", yaxis_title="Actual",
                           title_font_size=13)
-        st.plotly_chart(fcm, use_container_width=True, config={'displayModeBar': False})
+        st.plotly_chart(fcm, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
-    # ── Feature Importance ────────────────────────────────────────────────────
-    with tab_fi:
+    # ── Feature Importance ─────────────────────────────────────────────────────
+    elif active_tab == tab_fi_name:
         ca, cb = st.columns(2)
         for col_widget, fi_data, title, cscale in [
-            (ca, reg['feature_importance'], 'Regression',     ['#e8f2fc', '#1a5276']),
-            (cb, clf['feature_importance'], 'Classification', ['#e8f8f0', '#1e8449']),
+            (ca, reg['feature_importance'], 'Regression',     ['#10153D', 'var(--accent)']),
+            (cb, clf['feature_importance'], 'Classification', ['#10153D', 'var(--accent-teal)']),
         ]:
             with col_widget:
                 st.markdown(f"**{title} ({T.get('random_forest', 'Random Forest')})**")
@@ -166,13 +154,15 @@ def render_predictions_page():
                 }).sort_values('Importance', ascending=True)
                 ffi = px.bar(fidf, x='Importance', y='Feature', orientation='h',
                              color='Importance', color_continuous_scale=cscale)
-                ffi.update_layout(**PL, height=280, coloraxis_showscale=False,
-                                  xaxis=dict(gridcolor='rgba(143, 155, 186, 0.1)'), yaxis=dict(showgrid=False))
-                st.plotly_chart(ffi, use_container_width=True, config={'displayModeBar': False})
-        st.success("🔑 **Internal marks** is the most important feature in both models.")
+                ffi.update_traces(marker_line_width=1, marker_line_color='rgba(0,0,0,0.1)')
+                ffi.update_layout(**_PL)
+                ffi.update_layout(height=280, coloraxis_showscale=False,
+                                  xaxis=dict(showgrid=True), yaxis=dict(showgrid=False))
+                st.plotly_chart(ffi, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
+        st.success(" **Internal marks** is the most important feature in both models.")
 
     # ── Predict single student ────────────────────────────────────────────────
-    with tab_pred:
+    elif active_tab == tab_pred_name:
         st.markdown(f"#### {T.get('enter_student_details', 'Enter student details')}")
         rc1, rc2, rc3 = st.columns(3)
         attendance       = rc1.slider("Attendance %",       0.0, 100.0, 72.0, 0.5)
@@ -202,8 +192,8 @@ def render_predictions_page():
             pred_grade = clf['label_encoder'].inverse_transform(best_clf_m.predict(X_clf))[0]
 
             c1, c2 = st.columns(2)
-            _kpi(c1, f"{pred_marks:.1f}", "Predicted Marks", "out of 200", "#4318ff", True)
-            _kpi(c2, pred_grade, "Predicted Grade", "", GRADE_COL.get(pred_grade, "#333"))
+            _kpi(c1, f"{pred_marks:.1f}", "Predicted Marks", "out of 200", "var(--accent)", True)
+            _kpi(c2, pred_grade, "Predicted Grade", "", GRADE_COL.get(pred_grade, "#FFFFFF"))
 
             # Store in prediction history
             st.session_state.prediction_history.append({

@@ -1,5 +1,5 @@
-"""
-pages/year_comparison.py — Year-over-Year comparison dashboard.
+﻿"""
+pages/year_comparison.py â€” Year-over-Year comparison dashboard.
 
 Compares current year data with a previous year, showing delta KPIs,
 side-by-side charts, and student-level improvement tracking.
@@ -13,14 +13,11 @@ from config   import CURRENT_ACADEMIC_YEAR, DEPARTMENTS, DEPT_FULL_NAMES
 from data_pro import run_pipeline_from_db, filter_dataframe, get_summary_stats
 from database import get_available_years
 from language import TEXTS
+from ui_theme import PAGE_CSS, GRADE_COL, RISK_COL, DEPT_COL, PL as _PL, PL, kpi_card as _kpi, section_header as _sh
 
-# ── Colour maps ───────────────────────────────────────────────────────────────
-GRADE_COL = {"A": "#1e8449", "B": "#1a5276", "C": "#b7770d", "D": "#d35400", "F": "#c0392b"}
-RISK_COL  = {"Low": "#1e8449", "Moderate": "#b7770d", "High": "#d35400", "Critical": "#c0392b"}
-DEPT_COL  = {"CSE": "#5b5ef4", "ECE": "#e84855", "ME": "#f4a261", "CE": "#2ec4b6", "ISE": "#9b59b6"}
-PL = dict(font_family="DM Sans,sans-serif", font_color="#8f9bba",
-          plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-          margin=dict(l=8, r=8, t=32, b=8))
+# â”€â”€ Design system â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+# â”€â”€ Colour maps & Plotly Theme â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 
 def _delta_kpi(col, label, curr_val, prev_val, suffix="", fmt=".1f",
@@ -33,40 +30,41 @@ def _delta_kpi(col, label, curr_val, prev_val, suffix="", fmt=".1f",
         delta = curr_val - prev_val
         pct   = (delta / abs(prev_val)) * 100
         is_good = (delta < 0) if invert else (delta > 0)
-        arrow = "▲" if delta > 0 else "▼" if delta < 0 else "—"
-        color = "#27AE60" if is_good else "#E74C3C" if not is_good and delta != 0 else "#888"
+        arrow = "â–²" if delta > 0 else "â–¼" if delta < 0 else "â€”"
+        color = "var(--accent-teal)" if is_good else "var(--accent-red)" if not is_good and delta != 0 else "#888"
         delta_str = f'<span style="color:{color};font-size:13px">{arrow} {abs(delta):{fmt}}{suffix} ({abs(pct):.1f}%)</span>'
     else:
         delta_str = '<span style="color:#888;font-size:12px">No prev. data</span>'
 
     col.markdown(
         f'<div class="kpi">'
-        f'<div class="kv" style="color:#5b5ef4">{curr_val:{fmt}}{suffix}</div>'
+        f'<div class="kv" style="color:#0075FF">{curr_val:{fmt}}{suffix}</div>'
         f'<div class="kl">{label}</div>'
         f'<div style="margin-top:4px">{delta_str}</div>'
         f'</div>',
         unsafe_allow_html=True,
     )
 
-
 def render_year_comparison_page():
+    st.markdown(PAGE_CSS, unsafe_allow_html=True)
+    
     T  = TEXTS[st.session_state.language]
     years = get_available_years()
 
-    st.markdown(f"## {T.get('yoy_title', '📅 Year-over-Year Comparison')}")
+    st.markdown(f'<div class="page-title">{T.get("yoy_title", "ðŸ“… Year-over-Year Comparison")}</div>', unsafe_allow_html=True)
     st.markdown(
-        f"<div style='color:var(--muted-color,#888);font-size:13px;margin-bottom:20px'>"
-        f"{T.get('yoy_subtitle', 'Compare academic performance across years · Identify trends · Track improvements')}</div>",
+        f"<div class='page-subtitle'>"
+        f"{T.get('yoy_subtitle', 'Compare academic performance across years Â· Identify trends Â· Track improvements')}</div>",
         unsafe_allow_html=True,
     )
 
     if len(years) < 2:
-        st.warning("⚠️ At least **two academic years** of data are needed for comparison. "
+        st.warning("âš ï¸ At least **two academic years** of data are needed for comparison. "
                     "Currently available: " + (", ".join(years) if years else "none"))
-        st.info("💡 Use the migration script or add data for another year to enable comparisons.")
+        st.info("ðŸ’¡ Use the migration script or add data for another year to enable comparisons.")
         return
 
-    # ── Year Selectors ────────────────────────────────────────────────────────
+    # â”€â”€ Year Selectors â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     yc1, yc2, yc3 = st.columns([1, 1, 2])
     with yc1:
         curr_year = st.selectbox(T.get('curr_year', "Current Year"), years,
@@ -90,7 +88,7 @@ def render_year_comparison_page():
     prev_df_full = _load_year(prev_year)
 
     if curr_df_full.empty or prev_df_full.empty:
-        st.error("❌ One or both years have no data. Cannot compare.")
+        st.error("âŒ One or both years have no data. Cannot compare.")
         return
 
     curr_df = filter_dataframe(curr_df_full, sel_dept, sel_sem)
@@ -105,15 +103,15 @@ def render_year_comparison_page():
         filter_parts.append(DEPT_FULL_NAMES.get(sel_dept, sel_dept))
     if sel_sem != 'All':
         filter_parts.append(f"Semester {sel_sem}")
-    filter_str = " · ".join(filter_parts) if filter_parts else "All Departments · All Semesters"
+    filter_str = " Â· ".join(filter_parts) if filter_parts else "All Departments Â· All Semesters"
 
     st.markdown(
-        f"<div style='color:var(--muted-color,#888);font-size:12px;margin-bottom:16px'>"
-        f"📍 {filter_str} · Comparing <b>{curr_year}</b> vs <b>{prev_year}</b></div>",
+        f"<div style='color:var(--muted-color,#A0AEC0);font-size:12px;margin-bottom:16px'>"
+        f"ðŸ“–Â {filter_str} Â· Comparing <b>{curr_year}</b> vs <b>{prev_year}</b></div>",
         unsafe_allow_html=True,
     )
 
-    # ── Delta KPI Cards ───────────────────────────────────────────────────────
+    # â”€â”€ Delta KPI Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     k1, k2, k3, k4, k5 = st.columns(5)
 
     c_total = curr_stats.get('total_students', 0)
@@ -138,15 +136,15 @@ def render_year_comparison_page():
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── Side-by-Side Charts ───────────────────────────────────────────────────
+    # â”€â”€ Side-by-Side Charts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     tab_grade, tab_risk, tab_dept, tab_students = st.tabs([
-        T.get("tab_y_grade", "📊 Grade Distribution"), 
-        T.get("tab_y_risk", "⚠️ Risk Tiers"),
-        T.get("tab_y_dept", "🏫 Department Comparison"), 
-        T.get("tab_y_student", "👤 Student Tracking")
+        T.get("tab_y_grade", "Grade Distribution"), 
+        T.get("tab_y_risk", "Risk Tiers"),
+        T.get("tab_y_dept", "Department Comparison"), 
+        T.get("tab_y_student", "Student Tracking")
     ])
 
-    # ── Grade Distribution ────────────────────────────────────────────────────
+    # Grade Distribution â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     with tab_grade:
         grades = ['A', 'B', 'C', 'D', 'F']
         c_gdist = curr_stats.get('grade_distribution', {})
@@ -160,24 +158,25 @@ def render_year_comparison_page():
 
         fig = px.bar(grade_df, x='Grade', y='Count', color='Year',
                      barmode='group', text='Count',
-                     color_discrete_sequence=['#5b5ef4', '#a29bfe'],
-                     title=f"Grade Distribution — {curr_year} vs {prev_year}")
+                     color_discrete_sequence=['var(--accent)', 'var(--accent-light)'],
+                     title=f"Grade Distribution â€” {curr_year} vs {prev_year}")
         fig.update_traces(textposition='outside', marker_line_width=0)
-        fig.update_layout(**PL, height=340, showlegend=True,
+        fig.update_layout(**_PL)
+        fig.update_layout(height=340, showlegend=True,
                           legend=dict(orientation='h', y=-0.15, font_size=11),
                           xaxis=dict(showgrid=False),
-                          yaxis=dict(gridcolor='rgba(143,155,186,0.1)'))
-        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+                          yaxis=dict(showgrid=True))
+        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
         # Insight text
         curr_a = c_gdist.get('A', 0)
         prev_a = p_gdist.get('A', 0)
         if curr_a > prev_a:
-            st.success(f"📈 Grade A students increased from **{prev_a}** to **{curr_a}** (+{curr_a - prev_a})")
+            st.success(f"ðŸ“ˆ Grade A students increased from **{prev_a}** to **{curr_a}** (+{curr_a - prev_a})")
         elif curr_a < prev_a:
-            st.warning(f"📉 Grade A students decreased from **{prev_a}** to **{curr_a}** ({curr_a - prev_a})")
+            st.warning(f"ðŸ“ˆ Grade A students decreased from **{prev_a}** to **{curr_a}** ({curr_a - prev_a})")
 
-    # ── Risk Tier Comparison ──────────────────────────────────────────────────
+    # â”€â”€ Risk Tier Comparison â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     with tab_risk:
         tiers = ['Low', 'Moderate', 'High', 'Critical']
         c_rdist = curr_stats.get('risk_distribution', {})
@@ -191,25 +190,26 @@ def render_year_comparison_page():
 
         fig2 = px.bar(risk_df, x='Tier', y='Count', color='Year',
                       barmode='group', text='Count',
-                      color_discrete_sequence=['#e74c3c', '#f5b7b1'],
-                      title=f"Risk Tier Distribution — {curr_year} vs {prev_year}")
+                      color_discrete_sequence=['var(--accent-red)', 'var(--accent-amber)'],
+                      title=f"Risk Tier Distribution â€” {curr_year} vs {prev_year}")
         fig2.update_traces(textposition='outside', marker_line_width=0)
-        fig2.update_layout(**PL, height=340, showlegend=True,
+        fig2.update_layout(**_PL)
+        fig2.update_layout(height=340, showlegend=True,
                            legend=dict(orientation='h', y=-0.15, font_size=11),
                            xaxis=dict(showgrid=False,
                                       categoryorder='array',
                                       categoryarray=tiers),
-                           yaxis=dict(gridcolor='rgba(143,155,186,0.1)'))
-        st.plotly_chart(fig2, use_container_width=True, config={'displayModeBar': False})
+                           yaxis=dict(showgrid=True))
+        st.plotly_chart(fig2, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
         c_crit = c_rdist.get('Critical', 0)
         p_crit = p_rdist.get('Critical', 0)
         if c_crit < p_crit:
-            st.success(f"✅ Critical-risk students decreased from **{p_crit}** to **{c_crit}**")
+            st.success(f"âœ… Critical-risk students decreased from **{p_crit}** to **{c_crit}**")
         elif c_crit > p_crit:
-            st.error(f"🚨 Critical-risk students increased from **{p_crit}** to **{c_crit}**")
+            st.error(f"ðŸš¨ Critical-risk students increased from **{p_crit}** to **{c_crit}**")
 
-    # ── Department Comparison ─────────────────────────────────────────────────
+    # Department Comparison â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     with tab_dept:
         if sel_dept == 'All':
             dept_curr = curr_df.groupby('department').agg(
@@ -234,26 +234,28 @@ def render_year_comparison_page():
             with dc1:
                 fig3 = px.bar(dept_combined, x='department', y='avg_marks',
                               color='Year', barmode='group', text='avg_marks',
-                              color_discrete_sequence=['#5b5ef4', '#a29bfe'],
+                              color_discrete_sequence=['var(--accent)', 'var(--accent-light)'],
                               title="Avg Marks by Department")
                 fig3.update_traces(textposition='outside', texttemplate='%{text:.1f}')
-                fig3.update_layout(**PL, height=320, showlegend=True,
+                fig3.update_layout(**_PL)
+                fig3.update_layout(height=320, showlegend=True,
                                    legend=dict(orientation='h', y=-0.2, font_size=10),
                                    xaxis=dict(showgrid=False, title=''),
-                                   yaxis=dict(gridcolor='rgba(143,155,186,0.1)', title='Avg Marks'))
-                st.plotly_chart(fig3, use_container_width=True, config={'displayModeBar': False})
+                                   yaxis=dict(showgrid=True, title='Avg Marks'))
+                st.plotly_chart(fig3, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
             with dc2:
                 fig4 = px.bar(dept_combined, x='department', y='at_risk_pct',
                               color='Year', barmode='group', text='at_risk_pct',
-                              color_discrete_sequence=['#e74c3c', '#f5b7b1'],
+                              color_discrete_sequence=['var(--accent-red)', 'var(--accent-amber)'],
                               title="At-Risk % by Department")
                 fig4.update_traces(textposition='outside', texttemplate='%{text:.1f}%')
-                fig4.update_layout(**PL, height=320, showlegend=True,
+                fig4.update_layout(**_PL)
+                fig4.update_layout(height=320, showlegend=True,
                                    legend=dict(orientation='h', y=-0.2, font_size=10),
                                    xaxis=dict(showgrid=False, title=''),
-                                   yaxis=dict(gridcolor='rgba(143,155,186,0.1)', title='At-Risk %'))
-                st.plotly_chart(fig4, use_container_width=True, config={'displayModeBar': False})
+                                   yaxis=dict(showgrid=True, title='At-Risk %'))
+                st.plotly_chart(fig4, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
             # Summary Table
             st.markdown("#### Department Trend Summary")
@@ -269,21 +271,21 @@ def render_year_comparison_page():
                     'Department': dept,
                     f'Avg Marks ({prev_year})': round(p_marks, 1),
                     f'Avg Marks ({curr_year})': round(c_marks, 1),
-                    'Marks Δ': round(c_marks - p_marks, 1),
+                    'Marks Î”': round(c_marks - p_marks, 1),
                     f'At-Risk% ({prev_year})': round(p_risk, 1),
                     f'At-Risk% ({curr_year})': round(c_risk, 1),
-                    'Risk Δ': round(c_risk - p_risk, 1),
+                    'Risk Î”': round(c_risk - p_risk, 1),
                 })
             trend_df = pd.DataFrame(trend_data)
             st.dataframe(
                 trend_df.style
-                    .background_gradient(cmap='RdYlGn', subset=['Marks Δ'])
-                    .background_gradient(cmap='RdYlGn_r', subset=['Risk Δ'])
+                    .background_gradient(cmap='RdYlGn', subset=['Marks Î”'])
+                    .background_gradient(cmap='RdYlGn_r', subset=['Risk Î”'])
                     .format({col: '{:.1f}' for col in trend_df.columns if col != 'Department'}),
                 use_container_width=True,
             )
         else:
-            st.info(f"📊 Showing comparison for **{DEPT_FULL_NAMES.get(sel_dept, sel_dept)}** only. "
+            st.info(f"Showing comparison for **{DEPT_FULL_NAMES.get(sel_dept, sel_dept)}** only. "
                     "Select 'All Departments' in the sidebar to see cross-department charts.")
 
             # Single dept comparison
@@ -309,12 +311,12 @@ def render_year_comparison_page():
                 use_container_width=True,
             )
 
-    # ── Student-Level Tracking ────────────────────────────────────────────────
+    # â”€â”€ Student-Level Tracking â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     with tab_students:
         st.markdown(f"#### {T.get('student_imp', 'Student Improvement Tracking')}")
         st.markdown(
-            f"<div style='color:var(--muted-color,#888);font-size:13px;margin-bottom:12px'>"
-            f"{T.get('student_imp_sub', 'Students present in both years — who improved the most and who declined')}</div>",
+            f"<div style='color:var(--muted-color,#A0AEC0);font-size:13px;margin-bottom:12px'>"
+            f"{T.get('student_imp_sub', 'Students present in both years â€” who improved the most and who declined')}</div>",
             unsafe_allow_html=True,
         )
 
@@ -342,61 +344,60 @@ def render_year_comparison_page():
                 imp_col, dec_col = st.columns(2)
 
                 with imp_col:
-                    st.markdown('<div class="sh">📈 Top 10 Improvers (by marks)</div>',
+                    st.markdown('<div class="sh">ðŸ“ˆ Top 10 Improvers (by marks)</div>',
                                 unsafe_allow_html=True)
                     top_imp = merged.nlargest(10, 'marks_change')[
                         ['usn', 'name', 'department', 'semester_marks_prev',
                          'semester_marks_curr', 'marks_change']
                     ].copy()
                     top_imp.columns = ['USN', 'Name', 'Dept',
-                                       f'Marks ({prev_year})', f'Marks ({curr_year})', 'Δ']
+                                       f'Marks ({prev_year})', f'Marks ({curr_year})', 'Î”']
                     styled_imp = top_imp.style.background_gradient(
-                        cmap='Greens', subset=['Δ']
+                        cmap='Greens', subset=['Î”']
                     ).format({f'Marks ({prev_year})': '{:.1f}',
-                              f'Marks ({curr_year})': '{:.1f}', 'Δ': '{:+.1f}'})
+                              f'Marks ({curr_year})': '{:.1f}', 'Î”': '{:+.1f}'})
                     st.dataframe(styled_imp, use_container_width=True, height=380)
 
                 with dec_col:
-                    st.markdown('<div class="sh">📉 Top 10 Decliners (by marks)</div>',
+                    st.markdown('<div class="sh">ðŸ“ˆ Top 10 Decliners (by marks)</div>',
                                 unsafe_allow_html=True)
                     top_dec = merged.nsmallest(10, 'marks_change')[
                         ['usn', 'name', 'department', 'semester_marks_prev',
                          'semester_marks_curr', 'marks_change']
                     ].copy()
                     top_dec.columns = ['USN', 'Name', 'Dept',
-                                       f'Marks ({prev_year})', f'Marks ({curr_year})', 'Δ']
+                                       f'Marks ({prev_year})', f'Marks ({curr_year})', 'Î”']
                     styled_dec = top_dec.style.background_gradient(
-                        cmap='Reds', subset=['Δ']
+                        cmap='Reds', subset=['Î”']
                     ).format({f'Marks ({prev_year})': '{:.1f}',
-                              f'Marks ({curr_year})': '{:.1f}', 'Δ': '{:+.1f}'})
+                              f'Marks ({curr_year})': '{:.1f}', 'Î”': '{:+.1f}'})
                     st.dataframe(styled_dec, use_container_width=True, height=380)
 
                 # Distribution of changes
                 st.markdown('<div class="sh">Distribution of marks change</div>',
                             unsafe_allow_html=True)
                 fig_hist = px.histogram(merged, x='marks_change', nbins=30,
-                                        color_discrete_sequence=['#5b5ef4'],
+                                        color_discrete_sequence=['var(--accent)'],
                                         title="Semester Marks Change Distribution")
-                fig_hist.add_vline(x=0, line_dash='dash', line_color='#c0392b',
+                fig_hist.add_vline(x=0, line_dash='dash', line_color='var(--accent-red)',
                                    annotation_text='No change', annotation_font_size=10)
-                fig_hist.update_layout(**PL, height=280,
-                                       xaxis=dict(title='Change in Marks',
-                                                   gridcolor='rgba(143,155,186,0.1)'),
-                                       yaxis=dict(title='Students',
-                                                   gridcolor='rgba(143,155,186,0.1)'))
-                st.plotly_chart(fig_hist, use_container_width=True,
-                                config={'displayModeBar': False})
+                fig_hist.update_layout(**_PL)
+                fig_hist.update_layout(height=280,
+                                       xaxis=dict(title='Change in Marks', showgrid=True),
+                                       yaxis=dict(title='Students', showgrid=True))
+                st.plotly_chart(fig_hist, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
                 # Summary insight
                 improved = (merged['marks_change'] > 0).sum()
                 declined = (merged['marks_change'] < 0).sum()
                 no_change = (merged['marks_change'] == 0).sum()
                 st.markdown(
-                    f"**Summary**: Out of **{len(common_usns)}** tracked students — "
-                    f"**{improved}** improved 📈, **{declined}** declined 📉, "
-                    f"**{no_change}** unchanged ➡️",
+                    f"**Summary**: Out of **{len(common_usns)}** tracked students â€” "
+                    f"**{improved}** improved ðŸ“ˆ, **{declined}** declined ðŸ“‰, "
+                    f"**{no_change}** unchanged âž¡ï¸",
                 )
             else:
                 st.info("No common students found between the two years.")
         else:
-            st.warning("USN column not found in data — cannot track individual students.")
+            st.warning("USN column not found in data â€” cannot track individual students.")
+

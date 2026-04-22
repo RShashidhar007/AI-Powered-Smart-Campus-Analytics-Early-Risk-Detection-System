@@ -101,7 +101,7 @@ def _get_groq_response(user_msg: str, chat_history: list) -> str:
 
 def _get_fallback_response(user_msg: str) -> str:
     """Comprehensive fallback when Groq API is not available."""
-    return ("⚠️ **AI API not configured.** To enable universal answers:\n\n"
+    return (" **AI API not configured.** To enable universal answers:\n\n"
             "1. Go to **Settings** page\n"
             "2. Enter your **Groq API key**\n"
             "   (Get one at [console.groq.com](https://console.groq.com))\n\n"
@@ -130,12 +130,12 @@ def render_ai_agent():
         width: 60px;
         height: 60px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #5b5ef4 0%, #8b5cf6 100%);
+        background: var(--accent, #2563EB);
         color: white;
         border: none;
         font-size: 28px;
         cursor: pointer;
-        box-shadow: 0 4px 20px rgba(91, 94, 244, 0.45);
+        box-shadow: 0 4px 20px rgba(37, 99, 235, 0.45);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -143,7 +143,7 @@ def render_ai_agent():
     }
     .ai-fab:hover {
         transform: scale(1.1);
-        box-shadow: 0 6px 28px rgba(91, 94, 244, 0.6);
+        box-shadow: 0 6px 28px rgba(37, 99, 235, 0.6);
     }
     /* Hide the dummy streamlit button */
     [data-testid="stButton"] button p {
@@ -160,7 +160,7 @@ def render_ai_agent():
         width: 60px;
         height: 60px;
         border-radius: 50%;
-        background: rgba(91, 94, 244, 0.3);
+        background: rgba(37, 99, 235, 0.3);
         animation: ai-pulse 2s ease-in-out infinite;
     }
     @keyframes ai-pulse {
@@ -233,9 +233,9 @@ def render_ai_agent():
         st.markdown(
             "<div style='display:flex;align-items:center;gap:8px;margin-bottom:8px'>"
             "<span style='font-size:22px'>🤖</span>"
-            "<span style='font-size:16px;font-weight:600;color:var(--main-text-color,#333)'>"
+            "<span style='font-size:16px;font-weight:600;color:var(--text-primary)'>"
             "AI Campus Assistant</span>"
-            "<span style='font-size:11px;color:var(--muted-color,#888);margin-left:auto'>"
+            "<span style='font-size:11px;color:var(--text-muted);margin-left:auto'>"
             "Powered by Groq</span></div>",
             unsafe_allow_html=True,
         )
@@ -245,9 +245,9 @@ def render_ai_agent():
         with chat_container:
             if not st.session_state.ai_chat_history:
                 st.markdown(
-                    "<div style='text-align:center;color:var(--muted-color,#888);"
+                    "<div style='text-align:center;color:var(--text-muted);"
                     "padding:40px 0;font-size:13px'>"
-                    "👋 Hi! I'm your AI Campus Assistant.<br>"
+                    " Hi! I'm your AI Campus Assistant.<br>"
                     "I can answer <b>any question</b> — about students, predictions,<br>"
                     "academics, programming, or anything else!"
                     "</div>",

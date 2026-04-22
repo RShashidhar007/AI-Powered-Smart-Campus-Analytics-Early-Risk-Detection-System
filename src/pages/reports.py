@@ -1,5 +1,5 @@
-"""
-pages/reports.py — Exploratory Data Analysis (EDA) page.
+﻿"""
+pages/reports.py â€” Exploratory Data Analysis (EDA) page.
 """
 import streamlit as st
 import pandas as pd
@@ -9,12 +9,11 @@ from config    import DATA_PATH, DEPARTMENTS, DEPT_FULL_NAMES, CURRENT_ACADEMIC_
 from data_pro  import run_pipeline, run_pipeline_from_db, filter_dataframe
 from ml_models import FEATURES
 from language  import TEXTS
+from ui_theme import PAGE_CSS, GRADE_COL, RISK_COL, DEPT_COL, PL as _PL, PL, kpi_card as _kpi, section_header as _sh
 
-GRADE_COL = {"A": "#1e8449", "B": "#1a5276", "C": "#b7770d", "D": "#d35400", "F": "#c0392b"}
-DEPT_COL  = {"CSE": "#5b5ef4", "ECE": "#e84855", "ME": "#f4a261", "CE": "#2ec4b6", "ISE": "#9b59b6"}
-PL = dict(font_family="DM Sans,sans-serif", font_color="#8f9bba",
-          plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-          margin=dict(l=8, r=8, t=32, b=8))
+# â”€â”€ Design system â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+# â”€â”€ Colour maps & Plotly Theme â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 
 @st.cache_data(show_spinner=False)
@@ -25,8 +24,9 @@ def _load_all():
         df = run_pipeline(DATA_PATH)
     return df
 
-
 def render_reports_page():
+    st.markdown(PAGE_CSS, unsafe_allow_html=True)
+    
     T  = TEXTS[st.session_state.language]
     all_df = _load_all()
 
@@ -34,18 +34,18 @@ def render_reports_page():
     sel_sem  = st.session_state.get('selected_semester', 'All')
     df = filter_dataframe(all_df, sel_dept, sel_sem)
 
-    st.markdown("## Exploratory Data Analysis")
+    st.markdown('<div class="page-title">Exploratory Data Analysis</div>', unsafe_allow_html=True)
     st.markdown(
-        "<div style='color:var(--muted-color,#888);font-size:13px;margin-bottom:20px'>"
-        "Distributions · Correlations · Box plots by grade · Department comparison</div>",
+        "<div class='page-subtitle'>"
+        "Distributions Correlations Box Plots by grade Department Comparison</div>",
         unsafe_allow_html=True,
     )
 
     tab1, tab2, tab3, tab4 = st.tabs(
-        ["📊 Distributions", "🔥 Correlations", "📦 Box Plots", "🏫 Department Comparison"]
+        [" Distributions", " Correlations", "Box Plots", "Department Comparison"]
     )
 
-    # ── Distributions ─────────────────────────────────────────────────────────
+    # Distributions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     with tab1:
         all_f = FEATURES + ['semester_marks']
         for i in range(0, len(all_f), 3):
@@ -55,17 +55,18 @@ def render_reports_page():
                 with cols[ci]:
                     if len(df) > 0:
                         fig = px.histogram(df, x=feat, nbins=20,
-                                           color_discrete_sequence=['#5b5ef4'],
+                                           color_discrete_sequence=['var(--accent)'],
                                            title=feat.replace('_', ' ').title())
-                        fig.add_vline(x=df[feat].mean(), line_dash='dash', line_color='#c0392b',
-                                      annotation_text=f"μ={df[feat].mean():.1f}",
-                                      annotation_font_size=10, annotation_font_color='#c0392b')
-                        fig.update_layout(**PL, height=210, title_font_size=12,
-                                          xaxis=dict(gridcolor='rgba(143, 155, 186, 0.1)'),
-                                          yaxis=dict(gridcolor='rgba(143, 155, 186, 0.1)'))
-                        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+                        fig.add_vline(x=df[feat].mean(), line_dash='dash', line_color='var(--accent-red)',
+                                      annotation_text=f"Î¼={df[feat].mean():.1f}",
+                                      annotation_font_size=10, annotation_font_color='var(--accent-red)')
+                        fig.update_layout(**_PL)
+                        fig.update_layout(height=210, title_font_size=12,
+                                          xaxis=dict(showgrid=True),
+                                          yaxis=dict(showgrid=True))
+                        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
-    # ── Correlations ──────────────────────────────────────────────────────────
+    # Correlations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     with tab2:
         if len(df) > 10:
             numeric = FEATURES + ['semester_marks']
@@ -73,30 +74,31 @@ def render_reports_page():
             fhm     = px.imshow(cm, color_continuous_scale='RdYlGn',
                                 zmin=-0.3, zmax=0.8, text_auto=True, aspect='auto',
                                 title="Correlation matrix")
-            fhm.update_layout(**PL, height=420, title_font_size=13,
+            fhm.update_layout(**_PL)
+            fhm.update_layout(height=420, title_font_size=13,
                               coloraxis_colorbar=dict(title="r", thickness=12))
-            st.plotly_chart(fhm, use_container_width=True, config={'displayModeBar': False})
+            st.plotly_chart(fhm, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
             st.markdown("#### Correlation with semester marks")
             cs2 = cm['semester_marks'].drop('semester_marks').sort_values(ascending=False)
             ca, cb = st.columns([1.2, 1])
             with ca:
                 for feat, val in cs2.items():
-                    col_c = "#1e8449" if val > 0.4 else ("#d35400" if val > 0.15 else "#888")
+                    col_c = "var(--accent-teal)" if val > 0.4 else ("var(--accent-amber)" if val > 0.15 else "#888")
                     bw    = max(int(abs(val) * 120), 4)
                     st.markdown(
                         f'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
-                        f'<div style="width:140px;font-size:12px;color:#555">{feat.replace("_"," ").title()}</div>'
+                        f'<div style="width:140px;font-size:12px;color:#A0AEC0">{feat.replace("_"," ").title()}</div>'
                         f'<div style="width:{bw}px;height:8px;background:{col_c};border-radius:4px"></div>'
                         f'<div style="font-size:12px;font-weight:600;color:{col_c}">{val:+.3f}</div></div>',
                         unsafe_allow_html=True,
                     )
             with cb:
-                st.info("**Internal marks** — strongest predictor.\n\n"
-                        "**Study hours** — almost zero correlation.\n\n"
+                st.info("**Internal marks** â€” strongest predictor.\n\n"
+                        "**Study hours** â€” almost zero correlation.\n\n"
                         "Focus interventions on internal assessment performance.")
 
-    # ── Box Plots ─────────────────────────────────────────────────────────────
+    # Box Plots â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     with tab3:
         if len(df) > 0:
             fc = st.selectbox("Feature", options=FEATURES,
@@ -105,11 +107,12 @@ def render_reports_page():
                         color_discrete_map=GRADE_COL,
                         category_orders={'grade_label': ['A', 'B', 'C', 'D', 'F']},
                         points='outliers', title=f"{fc.replace('_',' ').title()} by Grade")
-            fb.update_layout(**PL, height=380,
+            fb.update_layout(**_PL)
+            fb.update_layout(height=380,
                              xaxis=dict(title='Grade', showgrid=False),
-                             yaxis=dict(title=fc.replace('_', ' ').title(), gridcolor='rgba(143, 155, 186, 0.1)'),
-                             title_font_size=13)
-            st.plotly_chart(fb, use_container_width=True, config={'displayModeBar': False})
+                             yaxis=dict(title=fc.replace('_', ' ').title(), showgrid=True),
+                             title_font_size=13, showlegend=False)
+            st.plotly_chart(fb, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
             gs = (df.groupby('grade_label')[fc]
                   .agg(['mean', 'median', 'std', 'min', 'max'])
@@ -117,7 +120,7 @@ def render_reports_page():
             st.dataframe(gs.style.background_gradient(cmap='RdYlGn', axis=0)
                          .format("{:.2f}"), use_container_width=True)
 
-    # ── Department Comparison ─────────────────────────────────────────────────
+    # Department Comparison â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     with tab4:
         compare_df = all_df.copy()
         if sel_sem != 'All':
@@ -140,26 +143,29 @@ def render_reports_page():
                 fig1 = px.bar(dept_agg, x='department', y='avg_marks',
                               color='department', color_discrete_map=DEPT_COL,
                               text='avg_marks', title="Avg Semester Marks")
-                fig1.update_traces(textposition='outside', texttemplate='%{text:.1f}')
-                fig1.update_layout(**PL, height=300, xaxis_title='', yaxis_title='Marks')
-                st.plotly_chart(fig1, use_container_width=True, config={'displayModeBar': False})
+                fig1.update_traces(textposition='outside', texttemplate='%{text:.1f}', marker_line_width=1, marker_line_color='rgba(0,0,0,0.1)')
+                fig1.update_layout(**_PL)
+                fig1.update_layout(height=300, xaxis_title='', yaxis_title='Marks', showlegend=False)
+                st.plotly_chart(fig1, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
             with dc2:
                 fig2 = px.bar(dept_agg, x='department', y='at_risk_pct',
                               color='department', color_discrete_map=DEPT_COL,
                               text='at_risk_pct', title="At-Risk Percentage (%)")
-                fig2.update_traces(textposition='outside', texttemplate='%{text:.1f}%')
-                fig2.update_layout(**PL, height=300, xaxis_title='', yaxis_title='%')
-                st.plotly_chart(fig2, use_container_width=True, config={'displayModeBar': False})
+                fig2.update_traces(textposition='outside', texttemplate='%{text:.1f}%', marker_line_width=1, marker_line_color='rgba(0,0,0,0.1)')
+                fig2.update_layout(**_PL)
+                fig2.update_layout(height=300, xaxis_title='', yaxis_title='%', showlegend=False)
+                st.plotly_chart(fig2, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
             dc3, dc4 = st.columns(2)
             with dc3:
                 fig3 = px.bar(dept_agg, x='department', y='avg_attendance',
                               color='department', color_discrete_map=DEPT_COL,
                               text='avg_attendance', title="Avg Attendance (%)")
-                fig3.update_traces(textposition='outside', texttemplate='%{text:.1f}%')
-                fig3.update_layout(**PL, height=300, xaxis_title='', yaxis_title='%')
-                st.plotly_chart(fig3, use_container_width=True, config={'displayModeBar': False})
+                fig3.update_traces(textposition='outside', texttemplate='%{text:.1f}%', marker_line_width=1, marker_line_color='rgba(0,0,0,0.1)')
+                fig3.update_layout(**_PL)
+                fig3.update_layout(height=300, xaxis_title='', yaxis_title='%', showlegend=False)
+                st.plotly_chart(fig3, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
             with dc4:
                 # Semester-wise comparison across departments
@@ -171,13 +177,13 @@ def render_reports_page():
                     fig4 = px.line(sem_dept, x='semester', y='avg_marks',
                                   color='department', color_discrete_map=DEPT_COL,
                                   markers=True, title="Marks Trend by Semester")
-                    fig4.update_layout(font_family="DM Sans,sans-serif", font_color="#8f9bba",
-                                      plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
-                                      margin=dict(l=8, r=8, t=32, b=8),
+                    fig4.update_traces(line=dict(shape='spline', width=3), marker=dict(size=8, opacity=0.8, line=dict(width=1, color='rgba(0,0,0,0.2)')))
+                    fig4.update_layout(**_PL)
+                    fig4.update_layout(
                                       height=300, showlegend=True,
                                       legend=dict(orientation='h', y=-0.25, font_size=10),
                                       xaxis_title='Semester', yaxis_title='Avg Marks')
-                    st.plotly_chart(fig4, use_container_width=True, config={'displayModeBar': False})
+                    st.plotly_chart(fig4, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
             # Summary table
             st.markdown("#### Department Summary")
@@ -189,3 +195,4 @@ def render_reports_page():
                          .format({'Avg Marks': '{:.1f}', 'Avg Attendance %': '{:.1f}',
                                   'At-Risk %': '{:.1f}', 'Avg Internal': '{:.1f}'}),
                          use_container_width=True)
+

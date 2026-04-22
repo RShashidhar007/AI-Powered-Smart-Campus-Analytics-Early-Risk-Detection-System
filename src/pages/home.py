@@ -1,301 +1,365 @@
 """
-pages/home.py — Campus Overview dashboard page.
+pages/home.py - Campus Overview dashboard page.
 """
 import streamlit as st
-import pandas as pd
-import numpy as np
 import plotly.graph_objects as go
-import plotly.express as px
 
-from config      import DATA_PATH, DEPARTMENTS, DEPT_FULL_NAMES, CURRENT_ACADEMIC_YEAR
-from data_pro    import run_pipeline, run_pipeline_from_db, get_summary_stats, get_at_risk_students, filter_dataframe
-from ml_models   import FEATURES
-from language    import TEXTS
+from config import DATA_PATH, DEPARTMENTS, DEPT_FULL_NAMES, CURRENT_ACADEMIC_YEAR
+from data_pro import (
+    run_pipeline,
+    run_pipeline_from_db,
+    get_summary_stats,
+    filter_dataframe,
+)
+from ml_models import FEATURES
+from ui_theme import PAGE_CSS, GRADE_COL, RISK_COL, DEPT_COL, PL as _PL, kpi_card as _kpi
 
-# ── Cached loader ─────────────────────────────────────────────────────────────
+
+HOME_CSS = """
+<style>
+.home-topline {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 18px;
+}
+.home-context {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: rgba(51, 65, 85, 0.55);
+    white-space: nowrap;
+}
+.home-section-title {
+    color: var(--text-primary);
+    font-size: 16px;
+    font-weight: 800;
+    margin: 24px 0 6px;
+}
+.home-section-subtitle {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin: 0 0 14px;
+}
+.home-alert {
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin: 2px 0 18px;
+    font-size: 14px;
+    font-weight: 600;
+}
+.home-alert-danger {
+    color: #FCA5A5;
+    background: rgba(191, 97, 106, 0.16);
+    border: 1px solid rgba(191, 97, 106, 0.38);
+}
+.home-alert-ok {
+    color: #BBF7D0;
+    background: rgba(129, 199, 132, 0.12);
+    border: 1px solid rgba(129, 199, 132, 0.32);
+}
+@media (max-width: 900px) {
+    .home-topline {
+        display: block;
+    }
+    .home-context {
+        display: inline-block;
+        margin-top: 10px;
+        white-space: normal;
+    }
+}
+</style>
+"""
+
+
 @st.cache_data(show_spinner=False)
 def _load_all():
-    year = st.session_state.get('selected_academic_year', CURRENT_ACADEMIC_YEAR)
+    year = st.session_state.get("selected_academic_year", CURRENT_ACADEMIC_YEAR)
     df = run_pipeline_from_db(year)
     if df.empty:
         df = run_pipeline(DATA_PATH)
     return df
 
-# ── Colour maps ───────────────────────────────────────────────────────────────
-GRADE_COL = {"A": "#27AE60", "B": "#2980B9", "C": "#F39C12", "D": "#E67E22", "F": "#E74C3C"}
-RISK_COL  = {"Low": "#27AE60", "Moderate": "#F39C12", "High": "#E67E22", "Critical": "#E74C3C"}
-DEPT_COL  = {"CSE": "#0075FF", "ECE": "#E74C3C", "ME": "#F39C12", "CE": "#2CD9FF", "ISE": "#7C3AED"}
 
-# Base plotly layout — matches the glassmorphic UI
-_PL = dict(
-    font_family="Plus Jakarta Sans, Inter, sans-serif",
-    font_color="#A0AEC0",
-    plot_bgcolor="rgba(0,0,0,0)",
-    paper_bgcolor="rgba(0,0,0,0)",
-)
+def _chart_title(title: str):
+    st.markdown(f'<div class="sh">{title}</div>', unsafe_allow_html=True)
 
 
-def _kpi(col, val, label, sub="", color="#4318ff", highlight=False):
-    style_str = "border-left: 6px solid #4318ff;" if highlight else ""
-    col.markdown(
-        f'<div class="kpi" style="{style_str}">'
-        f'<div class="kv" style="color:{color}">{val}</div>'
-        f'<div class="kl">{label}</div>'
-        f'<div class="ks">{sub}</div></div>',
+def _section(title: str, subtitle: str):
+    st.markdown(
+        f'<div class="home-section-title">{title}</div>'
+        f'<div class="home-section-subtitle">{subtitle}</div>',
         unsafe_allow_html=True,
     )
+
+
+def _standard_layout(fig: go.Figure, height: int = 320, legend: bool = False) -> go.Figure:
+    fig.update_layout(**_PL)
+    fig.update_layout(
+        height=height,
+        showlegend=legend,
+        margin=dict(l=12, r=12, t=18, b=12),
+        font=dict(size=12),
+    )
+    fig.update_xaxes(showgrid=False, zeroline=False, linecolor="rgba(148,163,184,0.24)")
+    fig.update_yaxes(
+        showgrid=True,
+        gridcolor="rgba(148,163,184,0.14)",
+        zeroline=True,
+        zerolinecolor="rgba(148,163,184,0.2)",
+    )
+    return fig
+
+
+def _attendance_colors(order: list[str]) -> list[str]:
+    tier_to_risk = {
+        "Excellent": "Low",
+        "Good": "Low",
+        "Average": "Moderate",
+        "Warning": "High",
+        "Critical": "Critical",
+    }
+    return [RISK_COL[tier_to_risk[tier]] for tier in order]
 
 
 def render_home_page():
-    T  = TEXTS[st.session_state.language]
-    all_df = _load_all()
+    st.markdown(PAGE_CSS, unsafe_allow_html=True)
+    st.markdown(HOME_CSS, unsafe_allow_html=True)
 
-    # Apply global filters
-    sel_dept = st.session_state.get('selected_department', 'All')
-    sel_sem  = st.session_state.get('selected_semester', 'All')
+    all_df = _load_all()
+    sel_dept = st.session_state.get("selected_department", "All")
+    sel_sem = st.session_state.get("selected_semester", "All")
     df = filter_dataframe(all_df, sel_dept, sel_sem)
     stats = get_summary_stats(df)
 
-    # Build subtitle
-    filter_parts = []
-    if sel_dept != 'All':
-        filter_parts.append(DEPT_FULL_NAMES.get(sel_dept, sel_dept))
-    else:
-        filter_parts.append("All Departments")
-    if sel_sem != 'All':
-        filter_parts.append(f"Semester {sel_sem}")
-    else:
-        filter_parts.append("All Semesters")
+    filter_parts = [
+        DEPT_FULL_NAMES.get(sel_dept, sel_dept) if sel_dept != "All" else "All Departments",
+        f"Semester {sel_sem}" if sel_sem != "All" else "All Semesters",
+    ]
 
-    st.markdown("## Campus Overview")
+    total_students = stats["total_students"]
+    at_risk_count = stats["at_risk_count"]
+    crit_n = int((df["risk_tier"] == "Critical").sum()) if len(df) else 0
+    avg_marks = df["semester_marks"].mean() if len(df) else 0
+    avg_att = df["attendance"].mean() if len(df) else 0
+    pass_rate = (df["semester_marks"] >= 120).mean() * 100 if len(df) else 0
+    risk_share = at_risk_count / max(total_students, 1) * 100
+
     st.markdown(
-        f"<div style='color:var(--muted-color,#888);font-size:13px;margin-bottom:20px'>"
-        f"Real-time analytics · {stats['total_students']} students · {' · '.join(filter_parts)}</div>",
+        f"""
+        <div class="home-topline">
+            <div>
+                <div class="page-title">Campus Overview</div>
+                <div class="page-subtitle">Real-time academic risk analytics for {total_students} students</div>
+            </div>
+            <div class="home-context">{" | ".join(filter_parts)}</div>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
 
-    # Critical alert
-    crit_n = int((df['risk_tier'] == 'Critical').sum())
     if crit_n > 0:
         st.markdown(
-            f'<div class="al">🚨 <b>{crit_n} students</b> are Critical risk — '
-            f'immediate faculty intervention required.</div>',
+            f'<div class="home-alert home-alert-danger"><b>{crit_n} critical-risk students</b> need immediate review. '
+            f'{risk_share:.1f}% of the filtered cohort is currently high or critical risk.</div>',
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            '<div class="home-alert home-alert-ok">No critical-risk students in the current filtered view.</div>',
             unsafe_allow_html=True,
         )
 
-    # KPI row
     c1, c2, c3, c4, c5, c6 = st.columns(6)
-    _kpi(c1, stats['total_students'],                          "Total",      f"{len(DEPARTMENTS)} depts",  "#5b5ef4")
-    _kpi(c2, stats['at_risk_count'],                           "At-Risk",    f"{stats['at_risk_count']/max(stats['total_students'],1)*100:.1f}%", "#c0392b")
-    _kpi(c3, crit_n,                                           "Critical",   "immediate",          "#922b21")
-    _kpi(c4, f"{df['semester_marks'].mean():.1f}" if len(df) else "—", "Avg Marks",  "out of 200",         "#1e8449")
-    _kpi(c5, f"{df['attendance'].mean():.1f}%" if len(df) else "—",   "Avg Attend", "threshold 65%",      "#d35400")
-    _kpi(c6, f"{(df['semester_marks']>=120).mean()*100:.1f}%" if len(df) else "—", "Pass Rate",  "marks ≥ 120",        "#1a5276")
+    _kpi(c1, total_students, "Students", f"{len(DEPARTMENTS)} departments", "var(--accent)")
+    _kpi(c2, at_risk_count, "At Risk", f"{risk_share:.1f}% of cohort", "var(--accent-red)", highlight=True)
+    _kpi(c3, crit_n, "Critical", "immediate review", "var(--accent-red)")
+    _kpi(c4, f"{avg_marks:.1f}" if len(df) else "-", "Avg Marks", "out of 200", "var(--accent-teal)")
+    _kpi(c5, f"{avg_att:.1f}%" if len(df) else "-", "Avg Attend", "threshold 65%", "var(--accent-amber)")
+    _kpi(c6, f"{pass_rate:.1f}%" if len(df) else "-", "Pass Rate", "marks >= 120", "var(--accent-light)")
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    _section("Risk And Performance", "A quick view of academic outcomes and intervention priority.")
+    left, center = st.columns([1, 1])
 
-    # =====================================================================
-    # CHARTS ROW 1 — Gradient Bars + Treemap + Area Chart
-    # =====================================================================
-    col1, col2, col3 = st.columns([1, 1, 1])
-
-    with col1:
-        st.markdown('<div class="sh">Grade Distribution</div>', unsafe_allow_html=True)
-        grades = ['A', 'B', 'C', 'D', 'F']
-        counts = [stats['grade_distribution'].get(g, 0) for g in grades]
-        colors = [GRADE_COL[g] for g in grades]
-
-        # Clean vertical bars with text
-        fig_grade = go.Figure()
-        fig_grade.add_trace(go.Bar(
-            x=grades, y=counts,
-            marker_color=colors,
-            marker_line_width=0,
-            opacity=0.9,
-            text=counts,
-            textposition='outside',
-            textfont=dict(color='#A0AEC0', size=13, family='Plus Jakarta Sans'),
-            hovertemplate="Grade %{x}: %{y} students<extra></extra>",
+    with left:
+        _chart_title("Risk Proportions")
+        risk_tiers = ["Low", "Moderate", "High", "Critical"]
+        risk_counts = [stats["risk_distribution"].get(t, 0) for t in risk_tiers]
+        fig_risk = go.Figure(go.Pie(
+            labels=risk_tiers,
+            values=risk_counts,
+            hole=0.62,
+            textinfo="label+percent",
+            marker_colors=[RISK_COL[t] for t in risk_tiers],
+            marker_line_width=2,
+            marker_line_color="rgba(30,41,59,0.9)",
+            hovertemplate="<b>%{label}</b><br>%{value} students<extra></extra>",
         ))
-        fig_grade.update_layout(
-            **_PL, height=300, showlegend=False,
-            xaxis=dict(showgrid=False, tickfont=dict(color='#FFFFFF', size=14, family='Plus Jakarta Sans')),
-            yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.06)', zeroline=True, zerolinecolor='rgba(255,255,255,0.1)', tickfont=dict(color='#A0AEC0')),
-            margin=dict(l=8, r=8, t=20, b=8)
-        )
-        st.plotly_chart(fig_grade, use_container_width=True, config={'displayModeBar': False})
+        _standard_layout(fig_risk, height=330)
+        fig_risk.update_layout(margin=dict(l=0, r=0, t=4, b=0))
+        st.plotly_chart(fig_risk, use_container_width=True, config={"displayModeBar": False}, theme="streamlit")
 
-    with col2:
-        st.markdown('<div class="sh">Risk Proportions</div>', unsafe_allow_html=True)
-        tiers   = ['Low', 'Moderate', 'High', 'Critical']
-        rcounts = [stats['risk_distribution'].get(t, 0) for t in tiers]
-        
-        # Treemap for clear proportion understanding
-        fig_risk = go.Figure(go.Treemap(
-            labels=tiers,
-            parents=[''] * len(tiers),
-            values=rcounts,
-            textinfo='label+value+percent entry',
-            marker_colors=[RISK_COL[t] for t in tiers],
-            textfont=dict(size=13, family='Plus Jakarta Sans', color='white'),
-            hovertemplate="%{label}: %{value} students<extra></extra>",
-            pathbar_visible=False,
-            tiling_pad=2,
+    with center:
+        _chart_title("Grade Distribution")
+        grades = ["A", "B", "C", "D", "F"]
+        grade_counts = [stats["grade_distribution"].get(g, 0) for g in grades]
+        fig_grade = go.Figure(go.Bar(
+            x=grades,
+            y=grade_counts,
+            marker_color=[GRADE_COL[g] for g in grades],
+            marker_line_width=1,
+            marker_line_color="rgba(255,255,255,0.12)",
+            text=grade_counts,
+            textposition="outside",
+            hovertemplate="<b>Grade %{x}</b><br>%{y} students<extra></extra>",
         ))
-        fig_risk.update_layout(**_PL, height=300, margin=dict(l=0, r=0, t=10, b=0))
-        st.plotly_chart(fig_risk, use_container_width=True, config={'displayModeBar': False})
+        _standard_layout(fig_grade, height=330)
+        fig_grade.update_yaxes(title_text="Students")
+        st.plotly_chart(fig_grade, use_container_width=True, config={"displayModeBar": False}, theme="streamlit")
 
-    with col3:
-        st.markdown('<div class="sh">Attendance Tiers</div>', unsafe_allow_html=True)
-        att_order = ['Critical', 'Warning', 'Average', 'Good', 'Excellent']
-        att_counts = df['attendance_tier'].value_counts().reindex(att_order).fillna(0)
-        
-        # Smooth area chart showing the distribution curve
-        fig_att = go.Figure()
-        fig_att.add_trace(go.Scatter(
-            x=att_order, y=att_counts.values,
-            fill='tozeroy',
-            mode='lines+markers',
-            line=dict(color='#0075FF', width=3, shape='spline'),
-            marker=dict(size=8, color='#2CD9FF', line=dict(width=2, color='#0075FF')),
-            fillcolor='rgba(0,117,255,0.15)',
+    _section("Attendance Insights", "Attendance tiers connected with student count and mark outcomes.")
+    att_left, att_right = st.columns([1, 1])
+
+    with att_left:
+        _chart_title("Attendance Tiers")
+        att_order = ["Excellent", "Good", "Average", "Warning", "Critical"]
+        att_counts = df["attendance_tier"].value_counts().reindex(att_order).fillna(0)
+        fig_att = go.Figure(go.Bar(
+            x=att_order,
+            y=att_counts.values,
+            marker_color=_attendance_colors(att_order),
+            marker_line_width=1,
+            marker_line_color="rgba(255,255,255,0.12)",
             text=att_counts.values,
-            textposition='top center',
-            hovertemplate="%{x}: %{y} students<extra></extra>",
+            textposition="outside",
+            hovertemplate="<b>%{x}</b><br>%{y} students<extra></extra>",
         ))
-        fig_att.update_layout(
-            **_PL, height=300, showlegend=False,
-            xaxis=dict(showgrid=False, tickfont=dict(color='#A0AEC0', size=11, family='Plus Jakarta Sans')),
-            yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.06)', tickfont=dict(color='#A0AEC0')),
-            margin=dict(l=8, r=8, t=20, b=8)
-        )
-        st.plotly_chart(fig_att, use_container_width=True, config={'displayModeBar': False})
+        _standard_layout(fig_att, height=320)
+        fig_att.update_xaxes(title_text="Attendance Tier")
+        fig_att.update_yaxes(title_text="Students")
+        st.plotly_chart(fig_att, use_container_width=True, config={"displayModeBar": False}, theme="streamlit")
 
-
-    # =====================================================================
-    # CHARTS ROW 2 — Bar Graph
-    # =====================================================================
-    col4, col5 = st.columns([1, 1])
-
-    with col4:
-        st.markdown(f'<div class="sh">Avg Marks by Attendance Tier</div>', unsafe_allow_html=True)
-        if len(df) > 0:
-            att_order = ['Critical', 'Warning', 'Average', 'Good', 'Excellent']
-            tier_marks = df.groupby('attendance_tier')['semester_marks'].mean().reindex(att_order).fillna(0)
-            att_colors = ['#E74C3C', '#E67E22', '#F39C12', '#2ECC71', '#27AE60'] 
-
-            fig_bar = go.Figure(go.Bar(
-                x=att_order, y=tier_marks.values,
-                marker_color=att_colors,
+    with att_right:
+        _chart_title("Avg Marks By Attendance Tier")
+        mark_order = ["Critical", "Warning", "Average", "Good", "Excellent"]
+        fig_marks = go.Figure()
+        if len(df):
+            tier_marks = df.groupby("attendance_tier")["semester_marks"].mean().reindex(mark_order).fillna(0)
+            fig_marks.add_trace(go.Bar(
+                x=mark_order,
+                y=tier_marks.values,
+                marker_color=_attendance_colors(mark_order),
+                marker_line_width=1,
+                marker_line_color="rgba(255,255,255,0.12)",
                 text=[f"{v:.1f}" if v > 0 else "" for v in tier_marks.values],
-                textposition='outside',
-                textfont=dict(color='#FFFFFF', size=13, family='Plus Jakarta Sans'),
-                hovertemplate="Tier: %{x}<br>Avg Marks: %{y:.1f}<extra></extra>"
+                textposition="outside",
+                hovertemplate="<b>%{x}</b><br>Avg marks: %{y:.1f}<extra></extra>",
             ))
-            
-            # Threshold line
-            fig_bar.add_hline(y=120, line_dash='dash', line_color='rgba(39,174,96,0.8)', annotation_text='Pass (120) ', annotation_position='bottom left', annotation_font_color='#27AE60')
-
-            fig_bar.update_layout(
-                **_PL, height=300, showlegend=False,
-                xaxis=dict(title='Attendance Tier', showgrid=False, tickfont=dict(color='#A0AEC0', size=12, family='Plus Jakarta Sans')),
-                yaxis=dict(title='Average Semester Marks', gridcolor='rgba(255,255,255,0.04)', tickfont=dict(color='#A0AEC0')),
-                margin=dict(l=8, r=8, t=20, b=8)
+            fig_marks.add_hline(
+                y=120,
+                line_dash="dash",
+                line_color=RISK_COL["Low"],
+                annotation_text="Pass line",
+                annotation_position="bottom left",
+                annotation_font_color=RISK_COL["Low"],
             )
-            
-            st.plotly_chart(fig_bar, use_container_width=True, config={'displayModeBar': False})
+        _standard_layout(fig_marks, height=320)
+        fig_marks.update_xaxes(title_text="Attendance Tier")
+        fig_marks.update_yaxes(title_text="Average Marks")
+        st.plotly_chart(fig_marks, use_container_width=True, config={"displayModeBar": False}, theme="streamlit")
 
-    with col5:
-        st.markdown('<div class="sh">Impact on Final Marks</div>', unsafe_allow_html=True)
+    _section("Academic Drivers", "Feature correlation and department-level comparisons.")
+    driver_left, driver_right = st.columns([1, 1])
+
+    with driver_left:
+        _chart_title("Impact On Final Marks")
+        fig_corr = go.Figure()
         if len(df) > 10:
-            corr = df[FEATURES].corrwith(df['semester_marks']).sort_values(ascending=True).round(3)
-            labels = [f.replace('_', ' ').title() for f in corr.index]
+            corr = df[FEATURES].corrwith(df["semester_marks"]).sort_values(ascending=True).round(3)
+            labels = [f.replace("_", " ").title() for f in corr.index]
             vals = corr.values
-
-            # Clean horizontal bars
-            fig_corr = go.Figure()
             fig_corr.add_trace(go.Bar(
-                x=vals, y=labels,
-                orientation='h',
+                x=vals,
+                y=labels,
+                orientation="h",
                 marker=dict(
                     color=vals,
-                    colorscale=[[0, '#E74C3C'], [0.3, '#F39C12'], [0.7, '#2CD9FF'], [1, '#27AE60']],
+                    colorscale=[
+                        [0, RISK_COL["Critical"]],
+                        [0.35, RISK_COL["High"]],
+                        [0.65, RISK_COL["Moderate"]],
+                        [1, RISK_COL["Low"]],
+                    ],
+                    line=dict(width=1, color="rgba(255,255,255,0.12)"),
                 ),
                 text=[f"{v:.2f}" for v in vals],
-                textposition='inside', insidetextanchor='end',
-                textfont=dict(color='white', size=11, family='Plus Jakarta Sans'),
-                hovertemplate="%{y}: %{x}<extra></extra>",
+                textposition="inside",
+                insidetextanchor="end",
+                hovertemplate="<b>%{y}</b><br>Correlation: %{x}<extra></extra>",
             ))
-            fig_corr.update_layout(
-                **_PL, height=300, showlegend=False,
-                xaxis=dict(showgrid=False, visible=False, range=[0, max(vals)*1.1]),
-                yaxis=dict(showgrid=False, tickfont=dict(color='#FFFFFF', size=12, family='Plus Jakarta Sans')),
-                margin=dict(l=8, r=8, t=10, b=8)
-            )
-            st.plotly_chart(fig_corr, use_container_width=True, config={'displayModeBar': False})
+            fig_corr.update_xaxes(range=[min(vals.min() * 1.15, -0.05), max(vals.max() * 1.15, 0.05)])
+        _standard_layout(fig_corr, height=330)
+        fig_corr.update_xaxes(title_text="Correlation")
+        fig_corr.update_yaxes(showgrid=False)
+        st.plotly_chart(fig_corr, use_container_width=True, config={"displayModeBar": False}, theme="streamlit")
 
-
-    # =====================================================================
-    # CHARTS ROW 3 — Department Comparisons (Grouped Bars + Clean Boxplot)
-    # =====================================================================
-    if sel_dept == 'All' and len(df) > 0:
-        col6, col7 = st.columns([1, 1])
-
-        with col6:
-            st.markdown('<div class="sh">Department Averages</div>', unsafe_allow_html=True)
-
-            dept_stats = df.groupby('department').agg(
-                avg_attendance=('attendance', 'mean'),
-                pass_rate=('semester_marks', lambda x: (x >= 120).mean() * 100),
+    with driver_right:
+        _chart_title("Department Averages")
+        fig_dept = go.Figure()
+        if sel_dept == "All" and len(df):
+            dept_stats = df.groupby("department").agg(
+                avg_attendance=("attendance", "mean"),
+                pass_rate=("semester_marks", lambda x: (x >= 120).mean() * 100),
             ).round(1)
-
             depts = dept_stats.index.tolist()
-            
-            # Grouped bar chart comparing metrics side by side
-            fig_dept = go.Figure()
             fig_dept.add_trace(go.Bar(
-                x=depts, y=dept_stats['avg_attendance'],
-                name='Attendance %',
-                marker_color='#0075FF', opacity=0.85,
+                x=depts,
+                y=dept_stats["avg_attendance"],
+                name="Attendance %",
+                marker_color=RISK_COL["Moderate"],
+                marker_line_width=1,
+                marker_line_color="rgba(255,255,255,0.12)",
             ))
             fig_dept.add_trace(go.Bar(
-                x=depts, y=dept_stats['pass_rate'],
-                name='Pass Rate %',
-                marker_color='#2CD9FF', opacity=0.85,
+                x=depts,
+                y=dept_stats["pass_rate"],
+                name="Pass Rate %",
+                marker_color=RISK_COL["Low"],
+                marker_line_width=1,
+                marker_line_color="rgba(255,255,255,0.12)",
             ))
+        _standard_layout(fig_dept, height=330, legend=True)
+        fig_dept.update_layout(
+            barmode="group",
+            bargap=0.18,
+            legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center"),
+        )
+        fig_dept.update_yaxes(title_text="Percent", range=[0, 100])
+        st.plotly_chart(fig_dept, use_container_width=True, config={"displayModeBar": False}, theme="streamlit")
 
-            fig_dept.update_layout(
-                **_PL, height=300, barmode='group',
-                legend=dict(orientation='h', y=-0.15, x=0.5, xanchor='center', font=dict(color='#A0AEC0')),
-                xaxis=dict(showgrid=False, tickfont=dict(color='#FFFFFF', size=13, family='Plus Jakarta Sans')),
-                yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.06)', range=[0, 100], tickfont=dict(color='#A0AEC0')),
-                margin=dict(l=8, r=8, t=10, b=40)
-            )
-            st.plotly_chart(fig_dept, use_container_width=True, config={'displayModeBar': False})
-
-        with col7:
-            st.markdown('<div class="sh">Marks Spread by Department</div>', unsafe_allow_html=True)
-
-            # Boxplot for a clean statistical spread
-            fig_box = go.Figure()
-            for dept in DEPARTMENTS:
-                dept_data = df[df['department'] == dept]['semester_marks']
-                if len(dept_data) > 0:
-                    fig_box.add_trace(go.Box(
-                        y=dept_data, name=dept,
-                        fillcolor=f"rgba({int(DEPT_COL.get(dept, '#0075FF')[1:3], 16)},{int(DEPT_COL.get(dept, '#0075FF')[3:5], 16)},{int(DEPT_COL.get(dept, '#0075FF')[5:7], 16)}, 0.2)",
-                        line=dict(color=DEPT_COL.get(dept, '#0075FF'), width=2),
-                        marker=dict(color=DEPT_COL.get(dept, '#0075FF'), size=4),
-                        boxpoints='outliers'
-                    ))
-
-            fig_box.update_layout(
-                **_PL, height=300, showlegend=False,
-                xaxis=dict(showgrid=False, tickfont=dict(color='#FFFFFF', size=13, family='Plus Jakarta Sans')),
-                yaxis=dict(
-                    title='Semester Marks', gridcolor='rgba(255,255,255,0.04)',
-                    tickfont=dict(color='#A0AEC0'),
-                ),
-                margin=dict(l=8, r=8, t=10, b=8)
-            )
-            st.plotly_chart(fig_box, use_container_width=True, config={'displayModeBar': False})
+    if sel_dept == "All" and len(df) > 0:
+        _chart_title("Marks Spread By Department")
+        fig_box = go.Figure()
+        for dept in DEPARTMENTS:
+            dept_data = df[df["department"] == dept]["semester_marks"]
+            if len(dept_data) > 0:
+                hex_col = DEPT_COL.get(dept, "#81A1C1").lstrip("#")
+                r, g, b = tuple(int(hex_col[i:i + 2], 16) for i in (0, 2, 4))
+                fig_box.add_trace(go.Box(
+                    y=dept_data,
+                    name=dept,
+                    fillcolor=f"rgba({r},{g},{b},0.24)",
+                    line=dict(color=f"rgba({r},{g},{b},1)", width=2),
+                    marker=dict(color=f"rgba({r},{g},{b},1)", size=4),
+                    boxpoints="outliers",
+                    hovertemplate=f"<b>{dept}</b><br>Marks: %{{y}}<extra></extra>",
+                ))
+        _standard_layout(fig_box, height=320)
+        fig_box.update_yaxes(title_text="Semester Marks")
+        st.plotly_chart(fig_box, use_container_width=True, config={"displayModeBar": False}, theme="streamlit")
