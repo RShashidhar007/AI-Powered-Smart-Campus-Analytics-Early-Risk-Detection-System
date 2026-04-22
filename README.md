@@ -1,126 +1,159 @@
-﻿# AI-Powered Smart Campus Analytics: Early Risk Detection System
+# AI-Powered Smart Campus Analytics: Early Risk Detection System
 
-An advanced, comprehensive **Smart Campus Analytics** dashboard built with Streamlit. This platform leverages Machine Learning to predict student outcomes across **5 departments** and **4 semesters**, functioning as an **Early Risk Detection System**. 
+An advanced **Smart Campus Analytics** dashboard built with Streamlit. The platform uses machine learning and academic performance data to identify students who may need early support across multiple departments and semesters.
 
-The system features a dual-profile **Faculty and Student Portal**, a robust **SQLite database** architecture for historical data and persistent user authentication, **Year-over-Year comparative analytics**, and a stunning, natively integrated **Glassmorphic Dark Mode UI**.
+The system includes separate **Faculty** and **Student** portals, SQLite-backed data storage, year-over-year analytics, multilingual UI support, professional dashboard visualizations, and a contextual AI assistant.
 
 ---
 
 ## Key Features
 
-* **Dual-Role Access Portals:** Features distinct interfaces for Faculty (advanced predictive analytics) and Students (read-only profiles mapping their specific performance vs class averages using Radar and Bullet charts).
-* **AI-Powered Early Risk Detection:** Employs Machine Learning models (`scikit-learn`) to classify student performance and predict individuals at risk of failing or dropping out.
-* **Robust SQLite Authentication & Persistence:** Powered by a unified SQLite database (`campus_analytics.db`) enforcing secure SHA-256 faculty registration/authentication and rapid historical student querying.
-* **Year-over-Year Comparison:** A dedicated dashboard to compare KPIs, grade distributions, and predictive risk tiers between current and previous academic years with interactive delta metrics.
-* **Multi-Department Support:** Scales efficiently across **5 major departments** (CSE, ECE, ME, CE, ISE) containing **4 semesters** worth of integrated insights.
-* **Premium Interactive Visualizations:** Upgraded dynamic visualizations using `Plotly`, featuring correlation impact bars, Risk Treemaps, Attendance Area Splines, and Statistical Boxplots inside a perfectly constrained geometric Grid layout.
-* **Multi-Format Data Ingestion:** Process student data continuously via CSV, Excel, and PDF files directly into the database.
-* **Enterprise Multilingual Support:** Comprehensive, dynamic localization mapping for **English, Hindi, and Kannada** available entirely offline across all pages and charts.
-* **AI Campus Assistant:** Integrated floating AI agent powered by **Groq (Llama 3)** for granular data interpretation context, acting as a personal data scientist.
-* **Deep Space Premium Styling:** Bespoke Streamlit layout enforcing an unbreakable **Glassmorphic Dark Theme** with polished typography, glowing hover actions, seamless metric cards, and perfectly aligned UI elements.
+* **Dual-role access portals:** Faculty users can access predictive analytics, reports, student management, and settings. Students can view a restricted personal dashboard using their USN.
+* **Early risk detection:** Uses attendance, internal marks, assignments, study hours, and semester marks to classify student risk levels.
+* **SQLite persistence:** Stores student records, academic-year data, and registered faculty accounts in `campus_analytics.db`.
+* **Professional home dashboard:** Provides KPI summaries, risk proportions, grade distribution, attendance insights, academic drivers, and department comparisons.
+* **Year-over-year comparison:** Compares KPIs, grade distributions, and predictive risk tiers across academic years.
+* **Multi-department support:** Supports CSE, ECE, ME, CE, and ISE across multiple semesters.
+* **Interactive visualizations:** Uses Plotly charts for distributions, correlations, attendance tiers, marks spread, and department-level comparisons.
+* **Multi-format ingestion:** Supports student data workflows from CSV, Excel, and PDF sources.
+* **Multilingual interface:** Includes English, Hindi, and Kannada text mappings.
+* **AI campus assistant:** Provides contextual analytics support using the configured LLM provider.
+* **Clean dark UI:** Uses a centralized theme for consistent spacing, typography, cards, and charts without logo-heavy branding.
 
 ---
 
 ## Technology Stack
 
-* **Frontend Framework:** Streamlit
-* **Database & Persistence:** SQLite (`campus_analytics.db`)
-* **Security Layer:** `hashlib` (SHA-256 cryptographic hashes for authentication)
-* **Data Processing Pipeline:** `pandas`, `numpy`
-* **Machine Learning Engine:** `scikit-learn`, `joblib`
-* **Data Visualization:** `plotly`
-* **LLM Engine:** Groq API (Llama-3.3-70b-versatile or similar)
-* **Document Processing:** `pdfplumber`, `openpyxl`
+* **Frontend:** Streamlit
+* **Database:** SQLite
+* **Data processing:** pandas, numpy
+* **Machine learning:** scikit-learn
+* **Visualization:** Plotly
+* **Documents:** pdfplumber, openpyxl
+* **Environment variables:** python-dotenv
+* **AI assistant:** OpenAI/Groq-compatible API configuration, depending on local setup
 
 ---
 
-## ðŸ“‚ Project Structure
+## Project Structure
 
 ```text
-â”œâ”€â”€ data/                   # SQLite Database (campus_analytics.db) and CSV backups
-â”œâ”€â”€ models/                 # Serialized Machine Learning models
-â”œâ”€â”€ scripts/                # Utility scripts
-â”‚   â”œâ”€â”€ migrate_to_sqlite.py # Script to migrate CSV data to SQLite and generate history
-â”‚   â”œâ”€â”€ update_lang.py       # Auto-generator script for missing translation variables
-â”‚   â”œâ”€â”€ inspect_db.py       # DB inspection utility
-â”œâ”€â”€ src/                    # Primary source code
-â”‚   â”œâ”€â”€ pages/              # Dashboards (Home, Predictions, Students, Reports, Year Comparison, Settings, Student Dashboard)
-â”‚   â”œâ”€â”€ styles.py           # Core Glassmorphic dark theme application CSS logic
-â”‚   â”œâ”€â”€ ai_agent.py         # Groq-powered contextual floating Assistant
-â”‚   â”œâ”€â”€ database.py         # SQLite authentication abstractions & student CRUD operations
-â”‚   â”œâ”€â”€ data_pro.py         # Data processing & feature pipelines
-â”‚   â”œâ”€â”€ login.py            # Custom UI logic for Faculty/Student login & Registration routing
-â”‚   â”œâ”€â”€ config.py           # App configuration limits (DB_PATH, ACADEMIC_YEAR)
-â”‚   â”œâ”€â”€ language.py         # i18n localization dictionary references
-â”‚   â”œâ”€â”€ ml_models.py        # ML architectures, hyperparameter training frameworks
-â”œâ”€â”€ app.py                  # Main Streamlit entrance application
-â””â”€â”€ requirements.txt        # System Dependencies
+.
+|-- app.py                         # Main Streamlit application entry point
+|-- requirements.txt               # Python dependencies
+|-- README.md                      # Project documentation
+|-- data/
+|   |-- campus_analytics.db         # SQLite database
+|   |-- student_data.csv            # Main student dataset
+|   `-- student_data_500.csv        # Sample dataset
+|-- scripts/
+|   |-- generate_data.py            # Synthetic data generator
+|   |-- inspect_csv.py              # CSV inspection utility
+|   |-- inspect_db.py               # Database inspection utility
+|   `-- migrate_to_sqlite.py        # CSV-to-SQLite migration script
+`-- src/
+    |-- ai_agent.py                 # AI assistant logic
+    |-- auth.py                     # Login renderer re-export
+    |-- config.py                   # App configuration and constants
+    |-- data_pro.py                 # Data cleaning and feature engineering
+    |-- database.py                 # SQLite access layer
+    |-- exel_repo.py                # Excel report generation
+    |-- file_ingest.py              # File ingestion helpers
+    |-- language.py                 # UI language mappings
+    |-- login.py                    # Faculty and student login UI
+    |-- ml_models.py                # ML training and prediction helpers
+    |-- pdf_report.py               # PDF report generation
+    |-- styles.py                   # CSS injection helpers
+    |-- ui_theme.py                 # Centralized design tokens and UI helpers
+    |-- visual.py                   # Static chart/report visualizations
+    `-- pages/
+        |-- home.py                 # Campus overview dashboard
+        |-- predictions.py          # Prediction tools
+        |-- reports.py              # Analytics reports
+        |-- settings.py             # Settings page
+        |-- student_dashboard.py    # Student-facing dashboard
+        |-- students.py             # Student management
+        `-- year_comparison.py      # Academic year comparison
 ```
 
 ---
 
-## ðŸš€ Getting Started
+## Getting Started
 
 ### 1. Prerequisites
-Ensure you have **Python 3.10+** installed.
+
+Install **Python 3.10+**.
 
 ### 2. Installation
+
 ```bash
 git clone https://github.com/RShashidhar007/AI-Powered-Smart-Campus-Analytics-Early-Risk-Detection-System.git
 cd AI-Powered-Smart-Campus-Analytics-Early-Risk-Detection-System
 python -m venv venv
-source venv/bin/activate  # Or `venv\Scripts\activate` on Windows
+venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 3. Database Initial Migration
-To populate the SQLite database schema and extract any residual CSV sample data:
+On macOS or Linux, activate the environment with:
+
+```bash
+source venv/bin/activate
+```
+
+### 3. Database Migration
+
+Populate or refresh the SQLite database from the dataset:
+
 ```bash
 python scripts/migrate_to_sqlite.py
 ```
 
-### 4. Configuration Requirements
-Create a `.env` file within the system root directory (An `.env.example` is provided):
-```env
-# Optional but required for floating chat AI
-GROQ_API_KEY=your_key_here
+### 4. Environment Configuration
 
-# Required for super-admin login dashboard interface
+Create a `.env` file in the project root:
+
+```env
+GROQ_API_KEY=your_key_here
+ADMIN_USERNAME=teacher
 ADMIN_PASSWORD=team07pro
 ```
 
-### 5. Launch the Application
+### 5. Run The App
+
 ```bash
 streamlit run app.py
 ```
 
 ---
 
-## ðŸ” Credentials & Access Roles
+## Credentials And Access
 
 ### Faculty Portal
-The main interface providing full predictive modeling and analytical capabilities.
-- **Default Super-Admin Username:** `teacher`
-- **Default Super-Admin Password:** `team07pro`
-*(Faculty users can directly register new permanent accounts via the "Register" GUI tab).*
+
+Faculty users can access the full dashboard, predictions, reports, student records, and settings.
+
+* **Default username:** `teacher`
+* **Default password:** `team07pro`
+
+Faculty users can also register permanent accounts from the Register tab.
 
 ### Student Portal
-A restricted read-only interface mapped exclusively to a student's `USN` performance metrics.
-- **Login Mechanism:** Enter a valid dataset `USN` (e.g. `1RV21CSE1001`) in both the Username and Password fields.
+
+Students log in with a valid dataset USN.
+
+* **Username:** student USN, for example `1RV21CSE1001`
+* **Default password:** same as the student USN
 
 ---
 
-## ðŸ¤ Contributing
-Contributions are highly encouraged! Feel free to fork the project and open a Pull Request.
+## Notes
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+* The app falls back to `data/student_data.csv` if database data is unavailable.
+* Academic-year filtering uses `CURRENT_ACADEMIC_YEAR` from `src/config.py`.
+* The UI is intentionally logo-free and uses text-first navigation.
 
 ---
 
-## ðŸ“ License
-Distributed under the MIT License. See `LICENSE` for more information.
+## License
 
+Distributed under the MIT License. See `LICENSE` for details.
