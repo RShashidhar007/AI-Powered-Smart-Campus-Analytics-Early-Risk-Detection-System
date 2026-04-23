@@ -1,4 +1,4 @@
-﻿import os
+import os
 import streamlit as st
 import numpy as np
 import pandas as pd
@@ -7,10 +7,10 @@ from language import TEXTS
 from config import DATA_PATH, CURRENT_ACADEMIC_YEAR
 from database import init_db, create_faculty_user, authenticate_faculty_user
 
-# â”€â”€ Design system â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# Design system
 # PAGE_CSS is now centrally managed in ui_theme.py and injected via styles.py
 
-# Admin credentials â€” override via environment variables
+# Admin credentials - override via environment variables
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "teacher")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "team07pro")
 
@@ -54,10 +54,10 @@ def render_login_page():
 
         st.selectbox(
             "Language", 
-            ["English", "à¤¹à¤¿à¤¨à¥à¤¦à¥€", "à²•à²¨à³à²¨à²¡"], 
+            ["English", "हिन्दी", "ಕನ್ನಡ"], 
             key="language_topright", 
             label_visibility="collapsed",
-            index=["English", "à¤¹à¤¿à¤¨à¥à¤¦à¥€", "à²•à²¨à³à²¨à²¡"].index(st.session_state.language),
+            index=["English", "हिन्दी", "ಕನ್ನಡ"].index(st.session_state.language),
             on_change=_on_login_lang_change,
         )
 
@@ -120,7 +120,7 @@ def render_login_page():
                             st.error(T["invalid_otp"])
 
             with tab3:
-                st.markdown("### ðŸ“‹ Create New Account")
+                st.markdown("### Create New Account")
                 with st.form("registration_form"):
                     new_username = st.text_input("Choose Username", placeholder="Enter desired username", key="reg_username")
                     new_email = st.text_input("Email Address", placeholder="Enter your email", key="reg_email")
@@ -131,34 +131,34 @@ def render_login_page():
                     # Password strength indicator for registration
                     if new_password:
                         password_strength = "Weak"
-                        strength_color = "ðŸ”´"
+                        strength_color = ""
                         if len(new_password) >= 8:
                             if any(c.isupper() for c in new_password) and any(c.isdigit() for c in new_password):
                                 password_strength = "Strong"
-                                strength_color = "ðŸŸ¢"
+                                strength_color = ""
                             else:
                                 password_strength = "Medium"
-                                strength_color = "ðŸŸ¡"
+                                strength_color = ""
                         st.caption(f"Password Strength: {strength_color} {password_strength}")
                     
                     submit_register = st.form_submit_button("Register Account", use_container_width=True)
                     if submit_register:
                         if not new_username or not new_email or not new_password:
-                            st.error("âŒ All fields are required.")
+                            st.error("All fields are required.")
                         elif len(new_password) < 8:
-                            st.error("âŒ Password must be at least 8 characters long.")
+                            st.error("Password must be at least 8 characters long.")
                         elif new_password != confirm_password:
-                            st.error("âŒ Passwords do not match.")
+                            st.error("Passwords do not match.")
                         elif "@" not in new_email:
-                            st.error("âŒ Please enter a valid email address.")
+                            st.error("Please enter a valid email address.")
                         else:
                             # Register new user to the database
                             success = create_faculty_user(new_username, new_email, new_password, department)
                             if success:
-                                st.success("âœ… Account created successfully!")
-                                st.info(f"ðŸ“ Your username: **{new_username}**\n\nðŸ” You can now log in using your username and password in the 'Username/Password' tab.")
+                                st.success("Account created successfully!")
+                                st.info(f"Your username: **{new_username}**\n\nYou can now log in using your username and password in the 'Username/Password' tab.")
                             else:
-                                st.error("âŒ Username already exists. Please choose another.")
+                                st.error("Username already exists. Please choose another.")
 
             # Forgot Password link under the tabs
             st.markdown(f"<a href='#' style='color:var(--text-muted); font-size:14px; display:block; text-align:center; margin-top:10px;'>{T['forgot_password_text']}</a>", unsafe_allow_html=True)
@@ -192,7 +192,7 @@ def render_login_page():
                     type="password",
                     key="student_password_input",
                 )
-                st.caption("ðŸ’¡ Default password is your USN")
+                st.caption("Default password is your USN")
 
                 submit_student = st.form_submit_button(
                     T.get("login_button_text", "Login"),
@@ -202,13 +202,13 @@ def render_login_page():
                 if submit_student:
                     usn_clean = student_usn.strip().upper()
                     if not usn_clean:
-                        st.error("âŒ Please enter your USN.")
+                        st.error("Please enter your USN.")
                     else:
                         valid_usns = _load_student_usns()
                         if usn_clean not in valid_usns:
-                            st.error(T.get("student_usn_not_found", "âŒ No student found with this USN"))
+                            st.error(T.get("student_usn_not_found", "No student found with this USN"))
                         elif student_password.strip().upper() != usn_clean:
-                            st.error(T.get("student_invalid_password", "âŒ Invalid password"))
+                            st.error(T.get("student_invalid_password", "Invalid password"))
                         else:
                             st.session_state.authenticated = True
                             st.session_state.user_role = "student"
@@ -218,4 +218,3 @@ def render_login_page():
                             st.rerun()
 
     st.markdown(f"<p style='text-align:center; color:var(--text-muted); font-size:12px; margin-top:20px;'>{T['footer']}</p>", unsafe_allow_html=True)
-

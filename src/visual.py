@@ -42,7 +42,7 @@ def plot_distributions(df, out_dir):
         axes[i].set_title(col.replace('_', ' ').title())
         axes[i].legend(fontsize=8)
     axes[-1].set_visible(False)
-    fig.suptitle('Feature Distributions — {len(df)} Students', fontsize=15, fontweight='bold', y=1.01)
+    fig.suptitle('Feature Distributions - {len(df)} Students', fontsize=15, fontweight='bold', y=1.01)
     fig.tight_layout()
     return _save(fig, f'{out_dir}/distributions.png')
 def plot_correlation_heatmap(df, out_dir):
@@ -55,7 +55,7 @@ def plot_correlation_heatmap(df, out_dir):
     sns.heatmap(corr, mask=mask, annot=True, fmt='.2f', cmap='RdYlGn',
                 center=0, ax=ax, linewidths=0.5,
                 annot_kws={'size': 9}, vmin=-1, vmax=1)
-    ax.set_title('Correlation Matrix — Academic Features', fontsize=14, fontweight='bold', pad=15)
+    ax.set_title('Correlation Matrix - Academic Features', fontsize=14, fontweight='bold', pad=15)
     fig.tight_layout()
     return _save(fig, f'{out_dir}/correlation_heatmap.png')
 def plot_grade_distribution(df, out_dir):
@@ -179,7 +179,7 @@ def plot_regression_results(y_test, predictions, out_dir):
     mn, mx = min(y_test.min(), predictions.min()), max(y_test.max(), predictions.max())
     axes[0].plot([mn, mx], [mn, mx], 'r--', linewidth=2, label='Perfect Fit')
     axes[0].set_xlabel('Actual Semester Marks'); axes[0].set_ylabel('Predicted Semester Marks')
-    axes[0].set_title(f'Actual vs Predicted  (R² = {r2:.3f})', fontweight='bold')
+    axes[0].set_title(f'Actual vs Predicted  (R2 = {r2:.3f})', fontweight='bold')
     axes[0].legend()
 
     residuals = np.array(y_test) - np.array(predictions)
@@ -216,8 +216,8 @@ def plot_model_comparison(reg_results: dict, clf_results: dict, out_dir: str):
     for bar, val in zip(bars, r2s):
         ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.005,
                  f'{val:.3f}', ha='center', fontweight='bold', fontsize=10)
-    ax1.set_ylim(0, 1.1); ax1.set_ylabel('R² Score')
-    ax1.set_title('Regression: R² Comparison', fontweight='bold')
+    ax1.set_ylim(0, 1.1); ax1.set_ylabel('R2 Score')
+    ax1.set_title('Regression: R2 Comparison', fontweight='bold')
     ax1.tick_params(axis='x', rotation=10)
     # Classification Accuracy
     names_c = list(clf_results.keys())
@@ -267,7 +267,7 @@ def plot_clusters(clustering_result: dict, out_dir: str):
                     color=PALETTE[i % len(PALETTE)], edgecolor='white', alpha=0.85)
     axes[1].set_xticks(x + width)
     axes[1].set_xticklabels(profile['cluster_name'].values, rotation=15, ha='right', fontsize=8)
-    axes[1].set_ylabel('Normalized Score (0–100)')
+    axes[1].set_ylabel('Normalized Score (0-100)')
     axes[1].set_title('Cluster Profiles Comparison', fontweight='bold')
     axes[1].legend(fontsize=8)
 

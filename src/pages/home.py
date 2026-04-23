@@ -12,7 +12,7 @@ from data_pro import (
     filter_dataframe,
 )
 from ml_models import FEATURES
-from ui_theme import PAGE_CSS, GRADE_COL, RISK_COL, DEPT_COL, PL as _PL, kpi_card as _kpi
+from ui_theme import get_page_css, GRADE_COL, RISK_COL, DEPT_COL, PL as _PL, kpi_card as _kpi
 
 
 HOME_CSS = """
@@ -129,7 +129,7 @@ def _attendance_colors(order: list[str]) -> list[str]:
 
 
 def render_home_page():
-    st.markdown(PAGE_CSS, unsafe_allow_html=True)
+    st.markdown(get_page_css(st.session_state.get('theme_mode', 'Dark')), unsafe_allow_html=True)
     st.markdown(HOME_CSS, unsafe_allow_html=True)
 
     all_df = _load_all()

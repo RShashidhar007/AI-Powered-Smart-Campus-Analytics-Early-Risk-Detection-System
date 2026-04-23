@@ -1,6 +1,6 @@
 TEXTS = {
     "English": {
-        # ── Login page ────────────────────────────────────────────────
+        # Login page
         "title_text":           "Smart Campus Login",
         "login_subtitle":       "Please connect with your credentials",
         "login_portal_text":    "Faculty Portal",
@@ -28,7 +28,7 @@ TEXTS = {
         "qr_scan_text":         "I have scanned the QR",
         "qr_verified":          " QR Login Successful!",
         "forgot_password_text": "Forgot Password?",
-        # ── Dashboard ─────────────────────────────────────────────────
+        # Dashboard
         "main_title":      "Smart Campus Analytics",
         "subtitle":        "AI-Powered Early Risk Detection System",
         "hi_teacher":      " Hi, Teacher",
@@ -39,12 +39,12 @@ TEXTS = {
         "at_risk":         "At-Risk",
         "on_track":        "On Track",
         "accuracy":        "Model Accuracy",
-        # ── Filters ───────────────────────────────────────────────────
+        # Filters
         "department":       "Department",
         "semester":         "Semester",
         "all_departments":  "All Departments",
         "all_semesters":    "All Semesters",
-        # ── Student portal ────────────────────────────────────────────
+        # Student portal
         "welcome_student":      "Welcome",
         "your_attendance":      "Attendance",
         "your_internals":       "Internal Marks",
@@ -57,10 +57,10 @@ TEXTS = {
         "name_label":           "Name",
         "department_label":     "Department",
         "semester_label":       "Semester",
-        "footer":          "© 2026 Smart Campus Analytics · AI-Powered Early Risk Detection System",
+        "footer":          "(c) 2026 Smart Campus Analytics - AI-Powered Early Risk Detection System",
     },
     "हिन्दी": {
-        # ── Login page ────────────────────────────────────────────────
+        # Login page
         "title_text":           "स्मार्ट कैंपस लॉगिन",
         "login_subtitle":       "कृपया अपने क्रेडेंशियल से कनेक्ट करें",
         "login_portal_text":    "शिक्षक पोर्टल",
@@ -88,7 +88,7 @@ TEXTS = {
         "qr_scan_text":         "मैंने QR स्कैन कर लिया है",
         "qr_verified":          " QR लॉगिन सफल!",
         "forgot_password_text": "पासवर्ड भूल गए?",
-        # ── Dashboard ─────────────────────────────────────────────────
+        # Dashboard
         "main_title":      "स्मार्ट कैंपस एनालिटिक्स",
         "subtitle":        "AI-संचालित प्रारंभिक जोखिम पहचान प्रणाली",
         "hi_teacher":      " नमस्ते, शिक्षक",
@@ -99,12 +99,12 @@ TEXTS = {
         "at_risk":         "जोखिम में",
         "on_track":        "सही रास्ते पर",
         "accuracy":        "मॉडल सटीकता",
-        # ── Filters ───────────────────────────────────────────────────
+        # Filters
         "department":       "विभाग",
         "semester":         "सेमेस्टर",
         "all_departments":  "सभी विभाग",
         "all_semesters":    "सभी सेमेस्टर",
-        # ── Student portal ────────────────────────────────────────────
+        # Student portal
         "welcome_student":      "स्वागत है",
         "your_attendance":      "उपस्थिति",
         "your_internals":       "आंतरिक अंक",
@@ -117,10 +117,10 @@ TEXTS = {
         "name_label":           "नाम",
         "department_label":     "विभाग",
         "semester_label":       "सेमेस्टर",
-        "footer":          "© 2026 स्मार्ट कैंपस एनालिटिक्स · AI-संचालित प्रारंभिक जोखिम पहचान प्रणाली",
+        "footer":          "(c) 2026 स्मार्ट कैंपस एनालिटिक्स - AI-संचालित प्रारंभिक जोखिम पहचान प्रणाली",
     },
     "ಕನ್ನಡ": {
-        # ── Login page ────────────────────────────────────────────────
+        # Login page
         "title_text":           "ಸ್ಮಾರ್ಟ್ ಕ್ಯಾಂಪಸ್ ಲಾಗಿನ್",
         "login_subtitle":       "ದಯವಿಟ್ಟು ನಿಮ್ಮ ರುಜುವಾತುಗಳೊಂದಿಗೆ ಸಂಪರ್ಕಿಸಿ",
         "login_portal_text":    "ಶಿಕ್ಷಕರ ಪೋರ್ಟಲ್",
@@ -128,17 +128,17 @@ TEXTS = {
         "faculty_tab":          "ಶಿಕ್ಷಕರ ಲಾಗಿನ್",
         "student_tab":          "ವಿದ್ಯಾರ್ಥಿ ಲಾಗಿನ್",
         "student_usn_placeholder": "ನಿಮ್ಮ USN ನಮೂದಿಸಿ (ಉದಾ. 1RV21CSE1001)",
-        "student_password_placeholder": "ನಿಮ್ಮ ಪಾಸ್‌ವರ್ಡ್ ನಮೂದಿಸಿ (ಡೀಫಾಲ್ಟ್: ನಿಮ್ಮ USN)",
+        "student_password_placeholder": "ನಿಮ್ಮ ಪಾಸ್ವರ್ಡ್ ನಮೂದಿಸಿ (ಡೀಫಾಲ್ಟ್: ನಿಮ್ಮ USN)",
         "student_login_success": "ಮರಳಿ ಸ್ವಾಗತ, ವಿದ್ಯಾರ್ಥಿ!",
         "student_usn_not_found": " ಈ USN ನೊಂದಿಗೆ ಯಾವ ವಿದ್ಯಾರ್ಥಿಯೂ ಕಂಡುಬಂದಿಲ್ಲ",
-        "student_invalid_password": " ಅಮಾನ್ಯ ಪಾಸ್‌ವರ್ಡ್",
+        "student_invalid_password": " ಅಮಾನ್ಯ ಪಾಸ್ವರ್ಡ್",
         "qr_login_text":        "QR ಸ್ಕ್ಯಾನ್",
         "username_placeholder": "ಬಳಕೆದಾರ ಹೆಸರು ನಮೂದಿಸಿ",
-        "password_placeholder": "ಪಾಸ್‌ವರ್ಡ್ ನಮೂದಿಸಿ",
+        "password_placeholder": "ಪಾಸ್ವರ್ಡ್ ನಮೂದಿಸಿ",
         "remember_text":        "ನನ್ನನ್ನು ನೆನಪಿಡಿ",
         "login_button_text":    "ಲಾಗಿನ್",
         "login_success":        "ಲಾಗಿನ್ ಯಶಸ್ವಿ!",
-        "invalid_credentials":  " ಅಮಾನ್ಯ ಬಳಕೆದಾರ ಹೆಸರು ಅಥವಾ ಪಾಸ್‌ವರ್ಡ್",
+        "invalid_credentials":  " ಅಮಾನ್ಯ ಬಳಕೆದಾರ ಹೆಸರು ಅಥವಾ ಪಾಸ್ವರ್ಡ್",
         "email_placeholder":    "ನಿಮ್ಮ ನೋಂದಾಯಿತ ಇಮೇಲ್ ನಮೂದಿಸಿ",
         "send_otp_text":        "OTP ಕಳುಹಿಸಿ",
         "otp_success":          "OTP ರಚಿಸಲಾಗಿದೆ: {otp}",
@@ -147,23 +147,23 @@ TEXTS = {
         "invalid_otp":          " ಅಮಾನ್ಯ OTP",
         "qr_scan_text":         "ನಾನು QR ಸ್ಕ್ಯಾನ್ ಮಾಡಿದ್ದೇನೆ",
         "qr_verified":          " QR ಲಾಗಿನ್ ಯಶಸ್ವಿ!",
-        "forgot_password_text": "ಪಾಸ್‌ವರ್ಡ್ ಮರೆತಿರಾ?",
-        # ── Dashboard ─────────────────────────────────────────────────
+        "forgot_password_text": "ಪಾಸ್ವರ್ಡ್ ಮರೆತಿರಾ?",
+        # Dashboard
         "main_title":      "ಸ್ಮಾರ್ಟ್ ಕ್ಯಾಂಪಸ್ ಅನಾಲಿಟಿಕ್ಸ್",
         "subtitle":        "AI-ಚಾಲಿತ ಆರಂಭಿಕ ಅಪಾಯ ಪತ್ತೆ ವ್ಯವಸ್ಥೆ",
         "hi_teacher":      " ನಮಸ್ಕಾರ, ಶಿಕ್ಷಕರೇ",
-        "logout":          "ಲಾಗ್‌ಔಟ್",
+        "logout":          "ಲಾಗ್ಔಟ್",
         "nav_options":     ["ಹೋಮ್", "ಮುನ್ಸೂಚನೆ", "ವಿದ್ಯಾರ್ಥಿಗಳು", "ವರದಿಗಳು", "ವರ್ಷ ಹೋಲಿಕೆ", "ಸೆಟ್ಟಿಂಗ್ಸ್"],
         "system_status":   "ಸಿಸ್ಟಮ್ ಸ್ಥಿತಿ",
         "total_students":  "ಒಟ್ಟು ವಿದ್ಯಾರ್ಥಿಗಳು",
         "at_risk":         "ಅಪಾಯದಲ್ಲಿ",
         "on_track":        "ಸರಿಯಾದ ಹಾದಿಯಲ್ಲಿ",
         "accuracy":        "ಮಾಡೆಲ್ ನಿಖರತೆ",
-        # ── Filters ───────────────────────────────────────────────────
+        # Filters
         "department":       "ವಿಭಾಗ",
         "semester":         "ಸೆಮಿಸ್ಟರ್",
         "all_departments":  "ಎಲ್ಲಾ ವಿಭಾಗಗಳು",
         "all_semesters":    "ಎಲ್ಲಾ ಸೆಮಿಸ್ಟರ್",
-        "footer":          "© 2026 ಸ್ಮಾರ್ಟ್ ಕ್ಯಾಂಪಸ್ ಅನಾಲಿಟಿಕ್ಸ್ · AI-ಚಾಲಿತ ಆರಂಭಿಕ ಅಪಾಯ ಪತ್ತೆ ವ್ಯವಸ್ಥೆ",
+        "footer":          "(c) 2026 ಸ್ಮಾರ್ಟ್ ಕ್ಯಾಂಪಸ್ ಅನಾಲಿಟಿಕ್ಸ್ - AI-ಚಾಲಿತ ಆರಂಭಿಕ ಅಪಾಯ ಪತ್ತೆ ವ್ಯವಸ್ಥೆ",
     },
 }

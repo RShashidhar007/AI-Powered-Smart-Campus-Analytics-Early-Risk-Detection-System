@@ -1,5 +1,5 @@
 """
-file_ingest.py — Extract student data tables from uploaded PDFs, CSVs, and Excel files.
+file_ingest.py - Extract student data tables from uploaded PDFs, CSVs, and Excel files.
 Uses pdfplumber for table extraction, and pandas for CSV/Excel reading. Handles missing columns gracefully.
 """
 import pandas as pd
@@ -15,7 +15,7 @@ EXPECTED_COLUMNS = [
     'semester_marks', 'study_hours',
 ]
 
-# Common aliases → canonical name mapping
+# Common aliases -> canonical name mapping
 COLUMN_ALIASES = {
     # USN
     'usn': 'usn', 'roll_no': 'usn', 'roll': 'usn', 'rollno': 'usn',
@@ -87,7 +87,7 @@ def extract_tables_from_pdf(file_bytes: bytes) -> tuple[pd.DataFrame | None, str
     try:
         pdf = pdfplumber.open(io.BytesIO(file_bytes))
     except Exception as e:
-        return None, f"❌ Could not open PDF: {e}"
+        return None, f" Could not open PDF: {e}"
 
     all_rows = []
     header = None
@@ -197,7 +197,7 @@ def _clean_and_map_dataframe(raw_df: pd.DataFrame, source_type: str) -> tuple[pd
 
     # Build status message
     found_str = ", ".join(f"**{c}**" for c in mapped_cols)
-    status = f"✅ Extracted **{len(df)} students** from {source_type}.\n\n📋 Mapped columns: {found_str}"
+    status = f" Extracted **{len(df)} students** from {source_type}.\n\n Mapped columns: {found_str}"
     if missing:
         missing_str = ", ".join(f"`{c}`" for c in missing)
         status += f"\n\n Missing columns (filled with defaults): {missing_str}"

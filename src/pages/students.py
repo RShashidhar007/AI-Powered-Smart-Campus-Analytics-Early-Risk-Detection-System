@@ -1,5 +1,5 @@
 """
-pages/students.py — At-Risk Students list and filters.
+pages/students.py - At-Risk Students list and filters.
 """
 import streamlit as st
 import pandas as pd
@@ -9,11 +9,11 @@ from config      import DATA_PATH, DEPARTMENTS, SEMESTERS, CURRENT_ACADEMIC_YEAR
 from data_pro    import run_pipeline, run_pipeline_from_db, get_at_risk_students, upsert_student_data, filter_dataframe
 from file_ingest import process_uploaded_file
 from language    import TEXTS
-from ui_theme import PAGE_CSS, GRADE_COL, RISK_COL, DEPT_COL, PL as _PL, PL, kpi_card as _kpi, section_header as _sh
+from ui_theme import get_page_css, GRADE_COL, RISK_COL, DEPT_COL, PL as _PL, PL, kpi_card as _kpi, section_header as _sh
 
-# ── Design system ─────────────────────────────────────────────────────────────
+# Design system
 
-# ── Colour maps & Plotly Theme ────────────────────────────────────────────────
+# Colour maps & Plotly Theme
 
 
 
@@ -26,7 +26,7 @@ def _load():
     return df
 
 def render_students_page():
-    st.markdown(PAGE_CSS, unsafe_allow_html=True)
+    st.markdown(get_page_css(st.session_state.get('theme_mode', 'Dark')), unsafe_allow_html=True)
     T = TEXTS[st.session_state.language]
     full_df = _load()
 
@@ -39,7 +39,7 @@ def render_students_page():
     st.markdown('<div class="page-title">At-Risk Students</div>', unsafe_allow_html=True)
     st.markdown(
         "<div class='page-subtitle'>"
-        "Early warning list · sorted by risk score</div>",
+        "Early warning list - sorted by risk score</div>",
         unsafe_allow_html=True,
     )
 
@@ -59,7 +59,7 @@ def render_students_page():
     _kpi(s1, len(flt),                                     "Students",       "", "var(--accent)")
     _kpi(s2, int((flt['risk_tier'] == 'Critical').sum()),   "Critical",       "", "var(--accent-red)")
     _kpi(s3, int((flt['risk_tier'] == 'High').sum()),       "High Risk",      "", "var(--accent-amber)")
-    _kpi(s4, f"{flt['attendance'].mean():.1f}%" if len(flt) else "—",
+    _kpi(s4, f"{flt['attendance'].mean():.1f}%" if len(flt) else "-",
          "Avg Attendance", "", "var(--accent-amber)")
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -93,11 +93,11 @@ def render_students_page():
 
     def _tc(v):
         bg = {'Critical': 'rgba(231,76,60,0.2)', 'High': 'rgba(230,126,34,0.2)', 'Moderate': 'rgba(243,156,18,0.2)', 'Low': 'rgba(39,174,96,0.2)'}
-        return f'background:{bg.get(v,"transparent")};color:{RISK_COL.get(v,"#FFFFFF")};font-weight:600;border:1px solid {RISK_COL.get(v,"#E2E8F0")}'
+        return f'background:{bg.get(v,"transparent")};color:{RISK_COL.get(v,"var(--text-primary)")};font-weight:600;border:1px solid {RISK_COL.get(v,"var(--border)")}'
 
     def _gc(v):
         bg = {'A': 'rgba(39,174,96,0.2)', 'B': 'rgba(46,134,171,0.2)', 'C': 'rgba(244,162,97,0.2)', 'D': 'rgba(230,126,34,0.2)', 'F': 'rgba(231,76,60,0.2)'}
-        return f'background:{bg.get(v,"transparent")};color:{GRADE_COL.get(v,"#FFFFFF")};font-weight:600;border:1px solid {GRADE_COL.get(v,"#E2E8F0")}'
+        return f'background:{bg.get(v,"transparent")};color:{GRADE_COL.get(v,"var(--text-primary)")};font-weight:600;border:1px solid {GRADE_COL.get(v,"var(--border)")}'
 
     sc = ['usn', 'name', 'department', 'semester', 'attendance', 'internal_marks', 'semester_marks',
           'study_hours', 'risk_score', 'risk_tier', 'grade_label', 'performance_index']
@@ -135,15 +135,15 @@ def render_students_page():
     if 'Risk Score' in disp.columns:
         styled = styled.bar(subset=['Risk Score'], color='rgba(231,76,60,0.6)', vmin=0, vmax=100)
         
-    styled = styled.set_properties(**{'font-size': '12px', 'background-color': 'transparent', 'color': '#F8FAFC'})
+    styled = styled.set_properties(**{'font-size': '12px', 'background-color': 'transparent', 'color': 'var(--text-primary)'})
               
     st.dataframe(styled, use_container_width=True, height=420)
-    st.download_button("⬇ Download CSV", flt.to_csv(index=False),
+    st.download_button("Download CSV", flt.to_csv(index=False),
                        "at_risk_students.csv", "text/csv")
 
-    # ── Add New Student ───────────────────────────────────────────────────────
+    # Add New Student
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown('<div class="sh">➕ Add New Student</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sh">Add New Student</div>', unsafe_allow_html=True)
     if 'student_added' in st.session_state:
         st.success(st.session_state['student_added'])
         del st.session_state['student_added']
@@ -169,11 +169,11 @@ def render_students_page():
         with fc5:
             new_study      = st.number_input("Study Hours/Day", 0.0, 10.0, 3.0, 0.1)
 
-        submitted = st.form_submit_button("✅ Add Student", use_container_width=True, type="primary")
+        submitted = st.form_submit_button("Add Student", use_container_width=True, type="primary")
 
         if submitted:
             if not new_usn.strip() or not new_name.strip():
-                st.error("❌ USN and Name are required.")
+                st.error(" USN and Name are required.")
             else:
                 import os
                 new_row = pd.DataFrame([{
@@ -193,12 +193,12 @@ def render_students_page():
                 upsert_student_data(new_row, DATA_PATH)
                 # Clear all cached data so every page picks up the new student
                 st.cache_data.clear()
-                st.session_state['student_added'] = f"✅ Student **{new_name.strip()}** ({new_usn.strip()}) added to {new_dept} Sem {new_sem}!"
+                st.session_state['student_added'] = f" Student **{new_name.strip()}** ({new_usn.strip()}) added to {new_dept} Sem {new_sem}!"
                 st.rerun()
 
-    # ── Upload File ────────────────────────────────────────────────────────────
+    # Upload File
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown('<div class="sh">📄 Upload Student Data (PDF, CSV, Excel)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sh"> Upload Student Data (PDF, CSV, Excel)</div>', unsafe_allow_html=True)
     st.caption("Upload a PDF, CSV, or Excel file containing student details in table format. "
                "The system will auto-detect columns and fill defaults for any missing ones.")
 
@@ -219,12 +219,12 @@ def render_students_page():
 
             col_add, col_cancel = st.columns(2)
             with col_add:
-                if st.button("✅ Add All to Dataset", use_container_width=True, type="primary",
+                if st.button("Add All to Dataset", use_container_width=True, type="primary",
                              key="pdf_add_btn"):
                     upsert_student_data(extracted_df, DATA_PATH)
                     st.cache_data.clear()
-                    st.success(f"✅ **{len(extracted_df)} students** updated/added to the dataset!")
+                    st.success(f" **{len(extracted_df)} students** updated/added to the dataset!")
                     st.rerun()
             with col_cancel:
-                if st.button("❌ Cancel", use_container_width=True, key="pdf_cancel_btn"):
+                if st.button("Cancel", use_container_width=True, key="pdf_cancel_btn"):
                     st.rerun()

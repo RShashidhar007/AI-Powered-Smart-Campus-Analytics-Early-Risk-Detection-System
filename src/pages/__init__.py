@@ -1,5 +1,5 @@
-﻿"""
-pages — Dashboard page renderers.
+"""
+pages - Dashboard page renderers.
 """
 from pages.home              import render_home_page
 from pages.predictions       import render_predictions_page

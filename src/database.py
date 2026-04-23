@@ -1,5 +1,5 @@
 """
-database.py — SQLite abstraction layer for Smart Campus Analytics.
+database.py - SQLite abstraction layer for Smart Campus Analytics.
 
 Provides a unified `students` table with academic_year tracking,
 replacing the old CSV-only data flow.
@@ -9,11 +9,11 @@ import sqlite3
 import pandas as pd
 import hashlib
 
-# ── Path ──────────────────────────────────────────────────────────────────────
+# Path
 _BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_PATH   = os.path.join(_BASE_DIR, 'data', 'campus_analytics.db')
 
-# ── Schema ────────────────────────────────────────────────────────────────────
+# Schema
 _CREATE_STUDENTS = """
 CREATE TABLE IF NOT EXISTS students (
     id               INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -112,7 +112,7 @@ def upsert_students(df: pd.DataFrame, academic_year: str,
     df = df.copy()
     df.columns = [c.strip().lower().replace(' ', '_') for c in df.columns]
 
-    # Map 'dept' → 'department' if needed
+    # Map 'dept' -> 'department' if needed
     if 'dept' in df.columns and 'department' not in df.columns:
         df = df.rename(columns={'dept': 'department'})
 

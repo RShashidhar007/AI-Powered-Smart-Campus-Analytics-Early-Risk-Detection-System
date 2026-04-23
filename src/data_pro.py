@@ -86,7 +86,7 @@ def assign_risk_tier(score: int) -> str:
 
 
 def compute_performance_index(row: pd.Series) -> float:
-    """Composite index (0–100) from all academic features."""
+    """Composite index (0-100) from all academic features."""
     att_norm   = min(row['attendance'] / 100, 1.0) * 20
     int_norm   = min(row['internal_marks'] / 50, 1.0) * 20
     asgn_norm  = min(row['assignment_score'] / 50, 1.0) * 15

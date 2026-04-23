@@ -15,7 +15,7 @@ from openpyxl.chart.series import DataPoint
 from openpyxl.formatting.rule import ColorScaleRule, DataBarRule
 import os
 
-# ── Color palette ─────────────────────────────────────────────────────────────
+# Color palette
 C = {
     'dark_blue':   '1F4E79', 'mid_blue':  '2E75B6', 'light_blue': 'DEEAF1',
     'green':       '27AE60', 'light_green':'D5F5E3',
@@ -61,7 +61,7 @@ def _freeze(ws, cell='A2'):
     ws.freeze_panes = ws[cell]
 
 
-# ── Sheet 1: Dashboard ────────────────────────────────────────────────────────
+# Sheet 1: Dashboard
 
 def _build_dashboard(ws, df):
     ws.sheet_properties.tabColor = C['dark_blue']
@@ -70,7 +70,7 @@ def _build_dashboard(ws, df):
     # Title block
     ws.merge_cells('B2:L3')
     title = ws['B2']
-    title.value     = 'AI-Powered Smart Campus Analytics — Executive Dashboard'
+    title.value     = 'AI-Powered Smart Campus Analytics - Executive Dashboard'
     title.font      = _font(bold=True, size=18, color='FFFFFF')
     title.fill      = _fill(C['dark_blue'])
     title.alignment = _align('center')
@@ -81,7 +81,7 @@ def _build_dashboard(ws, df):
     sub.font      = _font(size=10, color=C['mid_blue'], italic=True)
     sub.alignment = _align('center')
 
-    # KPI boxes row 6–8
+    # KPI boxes row 6-8
     kpis = [
         ('B', 'TOTAL STUDENTS', len(df), C['mid_blue'], ''),
         ('D', 'AT-RISK STUDENTS', int(df['is_at_risk'].sum()), C['red'], ''),
@@ -111,7 +111,7 @@ def _build_dashboard(ws, df):
     ws['B10'].font = _font(bold=True, size=12, color=C['dark_blue'])
     headers = ['Risk Tier', 'Count', 'Percentage', 'Action Required']
     actions = {
-        'Low':      'No action needed — monitor regularly',
+        'Low':      'No action needed - monitor regularly',
         'Moderate': 'Faculty advisory recommended',
         'High':     'Mandatory counselling & attendance review',
         'Critical': 'IMMEDIATE intervention required',
@@ -151,7 +151,7 @@ def _build_dashboard(ws, df):
         cell.alignment = _align('center')
         cell.border    = _border()
 
-    ranges = {'A': '165–200', 'B': '150–165', 'C': '135–150', 'D': '120–135', 'F': '<120'}
+    ranges = {'A': '165-200', 'B': '150-165', 'C': '135-150', 'D': '120-135', 'F': '<120'}
     row = 12
     for grade in ['A', 'B', 'C', 'D', 'F']:
         cnt = int((df['grade_label'] == grade).sum())
@@ -170,7 +170,7 @@ def _build_dashboard(ws, df):
     ws.column_dimensions[get_column_letter(10)].width = 14
 
 
-# ── Sheet 2: All Students ─────────────────────────────────────────────────────
+# Sheet 2: All Students
 
 def _build_all_students(ws, df):
     ws.sheet_properties.tabColor = C['mid_blue']
@@ -226,7 +226,7 @@ def _build_all_students(ws, df):
     )
 
 
-# ── Sheet 3: At-Risk Students ─────────────────────────────────────────────────
+# Sheet 3: At-Risk Students
 
 def _build_at_risk(ws, df):
     ws.sheet_properties.tabColor = C['red']
@@ -234,7 +234,7 @@ def _build_at_risk(ws, df):
 
     ws.merge_cells('A1:N1')
     title = ws['A1']
-    title.value     = f'⚠  AT-RISK STUDENTS — Requires Immediate Faculty Attention  ({len(at_risk)} students)'
+    title.value     = f'Warning  AT-RISK STUDENTS - Requires Immediate Faculty Attention  ({len(at_risk)} students)'
     title.font      = _font(bold=True, size=12, color='FFFFFF')
     title.fill      = _fill(C['red'])
     title.alignment = _align('center')
@@ -288,7 +288,7 @@ def _build_at_risk(ws, df):
         ws.row_dimensions[i].height = 30
 
 
-# ── Sheet 4: ML Results ───────────────────────────────────────────────────────
+# Sheet 4: ML Results
 
 def _build_ml_results(ws, reg_results, clf_results):
     ws.sheet_properties.tabColor = C['green']
@@ -300,9 +300,9 @@ def _build_ml_results(ws, reg_results, clf_results):
     ws['A1'].alignment = _align('center')
 
     # Regression
-    ws['A3'] = 'REGRESSION MODELS — Predicting Semester Marks'
+    ws['A3'] = 'REGRESSION MODELS - Predicting Semester Marks'
     ws['A3'].font = _font(bold=True, size=12, color=C['dark_blue'])
-    for c, h in enumerate(['Model', 'RMSE', 'MAE', 'R² Score', 'Performance'], 1):
+    for c, h in enumerate(['Model', 'RMSE', 'MAE', 'R2 Score', 'Performance'], 1):
         cell = ws.cell(row=4, column=c, value=h)
         cell.font = _font(bold=True, color='FFFFFF')
         cell.fill = _fill(C['mid_blue'])
@@ -318,7 +318,7 @@ def _build_ml_results(ws, reg_results, clf_results):
         perf = 'Excellent' if metrics['R2'] > 0.85 else ('Good' if metrics['R2'] > 0.70 else 'Fair')
         is_best = metrics['R2'] == max(m['R2'] for m in reg_results.values())
         bg = C['light_green'] if is_best else C['white']
-        for c, v in enumerate([name + (' ★' if is_best else ''), metrics['RMSE'], metrics['MAE'], metrics['R2'], perf], 1):
+        for c, v in enumerate([name + (' *' if is_best else ''), metrics['RMSE'], metrics['MAE'], metrics['R2'], perf], 1):
             cell = ws.cell(row=i, column=c, value=v)
             cell.fill      = _fill(bg)
             cell.alignment = _align('center')
@@ -327,7 +327,7 @@ def _build_ml_results(ws, reg_results, clf_results):
 
     # Classification
     start_row = 10
-    ws.cell(row=start_row, column=1).value = 'CLASSIFICATION MODELS — Predicting Grade (A–F)'
+    ws.cell(row=start_row, column=1).value = 'CLASSIFICATION MODELS - Predicting Grade (A-F)'
     ws.cell(row=start_row, column=1).font  = _font(bold=True, size=12, color=C['dark_blue'])
     for c, h in enumerate(['Model', 'Accuracy', 'Performance'], 1):
         cell = ws.cell(row=start_row+1, column=c, value=h)
@@ -340,7 +340,7 @@ def _build_ml_results(ws, reg_results, clf_results):
         is_best = metrics['Accuracy'] == max(m['Accuracy'] for m in clf_results.values())
         bg = C['light_green'] if is_best else C['white']
         perf = 'Excellent' if metrics['Accuracy'] > 0.85 else ('Good' if metrics['Accuracy'] > 0.70 else 'Fair')
-        for c, v in enumerate([name + (' ★' if is_best else ''), f"{metrics['Accuracy']*100:.1f}%", perf], 1):
+        for c, v in enumerate([name + (' *' if is_best else ''), f"{metrics['Accuracy']*100:.1f}%", perf], 1):
             cell = ws.cell(row=i, column=c, value=v)
             cell.fill      = _fill(bg)
             cell.alignment = _align('center')
@@ -348,7 +348,7 @@ def _build_ml_results(ws, reg_results, clf_results):
             cell.font      = _font(size=10, bold=is_best)
 
 
-# ── Sheet 5: Statistics ───────────────────────────────────────────────────────
+# Sheet 5: Statistics
 
 def _build_statistics(ws, df):
     ws.sheet_properties.tabColor = C['mid_blue']
@@ -357,7 +357,7 @@ def _build_statistics(ws, df):
     stats = df[numeric_cols].describe().round(3)
 
     ws.merge_cells('A1:I1')
-    ws['A1'].value     = 'Descriptive Statistics — All Academic Features'
+    ws['A1'].value     = 'Descriptive Statistics - All Academic Features'
     ws['A1'].font      = _font(bold=True, size=13, color='FFFFFF')
     ws['A1'].fill      = _fill(C['dark_blue'])
     ws['A1'].alignment = _align('center')
@@ -400,7 +400,7 @@ def _build_statistics(ws, df):
         cell.border = _border('hair')
 
 
-# ── Main entry point ──────────────────────────────────────────────────────────
+# Main entry point
 
 def generate_excel_report(df, reg_results, clf_results, output_path):
     wb = Workbook()

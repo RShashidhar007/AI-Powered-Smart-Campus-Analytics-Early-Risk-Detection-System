@@ -1,5 +1,5 @@
 """
-migrate_to_sqlite.py — Migrate CSV data to the unified SQLite students table.
+migrate_to_sqlite.py - Migrate CSV data to the unified SQLite students table.
 
 Steps:
   1. Drop legacy tables (current_students, previous_students) if present.
@@ -43,7 +43,7 @@ def _load_csv() -> pd.DataFrame:
 def _generate_previous_year(df: pd.DataFrame, seed: int = 42) -> pd.DataFrame:
     """Create synthetic previous-year data by applying gaussian noise.
 
-    - Numeric academic fields get ±5-15% noise so there are visible but
+    - Numeric academic fields get +/-5-15% noise so there are visible but
       realistic differences between years.
     - Some students are randomly dropped (simulating different cohort sizes).
     """
@@ -76,7 +76,7 @@ def _generate_previous_year(df: pd.DataFrame, seed: int = 42) -> pd.DataFrame:
 
 def main():
     print(f"\n{'='*60}")
-    print("  Smart Campus Analytics — SQLite Migration")
+    print("  Smart Campus Analytics - SQLite Migration")
     print(f"{'='*60}\n")
 
     print("[1/5] Connecting to database...")

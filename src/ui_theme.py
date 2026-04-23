@@ -1,5 +1,5 @@
 """
-ui_theme.py — Centralised UI design tokens for the Smart Campus dashboard.
+ui_theme.py - Centralised UI design tokens for the Smart Campus dashboard.
 
 This module contains ONLY visual / styling constants and tiny HTML-helper
 functions. It holds NO business logic, no data access, no model code.
@@ -7,7 +7,7 @@ functions. It holds NO business logic, no data access, no model code.
 Every page imports from here instead of carrying its own PAGE_CSS block.
 """
 
-# ── Colour maps (used by Plotly charts) ───────────────────────────────────────
+# Colour maps (used by Plotly charts)
 GRADE_COL = {
     "A": "#81C784", "B": "#81A1C1", "C": "#E5C07B",
     "D": "#D19A66", "F": "#E06C75",
@@ -21,45 +21,107 @@ DEPT_COL = {
     "CE": "#56B6C2", "ISE": "#E06C75",
 }
 
-# ── Plotly layout template ────────────────────────────────────────────────────
+# Plotly layout template
 PL = dict(
-    font_family="Inter, sans-serif",
+    font=dict(family="Inter, sans-serif", color="var(--text-primary)"),
+    title_font=dict(color="var(--text-primary)"),
     plot_bgcolor="rgba(0,0,0,0)",
     paper_bgcolor="rgba(0,0,0,0)",
     margin=dict(l=12, r=12, t=40, b=12),
-    xaxis=dict(gridcolor="rgba(128, 128, 128, 0.15)", zerolinecolor="rgba(128, 128, 128, 0.25)"),
-    yaxis=dict(gridcolor="rgba(128, 128, 128, 0.15)", zerolinecolor="rgba(128, 128, 128, 0.25)"),
-    legend=dict(bgcolor="rgba(0,0,0,0)", font=dict(size=11)),
+    xaxis=dict(
+        gridcolor="rgba(128, 128, 128, 0.15)",
+        zerolinecolor="rgba(128, 128, 128, 0.25)",
+        tickfont=dict(color="var(--text-secondary)"),
+        title=dict(font=dict(color="var(--text-secondary)")),
+    ),
+    yaxis=dict(
+        gridcolor="rgba(128, 128, 128, 0.15)",
+        zerolinecolor="rgba(128, 128, 128, 0.25)",
+        tickfont=dict(color="var(--text-secondary)"),
+        title=dict(font=dict(color="var(--text-secondary)")),
+    ),
+    legend=dict(bgcolor="rgba(0,0,0,0)", font=dict(size=11, color="var(--text-secondary)")),
 )
 
-# ── Shared PAGE_CSS (dark mode) ─────────────────────────────────────────────
-PAGE_CSS = """
+THEME_TOKENS = {
+    "Dark": {
+        "bg": "#1E293B",
+        "bg_secondary": "#334155",
+        "card_bg": "#334155",
+        "text_primary": "#F8FAFC",
+        "text_secondary": "#E2E8F0",
+        "text_muted": "#94A3B8",
+        "accent": "#81A1C1",
+        "accent_light": "#5E81AC",
+        "accent_teal": "#8FBCBB",
+        "accent_red": "#BF616A",
+        "accent_amber": "#EBCB8B",
+        "border": "#475569",
+        "border_hover": "#64748B",
+        "shadow": "0 4px 6px -1px rgba(0,0,0,0.5), 0 2px 4px -2px rgba(0,0,0,0.5)",
+        "shadow_md": "0 10px 15px -3px rgba(0,0,0,0.5), 0 4px 6px -4px rgba(0,0,0,0.5)",
+        "shadow_hover": "0 20px 25px -5px rgba(0,0,0,0.6), 0 8px 10px -6px rgba(0,0,0,0.6)",
+        "collapse_icon_fill": "%23F8FAFC",
+    },
+    "Light": {
+        "bg": "#F4F7FB",
+        "bg_secondary": "#E8EEF6",
+        "card_bg": "#FFFFFF",
+        "text_primary": "#172033",
+        "text_secondary": "#334155",
+        "text_muted": "#64748B",
+        "accent": "#2563EB",
+        "accent_light": "#1D4ED8",
+        "accent_teal": "#0F766E",
+        "accent_red": "#DC2626",
+        "accent_amber": "#B45309",
+        "border": "#D7DEE8",
+        "border_hover": "#A9B8CB",
+        "shadow": "0 4px 12px rgba(15,23,42,0.08), 0 1px 3px rgba(15,23,42,0.06)",
+        "shadow_md": "0 12px 24px rgba(15,23,42,0.10), 0 4px 10px rgba(15,23,42,0.08)",
+        "shadow_hover": "0 18px 30px rgba(15,23,42,0.14), 0 8px 16px rgba(15,23,42,0.10)",
+        "collapse_icon_fill": "%23172033",
+    },
+}
+
+
+def get_page_css(theme_mode="Dark"):
+    """Return app CSS for the selected visual theme."""
+    theme = THEME_TOKENS.get(theme_mode, THEME_TOKENS["Dark"])
+    css = PAGE_CSS_TEMPLATE
+    for key, value in theme.items():
+        css = css.replace("{" + key + "}", value)
+    return css
+
+
+# Shared PAGE_CSS template
+PAGE_CSS_TEMPLATE = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
-/* ── Root design tokens ──────────────────────────────────────────── */
+/* Root design tokens */
 :root {
-    --bg:              #1E293B;
-    --bg-secondary:    #334155;
-    --card-bg:         #334155;
-    --text-primary:    #F8FAFC;
-    --text-secondary:  #E2E8F0;
-    --text-muted:      #94A3B8;
-    --accent:          #81A1C1;
-    --accent-light:    #5E81AC;
-    --accent-teal:     #8FBCBB;
-    --accent-red:      #BF616A;
-    --accent-amber:    #EBCB8B;
-    --border:          #475569;
-    --border-hover:    #64748B;
-    --shadow:          0 4px 6px -1px rgba(0,0,0,0.5), 0 2px 4px -2px rgba(0,0,0,0.5);
-    --shadow-md:       0 10px 15px -3px rgba(0,0,0,0.5), 0 4px 6px -4px rgba(0,0,0,0.5);
-    --shadow-hover:    0 20px 25px -5px rgba(0,0,0,0.6), 0 8px 10px -6px rgba(0,0,0,0.6);
+    --bg:              {bg};
+    --bg-secondary:    {bg_secondary};
+    --card-bg:         {card_bg};
+    --text-primary:    {text_primary};
+    --text-secondary:  {text_secondary};
+    --text-muted:      {text_muted};
+    --accent:          {accent};
+    --accent-light:    {accent_light};
+    --accent-teal:     {accent_teal};
+    --accent-red:      {accent_red};
+    --accent-amber:    {accent_amber};
+    --border:          {border};
+    --border-hover:    {border_hover};
+    --shadow:          {shadow};
+    --shadow-md:       {shadow_md};
+    --shadow-hover:    {shadow_hover};
     --radius:          16px;
     --radius-sm:       12px;
 }
 
-/* ── Global typography ───────────────────────────────────────────── */
+/* Global typography */
 html, body, p, label, a, button, input, select, textarea {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     color: var(--text-secondary);
@@ -74,12 +136,12 @@ h1, h2, h3, h4, h5, h6 {
     font-family: 'Material Icons', 'Material Symbols Rounded', sans-serif !important;
 }
 
-/* ── Background ──────────────────────────────────────────────────── */
+/* Background */
 .stApp {
     background: var(--bg) !important;
 }
 
-/* ── Hide default Streamlit chrome ────────────────────────────────── */
+/* Hide default Streamlit chrome */
 #MainMenu, footer { visibility: hidden; }
 header {
     visibility: visible !important;
@@ -88,8 +150,8 @@ header {
 }
 button[kind="header"] { pointer-events: auto; }
 
-/* ── Sidebar collapse/expand button ──────────────────────────────── */
-/* ── Sidebar collapse/expand button ──────────────────────────────── */
+/* Sidebar collapse/expand button */
+/* Sidebar collapse/expand button */
 [data-testid="collapsedControl"], 
 [data-testid="stSidebarCollapsedControl"] {
     position: fixed !important;
@@ -103,7 +165,7 @@ button[kind="header"] { pointer-events: auto; }
     overflow: hidden !important;
     white-space: nowrap !important;
     
-    background: var(--card-bg) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23F8FAFC"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>') no-repeat center center !important;
+    background: var(--card-bg) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{collapse_icon_fill}"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>') no-repeat center center !important;
     background-size: 20px 20px !important;
     border: 1px solid var(--border) !important;
     border-radius: 50% !important;
@@ -127,13 +189,13 @@ button[kind="header"] { pointer-events: auto; }
     display: none !important;
 }
 
-/* ── Block container ─────────────────────────────────────────────── */
+/* Block container */
 .block-container {
     padding: 2.5rem 3rem 2rem !important;
     max-width: 1500px;
 }
 
-/* ── Sidebar ─────────────────────────────────────────────────────── */
+/* Sidebar */
 [data-testid="stSidebar"] {
     background: var(--card-bg) !important;
     border-right: 1px solid var(--border) !important;
@@ -154,7 +216,7 @@ button[kind="header"] { pointer-events: auto; }
     scrollbar-width: none !important;
 }
 
-/* ── Input fields ────────────────────────────────────────────────── */
+/* Input fields */
 .stTextInput > div > div > input,
 .stSelectbox > div > div > div,
 .stNumberInput > div > div > input {
@@ -172,7 +234,7 @@ button[kind="header"] { pointer-events: auto; }
     color: var(--text-muted) !important;
 }
 
-/* ── Radio navigation pills ──────────────────────────────────────── */
+/* Radio navigation pills */
 div.stRadio > div[role="radiogroup"] > label {
     background: transparent !important;
     border: none !important;
@@ -197,7 +259,7 @@ div.stRadio > div[role="radiogroup"] > label:hover:not([data-checked="true"]) {
     color: var(--text-primary) !important;
 }
 
-/* ── Tabs ────────────────────────────────────────────────────────── */
+/* Tabs */
 button[data-baseweb="tab"] {
     background: transparent !important;
     font-family: 'Inter', sans-serif !important;
@@ -211,7 +273,7 @@ button[data-baseweb="tab"][aria-selected="true"] {
     border-bottom-color: var(--accent) !important;
 }
 
-/* ── Buttons ─────────────────────────────────────────────────────── */
+/* Buttons */
 .stButton > button {
     background: var(--accent) !important;
     color: #FFFFFF !important;
@@ -241,19 +303,19 @@ button[data-baseweb="tab"][aria-selected="true"] {
     color: var(--accent) !important;
 }
 
-/* ── Data tables ─────────────────────────────────────────────────── */
+/* Data tables */
 .stDataFrame {
     border-radius: var(--radius) !important;
     overflow: hidden;
     border: 1px solid var(--border);
 }
 
-/* ── Sliders ──────────────────────────────────────────────────── */
+/* Sliders */
 .stSlider > div > div > div > div {
     background: var(--accent) !important;
 }
 
-/* ── Card classes ────────────────────────────────────────────────── */
+/* Card classes */
 .glass-card {
     background: var(--card-bg);
     border: 1px solid var(--border);
@@ -269,7 +331,7 @@ button[data-baseweb="tab"][aria-selected="true"] {
     transform: translateY(-2px);
 }
 
-/* ── KPI card ────────────────────────────────────────────────────── */
+/* KPI card */
 .kpi {
     background: var(--card-bg);
     border: 1px solid var(--border);
@@ -307,7 +369,7 @@ button[data-baseweb="tab"][aria-selected="true"] {
     font-weight: 400;
 }
 
-/* ── Stat card (used in app.py) ──────────────────────────────────── */
+/* Stat card (used in app.py) */
 .stat-card {
     background: var(--card-bg);
     border: 1px solid var(--border);
@@ -339,7 +401,7 @@ button[data-baseweb="tab"][aria-selected="true"] {
     letter-spacing: -0.02em;
 }
 
-/* ── Section header ──────────────────────────────────────────────── */
+/* Section header */
 .sh {
     font-size: 12px;
     font-weight: 700;
@@ -351,7 +413,7 @@ button[data-baseweb="tab"][aria-selected="true"] {
     margin-bottom: 16px;
 }
 
-/* ── Page title ──────────────────────────────────────────────────── */
+/* Page title */
 .page-title {
     font-size: 26px;
     font-weight: 800;
@@ -366,7 +428,7 @@ button[data-baseweb="tab"][aria-selected="true"] {
     font-weight: 400;
 }
 
-/* ── Dashboard header ────────────────────────────────────────────── */
+/* Dashboard header */
 .dashboard-header {
     margin-bottom: 20px;
 }
@@ -384,7 +446,7 @@ button[data-baseweb="tab"][aria-selected="true"] {
     font-weight: 400;
 }
 
-/* ── Alert bars ──────────────────────────────────────────────────── */
+/* Alert bars */
 .al {
     background: rgba(239, 68, 68, 0.15);
     border: 1px solid rgba(239, 68, 68, 0.3);
@@ -406,7 +468,7 @@ button[data-baseweb="tab"][aria-selected="true"] {
     margin-bottom: 20px;
 }
 
-/* ── Login box ───────────────────────────────────────────────────── */
+/* Login box */
 .login-box {
     background: var(--card-bg);
     border: 1px solid var(--border);
@@ -427,7 +489,7 @@ button[data-baseweb="tab"][aria-selected="true"] {
     margin-bottom: 20px;
 }
 
-/* ── Premium report card ─────────────────────────────────────────── */
+/* Premium report card */
 .pr {
     background: var(--card-bg);
     border: 1px solid var(--border);
@@ -443,7 +505,7 @@ button[data-baseweb="tab"][aria-selected="true"] {
     transform: translateY(-2px);
 }
 
-/* ── Scrollbar ───────────────────────────────────────────────────── */
+/* Scrollbar */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -463,10 +525,14 @@ button[data-baseweb="tab"][aria-selected="true"] {
 """
 
 
+# Backward-compatible default CSS.
+PAGE_CSS = get_page_css("Dark")
+
+
 def kpi_card(col, val, label, sub="", color="#2563EB", highlight=False):
     """Render a styled KPI card in the given Streamlit column.
 
-    This is a PURE UI helper — it only produces HTML.
+    This is a PURE UI helper - it only produces HTML.
     """
     border_style = f"border-left: 4px solid {color};" if highlight else ""
     col.markdown(

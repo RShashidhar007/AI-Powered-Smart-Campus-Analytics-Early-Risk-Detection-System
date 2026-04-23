@@ -1,5 +1,5 @@
 """
-ai_agent.py — Floating AI assistant chatbot widget.
+ai_agent.py - Floating AI assistant chatbot widget.
 Uses Groq API (llama3) for universal question answering.
 Falls back gracefully if API key is not configured.
 """
@@ -7,7 +7,7 @@ import os
 import streamlit as st
 from language import TEXTS
 
-SYSTEM_PROMPT = """You are the Smart Campus AI Assistant — a helpful, friendly, and knowledgeable 
+SYSTEM_PROMPT = """You are the Smart Campus AI Assistant - a helpful, friendly, and knowledgeable 
 virtual assistant embedded inside the "Smart Campus Analytics" dashboard. 
 
 About the platform:
@@ -15,7 +15,7 @@ About the platform:
   CSE (Computer Science), ECE (Electronics), ME (Mechanical), CE (Civil), ISE (Information Science).
 - Each department has 4 semesters with ~100 students each = ~2000 students total.
 - It has 5 pages: Home (overview KPIs & charts), Predictions (ML models & single-student predictor), 
-  Students (at-risk student list with filters), Reports (EDA — distributions, correlations, box plots, department comparison), 
+  Students (at-risk student list with filters), Reports (EDA - distributions, correlations, box plots, department comparison), 
   and Settings (theme & background customization).
 - Users can filter by Department and Semester from the sidebar.
 - Risk is calculated using attendance (<65%), internal marks (<25), semester marks (<120), 
@@ -25,7 +25,7 @@ About the platform:
 - Supports English, Hindi, and Kannada languages.
 
 Your role:
-- Answer ANY question the user asks — about the platform, academics, data science, 
+- Answer ANY question the user asks - about the platform, academics, data science, 
   programming, general knowledge, or anything else.
 - Be concise but thorough. Use markdown formatting when helpful.
 - EXACT STUDENT DATA: You have direct access to the complete student database (provided below in CSV format).
@@ -97,7 +97,7 @@ def _get_groq_response(user_msg: str, chat_history: list) -> str:
         response.raise_for_status()
         return response.json()["choices"][0]["message"]["content"]
     except Exception as e:
-        return f"⚠️ API Error: {str(e)}"
+        return f"Warning API Error: {str(e)}"
 
 def _get_fallback_response(user_msg: str) -> str:
     """Comprehensive fallback when Groq API is not available."""
@@ -232,7 +232,7 @@ def render_ai_agent():
         st.markdown("---")
         st.markdown(
             "<div style='display:flex;align-items:center;gap:8px;margin-bottom:8px'>"
-            "<span style='font-size:22px'>🤖</span>"
+            "<span style='font-size:22px'></span>"
             "<span style='font-size:16px;font-weight:600;color:var(--text-primary)'>"
             "AI Campus Assistant</span>"
             "<span style='font-size:11px;color:var(--text-muted);margin-left:auto'>"
@@ -248,7 +248,7 @@ def render_ai_agent():
                     "<div style='text-align:center;color:var(--text-muted);"
                     "padding:40px 0;font-size:13px'>"
                     " Hi! I'm your AI Campus Assistant.<br>"
-                    "I can answer <b>any question</b> — about students, predictions,<br>"
+                    "I can answer <b>any question</b> - about students, predictions,<br>"
                     "academics, programming, or anything else!"
                     "</div>",
                     unsafe_allow_html=True,

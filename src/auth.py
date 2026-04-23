@@ -1,5 +1,5 @@
 """
-auth.py — Re-exports the login page renderer.
+auth.py - Re-exports the login page renderer.
 """
 from login import render_login_page
 

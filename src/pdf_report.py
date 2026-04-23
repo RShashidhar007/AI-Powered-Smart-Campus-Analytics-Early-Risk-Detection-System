@@ -15,7 +15,7 @@ from reportlab.platypus import (
 )
 from reportlab.platypus.flowables import HRFlowable
 
-# ── Colors ────────────────────────────────────────────────────────────────────
+# Colors
 DARK_BLUE   = colors.HexColor('#1F4E79')
 MID_BLUE    = colors.HexColor('#2E75B6')
 LIGHT_BLUE  = colors.HexColor('#DEEAF1')
@@ -159,7 +159,7 @@ def _kpi_table(df, styles):
 def _risk_table(df, styles):
     data = [['Risk Tier', 'Count', 'Percentage', 'Required Action']]
     actions = {
-        'Low':      'No action — monitor regularly',
+        'Low':      'No action - monitor regularly',
         'Moderate': 'Faculty advisory recommended',
         'High':     'Mandatory counselling & attendance review',
         'Critical': 'IMMEDIATE intervention required',
@@ -194,7 +194,7 @@ def _risk_table(df, styles):
 
 
 def _grade_table(df, styles):
-    ranges = {'A': '165–200', 'B': '150–165', 'C': '135–150', 'D': '120–135', 'F': '<120'}
+    ranges = {'A': '165-200', 'B': '150-165', 'C': '135-150', 'D': '120-135', 'F': '<120'}
     data = [['Grade', 'Count', 'Percentage', 'Marks Range']]
     for grade in ['A', 'B', 'C', 'D', 'F']:
         cnt = int((df['grade_label'] == grade).sum())
@@ -222,7 +222,7 @@ def _ml_table(reg_results, clf_results, styles):
     data = [['Model Type', 'Model Name', 'Key Metric', 'Score', 'Status']]
     for name, m in reg_results.items():
         status = 'Best' if m['R2'] == max(x['R2'] for x in reg_results.values()) else ''
-        data.append(['Regression', name, 'R² Score', f"{m['R2']:.4f}", status])
+        data.append(['Regression', name, 'R2 Score', f"{m['R2']:.4f}", status])
     for name, m in clf_results.items():
         status = 'Best' if m['Accuracy'] == max(x['Accuracy'] for x in clf_results.values()) else ''
         data.append(['Classification', name, 'Accuracy', f"{m['Accuracy']*100:.1f}%", status])
@@ -292,7 +292,7 @@ def generate_pdf_report(df, reg_results, clf_results, clustering_result,
 
     story = []
 
-    # ── Cover Page ──
+    # Cover Page
     story.append(Spacer(1, 0.8*inch))
     cover_data = [[Paragraph('AI-Powered Smart Campus Analytics', styles['title']),
                    Paragraph('& Early Risk Detection System', styles['title'])]]
@@ -321,7 +321,7 @@ def generate_pdf_report(df, reg_results, clf_results, clustering_result,
     story.append(HRFlowable(width='100%', thickness=2, color=MID_BLUE))
     story.append(Spacer(1, 0.2*inch))
 
-    # ── Section 1: KPIs ──
+    # Section 1: KPIs
     story += _section_title('1. Key Performance Indicators', styles)
     story += _kpi_table(df, styles)
     story.append(Spacer(1, 0.2*inch))
@@ -337,7 +337,7 @@ def generate_pdf_report(df, reg_results, clf_results, clustering_result,
 
     _add_chart('kpi_summary.png', 'Figure 1: KPI Summary Dashboard', h=2.2)
 
-    # ── Section 2: Grade & Risk ──
+    # Section 2: Grade & Risk
     story += _section_title('2. Grade & Risk Distribution', styles)
     story.append(Paragraph('2.1 Grade Distribution', styles['h2']))
     story.append(_grade_table(df, styles))
@@ -349,28 +349,28 @@ def generate_pdf_report(df, reg_results, clf_results, clustering_result,
     story.append(Spacer(1, 0.15*inch))
     _add_chart('risk_distribution.png', 'Figure 3: Risk Tier Distribution', h=2.8)
 
-    # ── Section 3: EDA ──
+    # Section 3: EDA
     story.append(PageBreak())
     story += _section_title('3. Exploratory Data Analysis', styles)
     _add_chart('distributions.png', 'Figure 4: Feature Distributions Across All Students', h=3.5)
-    _add_chart('correlation_heatmap.png', 'Figure 5: Correlation Matrix — Academic Features', h=3.8)
+    _add_chart('correlation_heatmap.png', 'Figure 5: Correlation Matrix - Academic Features', h=3.8)
     _add_chart('attendance_vs_marks.png', 'Figure 6: Attendance vs Semester Marks (colored by Risk Score)', h=3.2)
     _add_chart('study_hours_vs_marks.png', 'Figure 7: Study Hours vs Semester Marks by Grade', h=3.2)
     _add_chart('boxplots_by_grade.png', 'Figure 8: Feature Distribution by Grade Group', h=3.0)
 
-    # ── Section 4: ML Results ──
+    # Section 4: ML Results
     story.append(PageBreak())
     story += _section_title('4. Machine Learning Model Results', styles)
     story.append(Paragraph('4.1 Model Performance Summary', styles['h2']))
     story.append(_ml_table(reg_results, clf_results, styles))
     story.append(Spacer(1, 0.15*inch))
     _add_chart('model_comparison.png', 'Figure 9: Model Performance Comparison', h=3.0)
-    _add_chart('regression_results.png', 'Figure 10: Regression Results — Actual vs Predicted', h=3.0)
+    _add_chart('regression_results.png', 'Figure 10: Regression Results - Actual vs Predicted', h=3.0)
     _add_chart('confusion_matrix.png', 'Figure 11: Classification Confusion Matrix (Best Model)', h=3.0)
-    _add_chart('feature_importance_regression.png', 'Figure 12: Feature Importance — Regression', h=2.8)
-    _add_chart('feature_importance_classification.png', 'Figure 13: Feature Importance — Classification', h=2.8)
+    _add_chart('feature_importance_regression.png', 'Figure 12: Feature Importance - Regression', h=2.8)
+    _add_chart('feature_importance_classification.png', 'Figure 13: Feature Importance - Classification', h=2.8)
 
-    # ── Section 5: Clustering ──
+    # Section 5: Clustering
     story.append(PageBreak())
     story += _section_title('5. Student Clustering & Personas', styles)
     story.append(Paragraph(
@@ -403,9 +403,9 @@ def generate_pdf_report(df, reg_results, clf_results, clustering_result,
     ]))
     story.append(tbl)
 
-    # ── Section 6: At-Risk Students ──
+    # Section 6: At-Risk Students
     story.append(PageBreak())
-    story += _section_title('6. At-Risk Students — Early Warning List', styles)
+    story += _section_title('6. At-Risk Students - Early Warning List', styles)
     at_risk_count = int(df['is_at_risk'].sum())
     critical_count = int((df['risk_tier'] == 'Critical').sum())
     story.append(Paragraph(
@@ -417,14 +417,14 @@ def generate_pdf_report(df, reg_results, clf_results, clustering_result,
     story.append(Spacer(1, 0.1*inch))
     story.append(_at_risk_table(df, styles))
 
-    # ── Section 7: Recommendations ──
+    # Section 7: Recommendations
     story.append(PageBreak())
     story += _section_title('7. Recommendations & Action Plan', styles)
     recs = [
         ('Immediate Interventions', [
             f'Contact all {critical_count} Critical-risk students and their guardians immediately.',
             'Assign dedicated academic mentors to High and Critical risk students.',
-            'Review attendance records for students below 65% — initiate attendance improvement plan.',
+            'Review attendance records for students below 65% - initiate attendance improvement plan.',
         ]),
         ('Faculty Actions', [
             'Conduct weekly attendance spot-checks for at-risk groups.',
@@ -445,10 +445,10 @@ def generate_pdf_report(df, reg_results, clf_results, clustering_result,
     for title, points in recs:
         story.append(Paragraph(title, styles['h2']))
         for p in points:
-            story.append(Paragraph(f'• {p}', styles['body']))
+            story.append(Paragraph(f'- {p}', styles['body']))
         story.append(Spacer(1, 0.1*inch))
 
-    # ── Footer note ──
+    # Footer note
     story.append(HRFlowable(width='100%', thickness=1, color=MID_BLUE))
     story.append(Spacer(1, 0.1*inch))
     story.append(Paragraph(

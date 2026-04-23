@@ -1,20 +1,20 @@
 """
-generate_data.py — Generate realistic synthetic student data for 5 departments × 4 semesters.
+generate_data.py - Generate realistic synthetic student data for 5 departments x 4 semesters.
 Run: python scripts/generate_data.py
 """
 import os
 import random
 import csv
 
-# ── Configuration ─────────────────────────────────────────────────────────────
+# Configuration
 DEPARTMENTS = ['CSE', 'ECE', 'ME', 'CE', 'ISE']
 SEMESTERS = [1, 2, 3, 4]
-STUDENTS_PER_DEPT_SEM = 100  # 5 × 4 × 100 = 2,000 total
+STUDENTS_PER_DEPT_SEM = 100  # 5 x 4 x 100 = 2,000 total
 
 OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data')
 OUTPUT_FILE = os.path.join(OUTPUT_DIR, 'student_data.csv')
 
-# ── Indian names pool ─────────────────────────────────────────────────────────
+# Indian names pool
 FIRST_NAMES = [
     'Aarav', 'Vivek', 'Rohan', 'Arjun', 'Karthik', 'Siddharth', 'Rahul', 'Amit',
     'Priya', 'Sneha', 'Ananya', 'Divya', 'Meera', 'Pooja', 'Neha', 'Riya',
@@ -36,7 +36,7 @@ LAST_NAMES = [
     'Chauhan', 'Dubey', 'Malhotra', 'Mehra', 'Kapoor', 'Saxena', 'Bansal', 'Aggarwal',
 ]
 
-# ── Department-specific tuning ────────────────────────────────────────────────
+# Department-specific tuning
 # Slight variations per department to make data realistic
 DEPT_PROFILES = {
     'CSE': {'att_mean': 72, 'att_std': 18, 'marks_bias': 0},
@@ -73,7 +73,7 @@ def generate_student(dept, semester, seq):
     attendance = random.gauss(dp['att_mean'], dp['att_std'])
     attendance = _clamp(round(attendance, 2), 15.0, 99.5)
 
-    # Internal marks (0-50) — correlated with attendance
+    # Internal marks (0-50) - correlated with attendance
     base_internal = (attendance / 100) * 35 + random.gauss(10, 6) + dp['marks_bias'] + sp['diff_factor']
     internal_marks = _clamp(round(base_internal, 2), 5.0, 50.0)
 
@@ -86,7 +86,7 @@ def generate_student(dept, semester, seq):
     # Lab marks (0-50)
     lab_marks = _clamp(round(random.gauss(33, 9) + dp['marks_bias'], 2), 5.0, 50.0)
 
-    # Semester marks (0-200) — strong correlation with internal + attendance
+    # Semester marks (0-200) - strong correlation with internal + attendance
     base_sem = (internal_marks / 50) * 100 + (attendance / 100) * 60 + random.gauss(10, 15) + sp['diff_factor'] * 3
     semester_marks = _clamp(round(base_sem, 2), 30.0, 200.0)
 

@@ -1,5 +1,5 @@
-﻿"""
-pages/reports.py â€” Exploratory Data Analysis (EDA) page.
+"""
+pages/reports.py - Exploratory Data Analysis (EDA) page.
 """
 import streamlit as st
 import pandas as pd
@@ -9,11 +9,11 @@ from config    import DATA_PATH, DEPARTMENTS, DEPT_FULL_NAMES, CURRENT_ACADEMIC_
 from data_pro  import run_pipeline, run_pipeline_from_db, filter_dataframe
 from ml_models import FEATURES
 from language  import TEXTS
-from ui_theme import PAGE_CSS, GRADE_COL, RISK_COL, DEPT_COL, PL as _PL, PL, kpi_card as _kpi, section_header as _sh
+from ui_theme import get_page_css, GRADE_COL, RISK_COL, DEPT_COL, PL as _PL, PL, kpi_card as _kpi, section_header as _sh
 
-# â”€â”€ Design system â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# Design system
 
-# â”€â”€ Colour maps & Plotly Theme â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# Colour maps & Plotly Theme
 
 
 @st.cache_data(show_spinner=False)
@@ -25,7 +25,7 @@ def _load_all():
     return df
 
 def render_reports_page():
-    st.markdown(PAGE_CSS, unsafe_allow_html=True)
+    st.markdown(get_page_css(st.session_state.get('theme_mode', 'Dark')), unsafe_allow_html=True)
     
     T  = TEXTS[st.session_state.language]
     all_df = _load_all()
@@ -45,7 +45,7 @@ def render_reports_page():
         [" Distributions", " Correlations", "Box Plots", "Department Comparison"]
     )
 
-    # Distributions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # Distributions
     with tab1:
         all_f = FEATURES + ['semester_marks']
         for i in range(0, len(all_f), 3):
@@ -58,7 +58,7 @@ def render_reports_page():
                                            color_discrete_sequence=['var(--accent)'],
                                            title=feat.replace('_', ' ').title())
                         fig.add_vline(x=df[feat].mean(), line_dash='dash', line_color='var(--accent-red)',
-                                      annotation_text=f"Î¼={df[feat].mean():.1f}",
+                                      annotation_text=f"mean={df[feat].mean():.1f}",
                                       annotation_font_size=10, annotation_font_color='var(--accent-red)')
                         fig.update_layout(**_PL)
                         fig.update_layout(height=210, title_font_size=12,
@@ -66,7 +66,7 @@ def render_reports_page():
                                           yaxis=dict(showgrid=True))
                         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
-    # Correlations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # Correlations
     with tab2:
         if len(df) > 10:
             numeric = FEATURES + ['semester_marks']
@@ -88,17 +88,17 @@ def render_reports_page():
                     bw    = max(int(abs(val) * 120), 4)
                     st.markdown(
                         f'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
-                        f'<div style="width:140px;font-size:12px;color:#A0AEC0">{feat.replace("_"," ").title()}</div>'
+                        f'<div style="width:140px;font-size:12px;color:var(--text-muted)">{feat.replace("_"," ").title()}</div>'
                         f'<div style="width:{bw}px;height:8px;background:{col_c};border-radius:4px"></div>'
                         f'<div style="font-size:12px;font-weight:600;color:{col_c}">{val:+.3f}</div></div>',
                         unsafe_allow_html=True,
                     )
             with cb:
-                st.info("**Internal marks** â€” strongest predictor.\n\n"
-                        "**Study hours** â€” almost zero correlation.\n\n"
+                st.info("**Internal marks** - strongest predictor.\n\n"
+                        "**Study hours** - almost zero correlation.\n\n"
                         "Focus interventions on internal assessment performance.")
 
-    # Box Plots â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # Box Plots
     with tab3:
         if len(df) > 0:
             fc = st.selectbox("Feature", options=FEATURES,
@@ -120,7 +120,7 @@ def render_reports_page():
             st.dataframe(gs.style.background_gradient(cmap='RdYlGn', axis=0)
                          .format("{:.2f}"), use_container_width=True)
 
-    # Department Comparison â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # Department Comparison
     with tab4:
         compare_df = all_df.copy()
         if sel_sem != 'All':
@@ -195,4 +195,3 @@ def render_reports_page():
                          .format({'Avg Marks': '{:.1f}', 'Avg Attendance %': '{:.1f}',
                                   'At-Risk %': '{:.1f}', 'Avg Internal': '{:.1f}'}),
                          use_container_width=True)
-

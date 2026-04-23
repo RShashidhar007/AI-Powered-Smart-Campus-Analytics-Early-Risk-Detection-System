@@ -1,5 +1,5 @@
 """
-pages/predictions.py — ML models display + single-student prediction.
+pages/predictions.py - ML models display + single-student prediction.
 """
 import streamlit as st
 import pandas as pd
@@ -13,14 +13,14 @@ from ml_models import (
     FEATURES, train_regression_models, train_classification_models,
 )
 from language  import TEXTS
-from ui_theme import PAGE_CSS, GRADE_COL, RISK_COL, DEPT_COL, PL as _PL, PL, kpi_card as _kpi, section_header as _sh
+from ui_theme import get_page_css, GRADE_COL, RISK_COL, DEPT_COL, PL as _PL, PL, kpi_card as _kpi, section_header as _sh
 
-# ── Design system ─────────────────────────────────────────────────────────────
+# Design system
 
-# ── Colour maps & Plotly Theme ────────────────────────────────────────────────
+# Colour maps & Plotly Theme
 
 
-# ── Cached loaders ────────────────────────────────────────────────────────────
+# Cached loaders
 @st.cache_data(show_spinner=False)
 def _load_df():
     year = st.session_state.get('selected_academic_year', CURRENT_ACADEMIC_YEAR)
@@ -44,7 +44,7 @@ def _train_clf(dept, sem):
     return train_classification_models(df)
 
 def render_predictions_page():
-    st.markdown(PAGE_CSS, unsafe_allow_html=True)
+    st.markdown(get_page_css(st.session_state.get('theme_mode', 'Dark')), unsafe_allow_html=True)
     
     T  = TEXTS[st.session_state.language]
 
@@ -56,16 +56,16 @@ def render_predictions_page():
     filter_label = []
     if sel_dept != 'All': filter_label.append(sel_dept)
     if sel_sem != 'All': filter_label.append(f"Sem {sel_sem}")
-    filter_str = " · ".join(filter_label) if filter_label else "All Departments"
+    filter_str = " - ".join(filter_label) if filter_label else "All Departments"
 
     st.markdown(f'<div class="page-title">{T.get("predictions_title", "Predictions & ML Models")}</div>', unsafe_allow_html=True)
     st.markdown(
         f"<div class='page-subtitle'>"
-        f"{T.get('predictions_subtitle', 'Regression · Classification · Feature importance · Single-student predictor')} · {filter_str}</div>",
+        f"{T.get('predictions_subtitle', 'Regression - Classification - Feature importance - Single-student predictor')} - {filter_str}</div>",
         unsafe_allow_html=True,
     )
 
-    with st.spinner("Training models (first load ~5 s)…"):
+    with st.spinner("Training models (first load ~5 s)..."):
         reg = _train_reg(sel_dept, sel_sem)
         clf = _train_clf(sel_dept, sel_sem)
 
@@ -76,7 +76,7 @@ def render_predictions_page():
 
     active_tab = st.radio("View", [tab_reg_name, tab_clf_name, tab_fi_name, tab_pred_name], horizontal=True, label_visibility="collapsed")
 
-    # ── Regression ─────────────────────────────────────────────────────────────
+    # Regression
     if active_tab == tab_reg_name:
         st.markdown(f"#### {T.get('pred_sem_marks', 'Predicting semester marks')}")
         results   = reg['results']
@@ -84,10 +84,10 @@ def render_predictions_page():
         cols = st.columns(len(results))
         for i, (name, m) in enumerate(results.items()):
             ib = name == best_name
-            _kpi(cols[i], m['R2'], name, f"RMSE {m['RMSE']} · MAE {m['MAE']}",
-                 "var(--accent-teal)" if ib else "#FFFFFF", ib)
+            _kpi(cols[i], m['R2'], name, f"RMSE {m['RMSE']} - MAE {m['MAE']}",
+                 "var(--accent-teal)" if ib else "var(--text-muted)", ib)
         st.markdown("<br>", unsafe_allow_html=True)
-        st.success(f"Best: **{best_name}** — R² = **{results[best_name]['R2']}** "
+        st.success(f"Best: **{best_name}** - R2 = **{results[best_name]['R2']}** "
                    f"(explains {results[best_name]['R2']*100:.1f}% of variance)")
 
         # Actual vs Predicted scatter
@@ -115,16 +115,16 @@ def render_predictions_page():
                           xaxis=dict(showgrid=True), yaxis=dict(showgrid=True))
         st.plotly_chart(fap, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
-    # ── Classification ─────────────────────────────────────────────────────────
+    # Classification
     elif active_tab == tab_clf_name:
-        st.markdown(f"#### {T.get('pred_grade_af', 'Predicting grade A–F')}")
+        st.markdown(f"#### {T.get('pred_grade_af', 'Predicting grade A-F')}")
         clf_results = clf['results']
         best_c      = clf['best_model']
         cols2 = st.columns(len(clf_results))
         for i, (name, m) in enumerate(clf_results.items()):
             ib = name == best_c
             _kpi(cols2[i], f"{m['Accuracy']*100:.1f}%", name, "Accuracy",
-                 "var(--accent-light)" if ib else "#FFFFFF", ib)
+                 "var(--accent-light)" if ib else "var(--text-muted)", ib)
         st.markdown("<br>", unsafe_allow_html=True)
 
         best_cm = np.array(clf_results[best_c]['Confusion'])
@@ -132,14 +132,14 @@ def render_predictions_page():
         fcm = px.imshow(best_cm, x=classes, y=classes,
                         color_continuous_scale='Blues',
                         text_auto=True, aspect='auto',
-                        title=f"{T.get('confusion_matrix', 'Confusion Matrix')} — {best_c}")
+                        title=f"{T.get('confusion_matrix', 'Confusion Matrix')} - {best_c}")
         fcm.update_layout(**_PL)
         fcm.update_layout(height=360, coloraxis_showscale=False,
                           xaxis_title="Predicted", yaxis_title="Actual",
                           title_font_size=13)
         st.plotly_chart(fcm, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
-    # ── Feature Importance ─────────────────────────────────────────────────────
+    # Feature Importance
     elif active_tab == tab_fi_name:
         ca, cb = st.columns(2)
         for col_widget, fi_data, title, cscale in [
@@ -161,7 +161,7 @@ def render_predictions_page():
                 st.plotly_chart(ffi, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
         st.success(" **Internal marks** is the most important feature in both models.")
 
-    # ── Predict single student ────────────────────────────────────────────────
+    # Predict single student
     elif active_tab == tab_pred_name:
         st.markdown(f"#### {T.get('enter_student_details', 'Enter student details')}")
         rc1, rc2, rc3 = st.columns(3)
@@ -173,7 +173,7 @@ def render_predictions_page():
         lab_marks   = rc5.slider("Lab marks",       0.0, 50.0, 36.0, 0.5)
         study_hours = rc6.slider("Study hours/day", 0.0, 10.0,  3.5, 0.1)
 
-        if st.button(T.get('run_prediction', '🔮  Run Prediction'), use_container_width=True, type="primary"):
+        if st.button(T.get('run_prediction', '  Run Prediction'), use_container_width=True, type="primary"):
             row = pd.DataFrame([{
                 'attendance': attendance, 'internal_marks': internal_marks,
                 'assignment_score': assignment_score, 'quiz_score': quiz_score,
@@ -193,7 +193,7 @@ def render_predictions_page():
 
             c1, c2 = st.columns(2)
             _kpi(c1, f"{pred_marks:.1f}", "Predicted Marks", "out of 200", "var(--accent)", True)
-            _kpi(c2, pred_grade, "Predicted Grade", "", GRADE_COL.get(pred_grade, "#FFFFFF"))
+            _kpi(c2, pred_grade, "Predicted Grade", "", GRADE_COL.get(pred_grade, "var(--text-primary)"))
 
             # Store in prediction history
             st.session_state.prediction_history.append({

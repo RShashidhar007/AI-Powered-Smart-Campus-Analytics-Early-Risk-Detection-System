@@ -20,7 +20,7 @@ TARGET_CLF = 'grade_label'
 GRADE_ORDER = ['A', 'B', 'C', 'D', 'F']
 
 
-# ── Regression ────────────────────────────────────────────────────────────────
+# Regression
 
 def train_regression_models(df: pd.DataFrame):
     X = df[FEATURES]
@@ -76,7 +76,7 @@ def predict_marks(model, scaler, X: pd.DataFrame, is_linear: bool = False) -> np
     return model.predict(X)
 
 
-# ── Classification ────────────────────────────────────────────────────────────
+# Classification
 
 def train_classification_models(df: pd.DataFrame):
     X = df[FEATURES]
@@ -132,7 +132,7 @@ def train_classification_models(df: pd.DataFrame):
     }
 
 
-# ── Clustering ────────────────────────────────────────────────────────────────
+# Clustering
 
 CLUSTER_PERSONAS = {
     0: {'name': 'High Achievers',       'color': '#27AE60'},
