@@ -64,7 +64,7 @@ def render_reports_page():
                         fig.update_layout(height=210, title_font_size=12,
                                           xaxis=dict(showgrid=True),
                                           yaxis=dict(showgrid=True))
-                        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
+                        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, theme=None)
 
     # Correlations
     with tab2:
@@ -73,11 +73,11 @@ def render_reports_page():
             cm      = df[numeric].corr().round(3)
             fhm     = px.imshow(cm, color_continuous_scale='RdYlGn',
                                 zmin=-0.3, zmax=0.8, text_auto=True, aspect='auto',
-                                title="Correlation matrix")
+                                title="Feature Relationship Map")
             fhm.update_layout(**_PL)
             fhm.update_layout(height=420, title_font_size=13,
                               coloraxis_colorbar=dict(title="r", thickness=12))
-            st.plotly_chart(fhm, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
+            st.plotly_chart(fhm, use_container_width=True, config={'displayModeBar': False}, theme=None)
 
             st.markdown("#### Correlation with semester marks")
             cs2 = cm['semester_marks'].drop('semester_marks').sort_values(ascending=False)
@@ -112,7 +112,7 @@ def render_reports_page():
                              xaxis=dict(title='Grade', showgrid=False),
                              yaxis=dict(title=fc.replace('_', ' ').title(), showgrid=True),
                              title_font_size=13, showlegend=False)
-            st.plotly_chart(fb, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
+            st.plotly_chart(fb, use_container_width=True, config={'displayModeBar': False}, theme=None)
 
             gs = (df.groupby('grade_label')[fc]
                   .agg(['mean', 'median', 'std', 'min', 'max'])
@@ -146,7 +146,7 @@ def render_reports_page():
                 fig1.update_traces(textposition='outside', texttemplate='%{text:.1f}', marker_line_width=1, marker_line_color='rgba(0,0,0,0.1)')
                 fig1.update_layout(**_PL)
                 fig1.update_layout(height=300, xaxis_title='', yaxis_title='Marks', showlegend=False)
-                st.plotly_chart(fig1, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
+                st.plotly_chart(fig1, use_container_width=True, config={'displayModeBar': False}, theme=None)
 
             with dc2:
                 fig2 = px.bar(dept_agg, x='department', y='at_risk_pct',
@@ -155,7 +155,7 @@ def render_reports_page():
                 fig2.update_traces(textposition='outside', texttemplate='%{text:.1f}%', marker_line_width=1, marker_line_color='rgba(0,0,0,0.1)')
                 fig2.update_layout(**_PL)
                 fig2.update_layout(height=300, xaxis_title='', yaxis_title='%', showlegend=False)
-                st.plotly_chart(fig2, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
+                st.plotly_chart(fig2, use_container_width=True, config={'displayModeBar': False}, theme=None)
 
             dc3, dc4 = st.columns(2)
             with dc3:
@@ -165,7 +165,7 @@ def render_reports_page():
                 fig3.update_traces(textposition='outside', texttemplate='%{text:.1f}%', marker_line_width=1, marker_line_color='rgba(0,0,0,0.1)')
                 fig3.update_layout(**_PL)
                 fig3.update_layout(height=300, xaxis_title='', yaxis_title='%', showlegend=False)
-                st.plotly_chart(fig3, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
+                st.plotly_chart(fig3, use_container_width=True, config={'displayModeBar': False}, theme=None)
 
             with dc4:
                 # Semester-wise comparison across departments
@@ -183,7 +183,7 @@ def render_reports_page():
                                       height=300, showlegend=True,
                                       legend=dict(orientation='h', y=-0.25, font_size=10),
                                       xaxis_title='Semester', yaxis_title='Avg Marks')
-                    st.plotly_chart(fig4, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
+                    st.plotly_chart(fig4, use_container_width=True, config={'displayModeBar': False}, theme=None)
 
             # Summary table
             st.markdown("#### Department Summary")

@@ -166,7 +166,7 @@ def render_year_comparison_page():
                           legend=dict(orientation='h', y=-0.15, font_size=11),
                           xaxis=dict(showgrid=False),
                           yaxis=dict(showgrid=True))
-        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
+        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, theme=None)
 
         # Insight text
         curr_a = c_gdist.get('A', 0)
@@ -200,7 +200,7 @@ def render_year_comparison_page():
                                       categoryorder='array',
                                       categoryarray=tiers),
                            yaxis=dict(showgrid=True))
-        st.plotly_chart(fig2, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
+        st.plotly_chart(fig2, use_container_width=True, config={'displayModeBar': False}, theme=None)
 
         c_crit = c_rdist.get('Critical', 0)
         p_crit = p_rdist.get('Critical', 0)
@@ -242,7 +242,7 @@ def render_year_comparison_page():
                                    legend=dict(orientation='h', y=-0.2, font_size=10),
                                    xaxis=dict(showgrid=False, title=''),
                                    yaxis=dict(showgrid=True, title='Avg Marks'))
-                st.plotly_chart(fig3, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
+                st.plotly_chart(fig3, use_container_width=True, config={'displayModeBar': False}, theme=None)
 
             with dc2:
                 fig4 = px.bar(dept_combined, x='department', y='at_risk_pct',
@@ -255,7 +255,7 @@ def render_year_comparison_page():
                                    legend=dict(orientation='h', y=-0.2, font_size=10),
                                    xaxis=dict(showgrid=False, title=''),
                                    yaxis=dict(showgrid=True, title='At-Risk %'))
-                st.plotly_chart(fig4, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
+                st.plotly_chart(fig4, use_container_width=True, config={'displayModeBar': False}, theme=None)
 
             # Summary Table
             st.markdown("#### Department Trend Summary")
@@ -373,28 +373,34 @@ def render_year_comparison_page():
                               f'Marks ({curr_year})': '{:.1f}', 'Delta': '{:+.1f}'})
                     st.dataframe(styled_dec, use_container_width=True, height=380)
 
-                # Distribution of changes
-                st.markdown('<div class="sh">Distribution of marks change</div>',
-                            unsafe_allow_html=True)
-                fig_hist = px.histogram(merged, x='marks_change', nbins=30,
-                                        color_discrete_sequence=['var(--accent)'],
-                                        title="Semester Marks Change Distribution")
-                fig_hist.add_vline(x=0, line_dash='dash', line_color='var(--accent-red)',
-                                   annotation_text='No change', annotation_font_size=10)
-                fig_hist.update_layout(**_PL)
-                fig_hist.update_layout(height=280,
-                                       xaxis=dict(title='Change in Marks', showgrid=True),
-                                       yaxis=dict(title='Students', showgrid=True))
-                st.plotly_chart(fig_hist, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
-
                 # Summary insight
                 improved = (merged['marks_change'] > 0).sum()
                 declined = (merged['marks_change'] < 0).sum()
                 no_change = (merged['marks_change'] == 0).sum()
+                
+                # Distribution of changes (Simplified to Bar Chart)
+                st.markdown('<div class="sh">Overall Student Progress</div>',
+                            unsafe_allow_html=True)
+                            
+                progress_df = pd.DataFrame({
+                    'Status': ['Improved', 'Unchanged', 'Declined'],
+                    'Students': [improved, no_change, declined]
+                })
+                
+                fig_prog = px.bar(
+                    progress_df, x='Status', y='Students', 
+                    color='Status', color_discrete_map={'Improved':'#81C784', 'Unchanged':'#90A4AE', 'Declined':'#E57373'},
+                    text='Students'
+                )
+                fig_prog.update_traces(textposition='outside')
+                fig_prog.update_layout(**_PL)
+                fig_prog.update_layout(height=280, showlegend=False, xaxis_title="", yaxis_title="Number of Students")
+                st.plotly_chart(fig_prog, use_container_width=True, config={'displayModeBar': False}, theme=None)
+
                 st.markdown(
-                    f"**Summary**: Out of **{len(common_usns)}** tracked students - "
-                    f"**{improved}** improved , **{declined}** declined , "
-                    f"**{no_change}** unchanged ",
+                    f"**Summary**: Out of **{len(common_usns)}** tracked students, "
+                    f"**{improved}** improved, **{declined}** declined, and "
+                    f"**{no_change}** saw no change in their marks."
                 )
             else:
                 st.info("No common students found between the two years.")

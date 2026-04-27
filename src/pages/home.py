@@ -203,7 +203,7 @@ def render_home_page():
         ))
         _standard_layout(fig_risk, height=330)
         fig_risk.update_layout(margin=dict(l=0, r=0, t=4, b=0))
-        st.plotly_chart(fig_risk, use_container_width=True, config={"displayModeBar": False}, theme="streamlit")
+        st.plotly_chart(fig_risk, use_container_width=True, config={"displayModeBar": False}, theme=None)
 
     with center:
         _chart_title("Grade Distribution")
@@ -221,7 +221,7 @@ def render_home_page():
         ))
         _standard_layout(fig_grade, height=330)
         fig_grade.update_yaxes(title_text="Students")
-        st.plotly_chart(fig_grade, use_container_width=True, config={"displayModeBar": False}, theme="streamlit")
+        st.plotly_chart(fig_grade, use_container_width=True, config={"displayModeBar": False}, theme=None)
 
     _section("Attendance Insights", "Attendance tiers connected with student count and mark outcomes.")
     att_left, att_right = st.columns([1, 1])
@@ -243,7 +243,7 @@ def render_home_page():
         _standard_layout(fig_att, height=320)
         fig_att.update_xaxes(title_text="Attendance Tier")
         fig_att.update_yaxes(title_text="Students")
-        st.plotly_chart(fig_att, use_container_width=True, config={"displayModeBar": False}, theme="streamlit")
+        st.plotly_chart(fig_att, use_container_width=True, config={"displayModeBar": False}, theme=None)
 
     with att_right:
         _chart_title("Avg Marks By Attendance Tier")
@@ -272,7 +272,7 @@ def render_home_page():
         _standard_layout(fig_marks, height=320)
         fig_marks.update_xaxes(title_text="Attendance Tier")
         fig_marks.update_yaxes(title_text="Average Marks")
-        st.plotly_chart(fig_marks, use_container_width=True, config={"displayModeBar": False}, theme="streamlit")
+        st.plotly_chart(fig_marks, use_container_width=True, config={"displayModeBar": False}, theme=None)
 
     _section("Academic Drivers", "Feature correlation and department-level comparisons.")
     driver_left, driver_right = st.columns([1, 1])
@@ -281,9 +281,11 @@ def render_home_page():
         _chart_title("Impact On Final Marks")
         fig_corr = go.Figure()
         if len(df) > 10:
-            corr = df[FEATURES].corrwith(df["semester_marks"]).sort_values(ascending=True).round(3)
+            # Convert correlation to a 0-100% "Impact Strength" scale for easier understanding
+            corr = df[FEATURES].corrwith(df["semester_marks"]).sort_values(ascending=True)
+            vals = (corr * 100).round(1).values
             labels = [f.replace("_", " ").title() for f in corr.index]
-            vals = corr.values
+            
             fig_corr.add_trace(go.Bar(
                 x=vals,
                 y=labels,
@@ -298,16 +300,16 @@ def render_home_page():
                     ],
                     line=dict(width=1, color="rgba(255,255,255,0.12)"),
                 ),
-                text=[f"{v:.2f}" for v in vals],
+                text=[f"{v:.1f}%" for v in vals],
                 textposition="inside",
                 insidetextanchor="end",
-                hovertemplate="<b>%{y}</b><br>Correlation: %{x}<extra></extra>",
+                hovertemplate="<b>%{y}</b><br>Impact Strength: %{x}%<extra></extra>",
             ))
-            fig_corr.update_xaxes(range=[min(vals.min() * 1.15, -0.05), max(vals.max() * 1.15, 0.05)])
+            fig_corr.update_xaxes(range=[min(vals.min() * 1.15, -5), max(vals.max() * 1.15, 5)])
         _standard_layout(fig_corr, height=330)
-        fig_corr.update_xaxes(title_text="Correlation")
+        fig_corr.update_xaxes(title_text="Impact Strength (%)")
         fig_corr.update_yaxes(showgrid=False)
-        st.plotly_chart(fig_corr, use_container_width=True, config={"displayModeBar": False}, theme="streamlit")
+        st.plotly_chart(fig_corr, use_container_width=True, config={"displayModeBar": False}, theme=None)
 
     with driver_right:
         _chart_title("Department Averages")

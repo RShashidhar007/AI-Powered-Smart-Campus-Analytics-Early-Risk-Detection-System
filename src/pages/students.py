@@ -70,12 +70,12 @@ def render_students_page():
         st.markdown('<div class="sh">Risk score distribution</div>', unsafe_allow_html=True)
         if len(at_risk) > 0:
             fh = px.histogram(at_risk, x='risk_score', nbins=10,
-                              color_discrete_sequence=['var(--accent)'])
+                              color_discrete_sequence=['var(--accent)'], text_auto=True)
             fh.update_layout(**_PL)
             fh.update_layout(height=200,
                              xaxis=dict(title='Risk Score', showgrid=True),
                              yaxis=dict(title='Students', showgrid=True))
-            st.plotly_chart(fh, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
+            st.plotly_chart(fh, use_container_width=True, config={'displayModeBar': False}, theme=None)
 
     with ch2:
         st.markdown('<div class="sh">Grade breakdown (at-risk)</div>', unsafe_allow_html=True)
@@ -86,7 +86,7 @@ def render_students_page():
             fa.update_traces(textposition='outside', marker_line_width=1, marker_line_color='rgba(0,0,0,0.1)')
             fa.update_layout(**_PL)
             fa.update_layout(height=200, xaxis=dict(showgrid=False))
-            st.plotly_chart(fa, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
+            st.plotly_chart(fa, use_container_width=True, config={'displayModeBar': False}, theme=None)
 
     # Data table
     st.markdown('<div class="sh">Student list</div>', unsafe_allow_html=True)

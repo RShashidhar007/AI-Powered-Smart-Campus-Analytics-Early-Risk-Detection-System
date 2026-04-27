@@ -107,13 +107,14 @@ def render_predictions_page():
         fap.add_trace(go.Scatter(x=[mn, mx], y=[mn, mx], mode='lines',
                                  line=dict(color='rgba(255,100,100,0.8)', dash='dash', width=2),
                                  name='Perfect fit', showlegend=True))
+        fap.update_traces(hovertemplate='<b>Actual Marks:</b> %{x}<br><b>Predicted Marks:</b> %{y}<extra></extra>')
         fap.update_layout(**_PL)
         fap.update_layout(
                           height=340, showlegend=True,
                           legend=dict(orientation='h', y=-0.2, font_size=11),
                           title_font_size=13,
                           xaxis=dict(showgrid=True), yaxis=dict(showgrid=True))
-        st.plotly_chart(fap, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
+        st.plotly_chart(fap, use_container_width=True, config={'displayModeBar': False}, theme=None)
 
     # Classification
     elif active_tab == tab_clf_name:
@@ -135,9 +136,10 @@ def render_predictions_page():
                         title=f"{T.get('confusion_matrix', 'Prediction Accuracy Map')} - {best_c}")
         fcm.update_layout(**_PL)
         fcm.update_layout(height=360, coloraxis_showscale=False,
-                          xaxis_title="Predicted", yaxis_title="Actual",
+                          xaxis_title="What the AI Predicted", yaxis_title="What the Student Actually Got",
                           title_font_size=13)
-        st.plotly_chart(fcm, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
+        st.plotly_chart(fcm, use_container_width=True, config={'displayModeBar': False}, theme=None)
+        st.caption("How to read: A dark diagonal line means the AI accurately predicted the correct grade.")
 
     # Feature Importance
     elif active_tab == tab_fi_name:
@@ -158,7 +160,7 @@ def render_predictions_page():
                 ffi.update_layout(**_PL)
                 ffi.update_layout(height=280, coloraxis_showscale=False,
                                   xaxis=dict(showgrid=True), yaxis=dict(showgrid=False))
-                st.plotly_chart(ffi, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
+                st.plotly_chart(ffi, use_container_width=True, config={'displayModeBar': False}, theme=None)
         st.success(" **Internal marks** is the most important feature in both models.")
 
     # Predict single student
