@@ -49,7 +49,7 @@ TEXTS = {
         "your_attendance":      "Attendance",
         "your_internals":       "Internal Marks",
         "your_semester_marks":  "Semester Marks",
-        "your_performance":     "Performance Index",
+        "your_performance":     "Overall Score",
         "your_results":         "Results",
         "marks_breakdown":      "Marks Breakdown",
         "academic_profile":     "Academic Profile",

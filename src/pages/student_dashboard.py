@@ -172,9 +172,9 @@ def render_student_dashboard():
             "<div class='glass-card'>"
             "<div style='font-size:13px;color:var(--text-muted);font-weight:800;text-transform:uppercase;margin-bottom:10px'>Academic Snapshot</div>"
             + _detail_item("Current Grade", student['grade_label'], "Based on semester marks")
-            + _detail_item("Performance Index", f"{_num(student, 'performance_index'):.1f} / 100")
+            + _detail_item("Overall Score", f"{_num(student, 'performance_index'):.1f} / 100")
             + _detail_item("Class Rank", rank_text)
-            + _detail_item("Overall Percentile", f"{percentile}th", "Based on performance index")
+            + _detail_item("Overall Percentile", f"{percentile}th", "Based on overall score")
             + "</div>",
             unsafe_allow_html=True,
         )

@@ -58,10 +58,10 @@ def render_predictions_page():
     if sel_sem != 'All': filter_label.append(f"Sem {sel_sem}")
     filter_str = " - ".join(filter_label) if filter_label else "All Departments"
 
-    st.markdown(f'<div class="page-title">{T.get("predictions_title", "Predictions & ML Models")}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="page-title">{T.get("predictions_title", "Predictions & Insights")}</div>', unsafe_allow_html=True)
     st.markdown(
         f"<div class='page-subtitle'>"
-        f"{T.get('predictions_subtitle', 'Regression - Classification - Feature importance - Single-student predictor')} - {filter_str}</div>",
+        f"{T.get('predictions_subtitle', 'Marks Predictor - Grade Forecast - Key Factors - Single-student predictor')} - {filter_str}</div>",
         unsafe_allow_html=True,
     )
 
@@ -69,26 +69,26 @@ def render_predictions_page():
         reg = _train_reg(sel_dept, sel_sem)
         clf = _train_clf(sel_dept, sel_sem)
 
-    tab_reg_name  = T.get('tab_reg', ' Regression')
-    tab_clf_name  = T.get('tab_clf', ' Classification')
-    tab_fi_name   = T.get('tab_fi', ' Feature Importance')
+    tab_reg_name  = T.get('tab_reg', ' Marks Predictor')
+    tab_clf_name  = T.get('tab_clf', ' Grade Forecast')
+    tab_fi_name   = T.get('tab_fi', ' Key Factors')
     tab_pred_name = T.get('tab_pred', ' Predict Student')
 
     active_tab = st.radio("View", [tab_reg_name, tab_clf_name, tab_fi_name, tab_pred_name], horizontal=True, label_visibility="collapsed")
 
     # Regression
     if active_tab == tab_reg_name:
-        st.markdown(f"#### {T.get('pred_sem_marks', 'Predicting semester marks')}")
+        st.markdown(f"#### {T.get('pred_sem_marks', 'Predicting Final Marks')}")
         results   = reg['results']
         best_name = reg['best_model']
         cols = st.columns(len(results))
         for i, (name, m) in enumerate(results.items()):
             ib = name == best_name
-            _kpi(cols[i], m['R2'], name, f"RMSE {m['RMSE']} - MAE {m['MAE']}",
-                 "var(--accent-teal)" if ib else "var(--text-muted)", ib)
+            _kpi(cols[i], m['R2'], name, f"Error Margin: {m['RMSE']} - Avg Off-by: {m['MAE']}",
+                 "#8FBCBB" if ib else "var(--text-muted)", ib)
         st.markdown("<br>", unsafe_allow_html=True)
-        st.success(f"Best: **{best_name}** - R2 = **{results[best_name]['R2']}** "
-                   f"(explains {results[best_name]['R2']*100:.1f}% of variance)")
+        st.success(f"Best: **{best_name}** - Confidence Score = **{results[best_name]['R2']}** "
+                   f"(confidence score: {results[best_name]['R2']*100:.1f}%)")
 
         # Actual vs Predicted scatter
         best_model = reg['trained_models'][best_name]
@@ -117,7 +117,7 @@ def render_predictions_page():
 
     # Classification
     elif active_tab == tab_clf_name:
-        st.markdown(f"#### {T.get('pred_grade_af', 'Predicting grade A-F')}")
+        st.markdown(f"#### {T.get('pred_grade_af', 'Predicting Final Grade A-F')}")
         clf_results = clf['results']
         best_c      = clf['best_model']
         cols2 = st.columns(len(clf_results))
@@ -132,7 +132,7 @@ def render_predictions_page():
         fcm = px.imshow(best_cm, x=classes, y=classes,
                         color_continuous_scale='Blues',
                         text_auto=True, aspect='auto',
-                        title=f"{T.get('confusion_matrix', 'Confusion Matrix')} - {best_c}")
+                        title=f"{T.get('confusion_matrix', 'Prediction Accuracy Map')} - {best_c}")
         fcm.update_layout(**_PL)
         fcm.update_layout(height=360, coloraxis_showscale=False,
                           xaxis_title="Predicted", yaxis_title="Actual",
@@ -143,11 +143,11 @@ def render_predictions_page():
     elif active_tab == tab_fi_name:
         ca, cb = st.columns(2)
         for col_widget, fi_data, title, cscale in [
-            (ca, reg['feature_importance'], 'Regression',     ['#10153D', 'var(--accent)']),
-            (cb, clf['feature_importance'], 'Classification', ['#10153D', 'var(--accent-teal)']),
+            (ca, reg['feature_importance'], 'Marks Predictor',     ['#10153D', '#81A1C1']),
+            (cb, clf['feature_importance'], 'Grade Forecast', ['#10153D', '#8FBCBB']),
         ]:
             with col_widget:
-                st.markdown(f"**{title} ({T.get('random_forest', 'Random Forest')})**")
+                st.markdown(f"**{title} ({T.get('random_forest', 'AI Analytics Engine')})**")
                 fidf = pd.DataFrame({
                     'Feature':    [k.replace('_', ' ').title() for k in fi_data],
                     'Importance': list(fi_data.values()),

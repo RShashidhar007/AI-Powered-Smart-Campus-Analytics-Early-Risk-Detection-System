@@ -88,12 +88,13 @@ def render_login_page():
                     if submit_user_pass:
                         # Check admin explicitly, then fall back to database
                         is_admin = (username == ADMIN_USERNAME and password == ADMIN_PASSWORD)
-                        is_valid_user = authenticate_faculty_user(username, password)
+                        is_valid_user, faculty_dept = authenticate_faculty_user(username, password)
                         
                         if is_admin or is_valid_user:
                             st.session_state.authenticated = True
                             st.session_state.user_role = "teacher"
                             st.session_state.student_usn = None
+                            st.session_state.faculty_department = "All" if is_admin else faculty_dept
                             st.success(T["login_success"])
                             time.sleep(1)
                             st.rerun()

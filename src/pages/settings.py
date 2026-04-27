@@ -33,7 +33,7 @@ def render_settings_page():
         st.markdown("""
         **Smart Campus Analytics - Early Risk Detection System**
         - **Version**: 1.0.0
-        - **Models**: Regression, SVM, Random Forest (Accuracy ~91%)
+        - **Engine**: Predictive AI, Pattern Recognition, Smart Analytics (Accuracy ~91%)
         - **Database**: SQLite
         """)
         st.markdown('</div>', unsafe_allow_html=True)

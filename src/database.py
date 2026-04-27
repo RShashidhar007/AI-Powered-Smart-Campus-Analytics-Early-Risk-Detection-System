@@ -198,18 +198,22 @@ def create_faculty_user(username: str, email: str, password: str, department: st
         conn.close()
 
 
-def authenticate_faculty_user(username: str, password: str, db_path: str = DB_PATH) -> bool:
+def authenticate_faculty_user(username: str, password: str, db_path: str = DB_PATH) -> tuple[bool, str]:
     """Verify the provided login credentials against the database securely."""
     conn = get_connection(db_path)
     cursor = conn.execute(
-        "SELECT password_hash FROM faculty_users WHERE username = ?",
+        "SELECT password_hash, department FROM faculty_users WHERE username = ?",
         (username,)
     )
     result = cursor.fetchone()
     conn.close()
     
     if result is None:
-        return False
+        return False, None
         
     stored_hash = result[0]
-    return stored_hash == _hash_password(password)
+    department = result[1]
+    
+    if stored_hash == _hash_password(password):
+        return True, department
+    return False, None

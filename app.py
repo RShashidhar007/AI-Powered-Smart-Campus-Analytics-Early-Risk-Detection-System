@@ -141,6 +141,7 @@ if st.session_state.get("authenticated", True):
             st.session_state.authenticated = False
             st.session_state.user_role = "teacher"
             st.session_state.student_usn = None
+            st.session_state.faculty_department = "All"
             st.session_state.prediction_history = []
             st.rerun()
 
@@ -223,18 +224,35 @@ if st.session_state.get("authenticated", True):
         # Department & Semester Filters
         st.markdown("<h4 style='color: var(--text-primary); margin-bottom: 8px;'> Filters</h4>", unsafe_allow_html=True)
 
-        dept_options = ["All"] + DEPARTMENTS
-        def _on_dept_change():
-            st.session_state.selected_department = st.session_state._sidebar_dept
-
-        st.selectbox(
-            "Department",
-            dept_options,
-            key="_sidebar_dept",
-            index=dept_options.index(st.session_state.selected_department),
-            on_change=_on_dept_change,
-            format_func=lambda x: f"All Departments" if x == "All" else f"{x} - {DEPT_FULL_NAMES.get(x, x)}",
-        )
+        # Restrict department options if user is a faculty member assigned to a specific department
+        faculty_dept = st.session_state.get('faculty_department', 'All')
+        
+        if faculty_dept != 'All':
+            st.session_state.selected_department = faculty_dept
+            dept_name = f"{faculty_dept} - {DEPT_FULL_NAMES.get(faculty_dept, faculty_dept)}"
+            st.markdown(f"""
+            <div style="margin-bottom: 4px; font-size: 14px; color: var(--text-primary);">Department</div>
+            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 14px; font-size: 14px; color: var(--text-primary); cursor: default; margin-bottom: 1rem;">
+                {dept_name}
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            dept_options = ["All"] + DEPARTMENTS
+            
+            def _on_dept_change():
+                st.session_state.selected_department = st.session_state._sidebar_dept
+                
+            if st.session_state.get('selected_department', 'All') not in dept_options:
+                st.session_state.selected_department = dept_options[0]
+    
+            st.selectbox(
+                "Department",
+                dept_options,
+                key="_sidebar_dept",
+                index=dept_options.index(st.session_state.get('selected_department', dept_options[0])),
+                on_change=_on_dept_change,
+                format_func=lambda x: f"All Departments" if x == "All" else f"{x} - {DEPT_FULL_NAMES.get(x, x)}",
+            )
 
         sem_options = ["All"] + [str(s) for s in SEMESTERS]
         def _on_sem_change():

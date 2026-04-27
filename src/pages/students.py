@@ -109,13 +109,13 @@ def render_students_page():
         'attendance': 'Attend %', 'internal_marks': 'Internals',
         'semester_marks': 'Sem Marks', 'study_hours': 'Study Hrs',
         'risk_score': 'Risk Score', 'risk_tier': 'Tier',
-        'grade_label': 'Grade', 'performance_index': 'Perf Index',
+        'grade_label': 'Grade', 'performance_index': 'Overall Score',
     }
     disp.columns = [col_names.get(c, c) for c in available_sc]
 
     fmt_dict = {}
     for c in disp.columns:
-        if c in ('Attend %', 'Internals', 'Sem Marks', 'Study Hrs', 'Perf Index'):
+        if c in ('Attend %', 'Internals', 'Sem Marks', 'Study Hrs', 'Overall Score'):
             fmt_dict[c] = '{:.1f}'
         elif c == 'Risk Score':
             fmt_dict[c] = '{:.0f}'
