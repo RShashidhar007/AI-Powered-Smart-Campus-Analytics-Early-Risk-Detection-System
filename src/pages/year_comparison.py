@@ -166,7 +166,7 @@ def render_year_comparison_page():
                           legend=dict(orientation='h', y=-0.15, font_size=11),
                           xaxis=dict(showgrid=False),
                           yaxis=dict(showgrid=True))
-        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, theme=None)
+        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
         # Insight text
         curr_a = c_gdist.get('A', 0)
@@ -200,7 +200,7 @@ def render_year_comparison_page():
                                       categoryorder='array',
                                       categoryarray=tiers),
                            yaxis=dict(showgrid=True))
-        st.plotly_chart(fig2, use_container_width=True, config={'displayModeBar': False}, theme=None)
+        st.plotly_chart(fig2, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
         c_crit = c_rdist.get('Critical', 0)
         p_crit = p_rdist.get('Critical', 0)
@@ -242,7 +242,7 @@ def render_year_comparison_page():
                                    legend=dict(orientation='h', y=-0.2, font_size=10),
                                    xaxis=dict(showgrid=False, title=''),
                                    yaxis=dict(showgrid=True, title='Avg Marks'))
-                st.plotly_chart(fig3, use_container_width=True, config={'displayModeBar': False}, theme=None)
+                st.plotly_chart(fig3, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
             with dc2:
                 fig4 = px.bar(dept_combined, x='department', y='at_risk_pct',
@@ -255,7 +255,7 @@ def render_year_comparison_page():
                                    legend=dict(orientation='h', y=-0.2, font_size=10),
                                    xaxis=dict(showgrid=False, title=''),
                                    yaxis=dict(showgrid=True, title='At-Risk %'))
-                st.plotly_chart(fig4, use_container_width=True, config={'displayModeBar': False}, theme=None)
+                st.plotly_chart(fig4, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
             # Summary Table
             st.markdown("#### Department Trend Summary")
@@ -395,7 +395,7 @@ def render_year_comparison_page():
                 fig_prog.update_traces(textposition='outside')
                 fig_prog.update_layout(**_PL)
                 fig_prog.update_layout(height=280, showlegend=False, xaxis_title="", yaxis_title="Number of Students")
-                st.plotly_chart(fig_prog, use_container_width=True, config={'displayModeBar': False}, theme=None)
+                st.plotly_chart(fig_prog, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
                 st.markdown(
                     f"**Summary**: Out of **{len(common_usns)}** tracked students, "

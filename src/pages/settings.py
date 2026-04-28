@@ -23,7 +23,7 @@ def render_settings_page():
     t1, t2 = st.tabs([T.get("tab_general", " General Config"), T.get("tab_profile", " Profile")])
 
     with t1:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+
         st.markdown("#### System Configuration")
         
         # Academic Year Selection
@@ -45,22 +45,7 @@ def render_settings_page():
             st.cache_data.clear()
             st.rerun()
 
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        c1, c2 = st.columns(2)
-        with c1:
-            st.markdown("**Display Preferences**")
-            st.selectbox("Theme Mode", ["Dark"], disabled=True, help="Currently locked to Dark Mode for optimal UI.")
-            
-        with c2:
-            st.markdown("**Data Management**")
-            if st.button("Clear Application Cache", use_container_width=True):
-                st.cache_data.clear()
-                st.success("Cache cleared successfully!")
-                
-        st.markdown('</div>', unsafe_allow_html=True)
 
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.markdown(f"#### {T.get('about_sys', 'About System')}")
         st.markdown("""
         **Smart Campus Analytics - Early Risk Detection System**
@@ -68,10 +53,10 @@ def render_settings_page():
         - **Engine**: Predictive AI, Pattern Recognition, Smart Analytics (Accuracy ~91%)
         - **Database**: SQLite
         """)
-        st.markdown('</div>', unsafe_allow_html=True)
+
 
     with t2:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+
         st.markdown("#### User Profile")
         user_role = st.session_state.get('user_role', 'Unknown')
         faculty_dept = st.session_state.get('faculty_department', 'All')
@@ -97,4 +82,4 @@ def render_settings_page():
              st.markdown(f"<p><b>Department Access</b>: {dept_access}</p>", unsafe_allow_html=True)
         elif user_role == 'student':
              st.markdown(f"<p><b>USN</b>: {st.session_state.get('student_usn')}</p>", unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+

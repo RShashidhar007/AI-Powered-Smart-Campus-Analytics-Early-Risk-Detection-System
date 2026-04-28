@@ -23,24 +23,24 @@ DEPT_COL = {
 
 # Plotly layout template
 PL = dict(
-    font=dict(family="Inter, sans-serif", color="var(--text-primary)"),
-    title_font=dict(color="var(--text-primary)"),
+    font=dict(family="Inter, sans-serif"),
+    title_font=dict(),
     plot_bgcolor="rgba(0,0,0,0)",
     paper_bgcolor="rgba(0,0,0,0)",
     margin=dict(l=12, r=12, t=40, b=12),
     xaxis=dict(
         gridcolor="rgba(128, 128, 128, 0.15)",
         zerolinecolor="rgba(128, 128, 128, 0.25)",
-        tickfont=dict(color="var(--text-secondary)"),
-        title=dict(font=dict(color="var(--text-secondary)")),
+        tickfont=dict(),
+        title=dict(),
     ),
     yaxis=dict(
         gridcolor="rgba(128, 128, 128, 0.15)",
         zerolinecolor="rgba(128, 128, 128, 0.25)",
-        tickfont=dict(color="var(--text-secondary)"),
-        title=dict(font=dict(color="var(--text-secondary)")),
+        tickfont=dict(),
+        title=dict(),
     ),
-    legend=dict(bgcolor="rgba(0,0,0,0)", font=dict(size=11, color="var(--text-secondary)")),
+    legend=dict(bgcolor="rgba(0,0,0,0)", font=dict(size=11)),
 )
 
 THEME_TOKENS = {
@@ -236,27 +236,36 @@ button[kind="header"] { pointer-events: auto; }
 
 /* Radio navigation pills */
 div.stRadio > div[role="radiogroup"] > label {
-    background: transparent !important;
-    border: none !important;
-    color: var(--text-muted) !important;
-    font-weight: 600 !important;
+    background: rgba(128, 128, 128, 0.05) !important;
+    border: 1px solid rgba(128, 128, 128, 0.1) !important;
+    color: var(--text-secondary) !important;
+    font-weight: 500 !important;
     padding: 10px 18px !important;
     border-radius: var(--radius-sm) !important;
     transition: all 0.2s ease !important;
-    margin-bottom: 4px !important;
+    margin-bottom: 6px !important;
     font-family: 'Inter', sans-serif !important;
 }
 div.stRadio > div[role="radiogroup"] > label > div:first-child {
     display: none !important;
 }
-div.stRadio > div[role="radiogroup"] > label[data-checked="true"] {
+div.stRadio > div[role="radiogroup"] > label:has(input:checked) {
     background: var(--accent) !important;
+    border-color: var(--accent) !important;
     color: #FFFFFF !important;
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
 }
-div.stRadio > div[role="radiogroup"] > label:hover:not([data-checked="true"]) {
+div.stRadio > div[role="radiogroup"] > label:hover:not(:has(input:checked)) {
     background: var(--bg-secondary) !important;
+    border-color: var(--border-hover) !important;
     color: var(--text-primary) !important;
+}
+
+/* Sidebar-specific radio buttons (Menu) */
+[data-testid="stSidebar"] div.stRadio > div[role="radiogroup"] > label {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 /* Tabs */
@@ -431,6 +440,13 @@ button[data-baseweb="tab"][aria-selected="true"] {
 /* Dashboard header */
 .dashboard-header {
     margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.header-text-container {
+    display: flex;
+    flex-direction: column;
 }
 .header-title {
     font-size: 32px;

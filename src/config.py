@@ -29,7 +29,7 @@ DEPT_FULL_NAMES = {
 
 def set_page_config():
     st.set_page_config(
-        page_title="Smart Campus Analytics",
+        page_title="CampusInsight",
         layout="wide",
         initial_sidebar_state="expanded",
     )

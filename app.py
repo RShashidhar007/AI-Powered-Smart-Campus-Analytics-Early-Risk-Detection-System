@@ -1,5 +1,5 @@
 """
-Smart Campus Analytics - Streamlit Dashboard
+CampusInsight: AI-Powered Student Performance Analytics & Prediction
 =============================================
 Run:      streamlit run app.py
 Install:  pip install -r requirements.txt
@@ -16,6 +16,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 import streamlit as st
 import pandas as pd
 import time
+import base64
+
+@st.cache_data
+def get_base64_of_bin_file(bin_file):
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
 
 # Import modules
 from config import set_page_config, init_session_state, DEPARTMENTS, SEMESTERS, DEPT_FULL_NAMES
@@ -61,11 +68,16 @@ if st.session_state.get("user_role") == "student":
     T = TEXTS[st.session_state.language]
     set_styles()
 
+    logo_b64 = get_base64_of_bin_file(os.path.join(os.path.dirname(__file__), 'assets', 'logo.png'))
+
     # Header
     st.markdown(f"""
     <div class="dashboard-header">
-        <div class="header-title">{T['main_title']}</div>
-        <div class="header-subtitle">{T.get('student_portal_text', 'Student Portal')}</div>
+        <img src="data:image/png;base64,{logo_b64}" style="width: 55px; height: 55px; object-fit: contain;">
+        <div class="header-text-container">
+            <div class="header-title">{T['main_title']}</div>
+            <div class="header-subtitle">{T.get('student_portal_text', 'Student Portal')}</div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
     # Top Controls Row --
@@ -111,11 +123,16 @@ if st.session_state.get("authenticated", True):
     # 1. Apply Dynamic CSS based on state
     set_styles()
 
+    logo_b64 = get_base64_of_bin_file(os.path.join(os.path.dirname(__file__), 'assets', 'logo.png'))
+
     # Header
     st.markdown(f"""
     <div class="dashboard-header" style="cursor:pointer;" onclick="window.parent.location.assign(window.parent.location.pathname + '?reset=1');">
-        <div class="header-title">{T['main_title']}</div>
-        <div class="header-subtitle">{T['subtitle']}</div>
+        <img src="data:image/png;base64,{logo_b64}" style="width: 55px; height: 55px; object-fit: contain;">
+        <div class="header-text-container">
+            <div class="header-title">{T['main_title']}</div>
+            <div class="header-subtitle">{T['subtitle']}</div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
     # Top Controls Row (User Info, Language, Logout)

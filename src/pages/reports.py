@@ -4,6 +4,7 @@ pages/reports.py - Exploratory Data Analysis (EDA) page.
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 
 from config    import DATA_PATH, DEPARTMENTS, DEPT_FULL_NAMES, CURRENT_ACADEMIC_YEAR
 from data_pro  import run_pipeline, run_pipeline_from_db, filter_dataframe
@@ -34,15 +35,15 @@ def render_reports_page():
     sel_sem  = st.session_state.get('selected_semester', 'All')
     df = filter_dataframe(all_df, sel_dept, sel_sem)
 
-    st.markdown('<div class="page-title">Exploratory Data Analysis</div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-title">Data Reports</div>', unsafe_allow_html=True)
     st.markdown(
         "<div class='page-subtitle'>"
-        "Distributions Correlations Box Plots by grade Department Comparison</div>",
+        "View detailed data patterns, relationships, and compare department performance.</div>",
         unsafe_allow_html=True,
     )
 
     tab1, tab2, tab3, tab4 = st.tabs(
-        [" Distributions", " Correlations", "Box Plots", "Department Comparison"]
+        [" Overview", " Relationships", " Grade Breakdown", " Department Comparison"]
     )
 
     # Distributions
@@ -64,39 +65,50 @@ def render_reports_page():
                         fig.update_layout(height=210, title_font_size=12,
                                           xaxis=dict(showgrid=True),
                                           yaxis=dict(showgrid=True))
-                        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, theme=None)
+                        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
-    # Correlations
+    # Relationships
     with tab2:
         if len(df) > 10:
-            numeric = FEATURES + ['semester_marks']
-            cm      = df[numeric].corr().round(3)
-            fhm     = px.imshow(cm, color_continuous_scale='RdYlGn',
-                                zmin=-0.3, zmax=0.8, text_auto=True, aspect='auto',
-                                title="Feature Relationship Map")
-            fhm.update_layout(**_PL)
-            fhm.update_layout(height=420, title_font_size=13,
-                              coloraxis_colorbar=dict(title="r", thickness=12))
-            st.plotly_chart(fhm, use_container_width=True, config={'displayModeBar': False}, theme=None)
+            numeric = FEATURES
+            corr = df[numeric].corrwith(df['semester_marks']).sort_values(ascending=True)
+            vals = (corr * 100).round(1).values
+            labels = [f.replace("_", " ").title() for f in corr.index]
 
-            st.markdown("#### Correlation with semester marks")
-            cs2 = cm['semester_marks'].drop('semester_marks').sort_values(ascending=False)
-            ca, cb = st.columns([1.2, 1])
-            with ca:
-                for feat, val in cs2.items():
-                    col_c = "var(--accent-teal)" if val > 0.4 else ("var(--accent-amber)" if val > 0.15 else "#888")
-                    bw    = max(int(abs(val) * 120), 4)
-                    st.markdown(
-                        f'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
-                        f'<div style="width:140px;font-size:12px;color:var(--text-muted)">{feat.replace("_"," ").title()}</div>'
-                        f'<div style="width:{bw}px;height:8px;background:{col_c};border-radius:4px"></div>'
-                        f'<div style="font-size:12px;font-weight:600;color:{col_c}">{val:+.3f}</div></div>',
-                        unsafe_allow_html=True,
-                    )
-            with cb:
-                st.info("**Internal marks** - strongest predictor.\n\n"
-                        "**Study hours** - almost zero correlation.\n\n"
-                        "Focus interventions on internal assessment performance.")
+            fig_corr = go.Figure()
+            fig_corr.add_trace(go.Bar(
+                x=vals,
+                y=labels,
+                orientation="h",
+                marker=dict(
+                    color=vals,
+                    colorscale=[
+                        [0, RISK_COL["Critical"]],
+                        [0.35, RISK_COL["High"]],
+                        [0.65, RISK_COL["Moderate"]],
+                        [1, RISK_COL["Low"]],
+                    ],
+                    line=dict(width=1, color="rgba(255,255,255,0.12)"),
+                ),
+                text=[f"{v:+.1f}%" for v in vals],
+                textposition="inside",
+                insidetextanchor="end",
+                hovertemplate="<b>%{y}</b><br>Impact Strength: %{x}%<extra></extra>",
+            ))
+            fig_corr.update_xaxes(range=[min(vals.min() * 1.15, -5), max(vals.max() * 1.15, 5)])
+            fig_corr.update_layout(**_PL)
+            fig_corr.update_layout(
+                height=350,
+                title="How Much Does Each Factor Affect Final Marks?",
+                title_font_size=14,
+                xaxis_title="Impact Strength (%)",
+            )
+            fig_corr.update_yaxes(showgrid=False)
+            st.plotly_chart(fig_corr, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
+
+            st.info("**Internal marks** - strongest predictor.\n\n"
+                    "**Study hours** - almost zero correlation.\n\n"
+                    "Focus interventions on internal assessment performance.")
 
     # Box Plots
     with tab3:
@@ -112,7 +124,7 @@ def render_reports_page():
                              xaxis=dict(title='Grade', showgrid=False),
                              yaxis=dict(title=fc.replace('_', ' ').title(), showgrid=True),
                              title_font_size=13, showlegend=False)
-            st.plotly_chart(fb, use_container_width=True, config={'displayModeBar': False}, theme=None)
+            st.plotly_chart(fb, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
             gs = (df.groupby('grade_label')[fc]
                   .agg(['mean', 'median', 'std', 'min', 'max'])
@@ -146,7 +158,7 @@ def render_reports_page():
                 fig1.update_traces(textposition='outside', texttemplate='%{text:.1f}', marker_line_width=1, marker_line_color='rgba(0,0,0,0.1)')
                 fig1.update_layout(**_PL)
                 fig1.update_layout(height=300, xaxis_title='', yaxis_title='Marks', showlegend=False)
-                st.plotly_chart(fig1, use_container_width=True, config={'displayModeBar': False}, theme=None)
+                st.plotly_chart(fig1, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
             with dc2:
                 fig2 = px.bar(dept_agg, x='department', y='at_risk_pct',
@@ -155,7 +167,7 @@ def render_reports_page():
                 fig2.update_traces(textposition='outside', texttemplate='%{text:.1f}%', marker_line_width=1, marker_line_color='rgba(0,0,0,0.1)')
                 fig2.update_layout(**_PL)
                 fig2.update_layout(height=300, xaxis_title='', yaxis_title='%', showlegend=False)
-                st.plotly_chart(fig2, use_container_width=True, config={'displayModeBar': False}, theme=None)
+                st.plotly_chart(fig2, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
             dc3, dc4 = st.columns(2)
             with dc3:
@@ -165,7 +177,7 @@ def render_reports_page():
                 fig3.update_traces(textposition='outside', texttemplate='%{text:.1f}%', marker_line_width=1, marker_line_color='rgba(0,0,0,0.1)')
                 fig3.update_layout(**_PL)
                 fig3.update_layout(height=300, xaxis_title='', yaxis_title='%', showlegend=False)
-                st.plotly_chart(fig3, use_container_width=True, config={'displayModeBar': False}, theme=None)
+                st.plotly_chart(fig3, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
             with dc4:
                 # Semester-wise comparison across departments
@@ -183,7 +195,7 @@ def render_reports_page():
                                       height=300, showlegend=True,
                                       legend=dict(orientation='h', y=-0.25, font_size=10),
                                       xaxis_title='Semester', yaxis_title='Avg Marks')
-                    st.plotly_chart(fig4, use_container_width=True, config={'displayModeBar': False}, theme=None)
+                    st.plotly_chart(fig4, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
             # Summary table
             st.markdown("#### Department Summary")

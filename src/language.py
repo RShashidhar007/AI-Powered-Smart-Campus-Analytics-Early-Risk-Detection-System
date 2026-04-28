@@ -1,7 +1,7 @@
 TEXTS = {
     "English": {
         # Login page
-        "title_text":           "Smart Campus Login",
+        "title_text":           "CampusInsight Login",
         "login_subtitle":       "Please connect with your credentials",
         "login_portal_text":    "Faculty Portal",
         "student_portal_text":  "Student Portal",
@@ -29,8 +29,8 @@ TEXTS = {
         "qr_verified":          " QR Login Successful!",
         "forgot_password_text": "Forgot Password?",
         # Dashboard
-        "main_title":      "Smart Campus Analytics",
-        "subtitle":        "AI-Powered Early Risk Detection System",
+        "main_title":      "CampusInsight",
+        "subtitle":        " AI-Powered Student Performance Analytics & Prediction",
         "hi_teacher":      " Hi, Teacher",
         "logout":          "Logout",
         "nav_options":     ["Home", "Predictions", "Students", "Reports", "Year Comparison", "Settings"],
@@ -57,7 +57,7 @@ TEXTS = {
         "name_label":           "Name",
         "department_label":     "Department",
         "semester_label":       "Semester",
-        "footer":          "(c) 2026 Smart Campus Analytics - AI-Powered Early Risk Detection System",
+        "footer":          "(c) 2026 CampusInsight:AI-Powered Student Performance Analytics & Prediction",
     },
     "हिन्दी": {
         # Login page

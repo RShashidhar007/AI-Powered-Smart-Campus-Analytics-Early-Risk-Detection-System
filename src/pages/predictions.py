@@ -114,7 +114,7 @@ def render_predictions_page():
                           legend=dict(orientation='h', y=-0.2, font_size=11),
                           title_font_size=13,
                           xaxis=dict(showgrid=True), yaxis=dict(showgrid=True))
-        st.plotly_chart(fap, use_container_width=True, config={'displayModeBar': False}, theme=None)
+        st.plotly_chart(fap, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
     # Classification
     elif active_tab == tab_clf_name:
@@ -138,7 +138,7 @@ def render_predictions_page():
         fcm.update_layout(height=360, coloraxis_showscale=False,
                           xaxis_title="What the AI Predicted", yaxis_title="What the Student Actually Got",
                           title_font_size=13)
-        st.plotly_chart(fcm, use_container_width=True, config={'displayModeBar': False}, theme=None)
+        st.plotly_chart(fcm, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
         st.caption("How to read: A dark diagonal line means the AI accurately predicted the correct grade.")
 
     # Feature Importance
@@ -160,7 +160,7 @@ def render_predictions_page():
                 ffi.update_layout(**_PL)
                 ffi.update_layout(height=280, coloraxis_showscale=False,
                                   xaxis=dict(showgrid=True), yaxis=dict(showgrid=False))
-                st.plotly_chart(ffi, use_container_width=True, config={'displayModeBar': False}, theme=None)
+                st.plotly_chart(ffi, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
         st.success(" **Internal marks** is the most important feature in both models.")
 
     # Predict single student

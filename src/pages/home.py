@@ -203,7 +203,7 @@ def render_home_page():
         ))
         _standard_layout(fig_risk, height=330)
         fig_risk.update_layout(margin=dict(l=0, r=0, t=4, b=0))
-        st.plotly_chart(fig_risk, use_container_width=True, config={"displayModeBar": False}, theme=None)
+        st.plotly_chart(fig_risk, use_container_width=True, config={"displayModeBar": False}, theme="streamlit")
 
     with center:
         _chart_title("Grade Distribution")
@@ -221,7 +221,7 @@ def render_home_page():
         ))
         _standard_layout(fig_grade, height=330)
         fig_grade.update_yaxes(title_text="Students")
-        st.plotly_chart(fig_grade, use_container_width=True, config={"displayModeBar": False}, theme=None)
+        st.plotly_chart(fig_grade, use_container_width=True, config={"displayModeBar": False}, theme="streamlit")
 
     _section("Attendance Insights", "Attendance tiers connected with student count and mark outcomes.")
     att_left, att_right = st.columns([1, 1])
@@ -243,7 +243,7 @@ def render_home_page():
         _standard_layout(fig_att, height=320)
         fig_att.update_xaxes(title_text="Attendance Tier")
         fig_att.update_yaxes(title_text="Students")
-        st.plotly_chart(fig_att, use_container_width=True, config={"displayModeBar": False}, theme=None)
+        st.plotly_chart(fig_att, use_container_width=True, config={"displayModeBar": False}, theme="streamlit")
 
     with att_right:
         _chart_title("Avg Marks By Attendance Tier")
@@ -272,10 +272,15 @@ def render_home_page():
         _standard_layout(fig_marks, height=320)
         fig_marks.update_xaxes(title_text="Attendance Tier")
         fig_marks.update_yaxes(title_text="Average Marks")
-        st.plotly_chart(fig_marks, use_container_width=True, config={"displayModeBar": False}, theme=None)
+        st.plotly_chart(fig_marks, use_container_width=True, config={"displayModeBar": False}, theme="streamlit")
 
-    _section("Academic Drivers", "Feature correlation and department-level comparisons.")
-    driver_left, driver_right = st.columns([1, 1])
+    if sel_dept == "All":
+        _section("Academic Drivers", "Feature correlation and department-level comparisons.")
+        driver_left, driver_right = st.columns([1, 1])
+    else:
+        _section("Academic Drivers", "Feature correlation impacting academic outcomes.")
+        driver_left = st.container()
+        driver_right = None
 
     with driver_left:
         _chart_title("Impact On Final Marks")
@@ -309,41 +314,42 @@ def render_home_page():
         _standard_layout(fig_corr, height=330)
         fig_corr.update_xaxes(title_text="Impact Strength (%)")
         fig_corr.update_yaxes(showgrid=False)
-        st.plotly_chart(fig_corr, use_container_width=True, config={"displayModeBar": False}, theme=None)
+        st.plotly_chart(fig_corr, use_container_width=True, config={"displayModeBar": False}, theme="streamlit")
 
-    with driver_right:
-        _chart_title("Department Averages")
-        fig_dept = go.Figure()
-        if sel_dept == "All" and len(df):
-            dept_stats = df.groupby("department").agg(
-                avg_attendance=("attendance", "mean"),
-                pass_rate=("semester_marks", lambda x: (x >= 120).mean() * 100),
-            ).round(1)
-            depts = dept_stats.index.tolist()
-            fig_dept.add_trace(go.Bar(
-                x=depts,
-                y=dept_stats["avg_attendance"],
-                name="Attendance %",
-                marker_color=RISK_COL["Moderate"],
-                marker_line_width=1,
-                marker_line_color="rgba(255,255,255,0.12)",
-            ))
-            fig_dept.add_trace(go.Bar(
-                x=depts,
-                y=dept_stats["pass_rate"],
-                name="Pass Rate %",
-                marker_color=RISK_COL["Low"],
-                marker_line_width=1,
-                marker_line_color="rgba(255,255,255,0.12)",
-            ))
-        _standard_layout(fig_dept, height=330, legend=True)
-        fig_dept.update_layout(
-            barmode="group",
-            bargap=0.18,
-            legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center"),
-        )
-        fig_dept.update_yaxes(title_text="Percent", range=[0, 100])
-        st.plotly_chart(fig_dept, use_container_width=True, config={"displayModeBar": False}, theme="streamlit")
+    if driver_right is not None:
+        with driver_right:
+            _chart_title("Department Averages")
+            fig_dept = go.Figure()
+            if len(df):
+                dept_stats = df.groupby("department").agg(
+                    avg_attendance=("attendance", "mean"),
+                    pass_rate=("semester_marks", lambda x: (x >= 120).mean() * 100),
+                ).round(1)
+                depts = dept_stats.index.tolist()
+                fig_dept.add_trace(go.Bar(
+                    x=depts,
+                    y=dept_stats["avg_attendance"],
+                    name="Attendance %",
+                    marker_color=RISK_COL["Moderate"],
+                    marker_line_width=1,
+                    marker_line_color="rgba(255,255,255,0.12)",
+                ))
+                fig_dept.add_trace(go.Bar(
+                    x=depts,
+                    y=dept_stats["pass_rate"],
+                    name="Pass Rate %",
+                    marker_color=RISK_COL["Low"],
+                    marker_line_width=1,
+                    marker_line_color="rgba(255,255,255,0.12)",
+                ))
+            _standard_layout(fig_dept, height=330, legend=True)
+            fig_dept.update_layout(
+                barmode="group",
+                bargap=0.18,
+                legend=dict(orientation="h", y=-0.2, x=0.5, xanchor="center"),
+            )
+            fig_dept.update_yaxes(title_text="Percent", range=[0, 100])
+            st.plotly_chart(fig_dept, use_container_width=True, config={"displayModeBar": False}, theme="streamlit")
 
     if sel_dept == "All" and len(df) > 0:
         _chart_title("Marks Spread By Department")

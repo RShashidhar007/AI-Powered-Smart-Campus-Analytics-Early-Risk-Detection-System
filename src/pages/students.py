@@ -75,7 +75,7 @@ def render_students_page():
             fh.update_layout(height=200,
                              xaxis=dict(title='Risk Score', showgrid=True),
                              yaxis=dict(title='Students', showgrid=True))
-            st.plotly_chart(fh, use_container_width=True, config={'displayModeBar': False}, theme=None)
+            st.plotly_chart(fh, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
     with ch2:
         st.markdown('<div class="sh">Grade breakdown (at-risk)</div>', unsafe_allow_html=True)
@@ -86,18 +86,18 @@ def render_students_page():
             fa.update_traces(textposition='outside', marker_line_width=1, marker_line_color='rgba(0,0,0,0.1)')
             fa.update_layout(**_PL)
             fa.update_layout(height=200, xaxis=dict(showgrid=False))
-            st.plotly_chart(fa, use_container_width=True, config={'displayModeBar': False}, theme=None)
+            st.plotly_chart(fa, use_container_width=True, config={'displayModeBar': False}, theme="streamlit")
 
     # Data table
     st.markdown('<div class="sh">Student list</div>', unsafe_allow_html=True)
 
     def _tc(v):
         bg = {'Critical': 'rgba(231,76,60,0.2)', 'High': 'rgba(230,126,34,0.2)', 'Moderate': 'rgba(243,156,18,0.2)', 'Low': 'rgba(39,174,96,0.2)'}
-        return f'background:{bg.get(v,"transparent")};color:{RISK_COL.get(v,"var(--text-primary)")};font-weight:600;border:1px solid {RISK_COL.get(v,"var(--border)")}'
+        return f'background:{bg.get(v,"transparent")};color:{RISK_COL.get(v,"inherit")};font-weight:600;border:1px solid {RISK_COL.get(v,"transparent")}'
 
     def _gc(v):
         bg = {'A': 'rgba(39,174,96,0.2)', 'B': 'rgba(46,134,171,0.2)', 'C': 'rgba(244,162,97,0.2)', 'D': 'rgba(230,126,34,0.2)', 'F': 'rgba(231,76,60,0.2)'}
-        return f'background:{bg.get(v,"transparent")};color:{GRADE_COL.get(v,"var(--text-primary)")};font-weight:600;border:1px solid {GRADE_COL.get(v,"var(--border)")}'
+        return f'background:{bg.get(v,"transparent")};color:{GRADE_COL.get(v,"inherit")};font-weight:600;border:1px solid {GRADE_COL.get(v,"transparent")}'
 
     sc = ['usn', 'name', 'department', 'semester', 'attendance', 'internal_marks', 'semester_marks',
           'study_hours', 'risk_score', 'risk_tier', 'grade_label', 'performance_index']
@@ -135,7 +135,7 @@ def render_students_page():
     if 'Risk Score' in disp.columns:
         styled = styled.bar(subset=['Risk Score'], color='rgba(231,76,60,0.6)', vmin=0, vmax=100)
         
-    styled = styled.set_properties(**{'font-size': '12px', 'background-color': 'transparent', 'color': 'var(--text-primary)'})
+    styled = styled.set_properties(**{'font-size': '12px'})
               
     st.dataframe(styled, use_container_width=True, height=420)
     st.download_button("Download CSV", flt.to_csv(index=False),
