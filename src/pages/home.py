@@ -286,8 +286,8 @@ def render_home_page():
         _chart_title("Impact On Final Marks")
         fig_corr = go.Figure()
         if len(df) > 10:
-            # Convert correlation to a 0-100% "Impact Strength" scale for easier understanding
-            corr = df[FEATURES].corrwith(df["semester_marks"]).sort_values(ascending=True)
+            # Use absolute correlation to show 'Impact Strength' magnitude without negative percentages
+            corr = df[FEATURES].corrwith(df["semester_marks"]).abs().sort_values(ascending=True)
             vals = (corr * 100).round(1).values
             labels = [f.replace("_", " ").title() for f in corr.index]
             

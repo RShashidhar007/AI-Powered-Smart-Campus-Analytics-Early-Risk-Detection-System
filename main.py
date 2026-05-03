@@ -4,7 +4,7 @@ import time
 import numpy as np
 
 BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
-DATA_PATH   = os.path.join(BASE_DIR, 'data', 'student_data_500.csv')
+DATA_PATH   = os.path.join(BASE_DIR, 'data', 'student_data.csv')
 CHART_DIR   = os.path.join(BASE_DIR, 'outputs', 'charts')
 OUTPUT_DIR  = os.path.join(BASE_DIR, 'outputs')
 

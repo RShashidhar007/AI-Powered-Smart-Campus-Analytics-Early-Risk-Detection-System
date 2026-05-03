@@ -196,7 +196,42 @@ if st.session_state.get("authenticated", True):
         filter_label = "All Departments - All Semesters"
 
     st.markdown(f"<h3 style='color: var(--text-primary); margin-bottom: 5px;'>{T['system_status']}</h3>", unsafe_allow_html=True)
-    st.markdown(f"<div style='color: var(--text-muted); font-size:12px; margin-bottom:12px'> {filter_label}</div>", unsafe_allow_html=True)
+    
+    # NEW: Filters in the main area header
+    f_col1, f_col2, f_col3 = st.columns([1.5, 1, 2.5])
+    with f_col1:
+        faculty_dept = st.session_state.get('faculty_department', 'All')
+        if faculty_dept != 'All':
+            st.session_state.selected_department = faculty_dept
+            st.markdown(f"<div style='font-size:12px; color:var(--text-muted); margin-bottom:4px;'>Department</div><div style='background:rgba(255,255,255,0.05); border:1px solid var(--border); padding:8px 12px; border-radius:8px; font-size:14px;'>{faculty_dept}</div>", unsafe_allow_html=True)
+        else:
+            dept_options = ["All"] + DEPARTMENTS
+            def _on_main_dept_change():
+                st.session_state.selected_department = st.session_state._main_dept_filter
+            st.selectbox(
+                "Department",
+                dept_options,
+                key="_main_dept_filter",
+                index=dept_options.index(st.session_state.get('selected_department', 'All')),
+                on_change=_on_main_dept_change,
+                format_func=lambda x: "All Depts" if x == "All" else x,
+                label_visibility="collapsed"
+            )
+    with f_col2:
+        sem_options = ["All"] + [str(s) for s in SEMESTERS]
+        def _on_main_sem_change():
+            st.session_state.selected_semester = st.session_state._main_sem_filter
+        st.selectbox(
+            "Semester",
+            sem_options,
+            key="_main_sem_filter",
+            index=sem_options.index(str(st.session_state.get('selected_semester', 'All'))),
+            on_change=_on_main_sem_change,
+            format_func=lambda x: "All Sem" if x == "All" else f"Sem {x}",
+            label_visibility="collapsed"
+        )
+    with f_col3:
+        st.markdown(f"<div style='color: var(--text-muted); font-size:12px; margin-top:10px; text-align:right;'> {filter_label}</div>", unsafe_allow_html=True)
 
     c1, c2, c3, c4 = st.columns(4)
 
@@ -234,57 +269,10 @@ if st.session_state.get("authenticated", True):
 
     st.divider()
 
-    # 5. Sidebar with Filters + Navigation
+    # 5. Sidebar with Navigation
     with st.sidebar:
-        # Department & Semester Filters
-        st.markdown("<h4 style='color: var(--text-primary); margin-bottom: 8px;'> Filters</h4>", unsafe_allow_html=True)
-
-        # Restrict department options if user is a faculty member assigned to a specific department
-        faculty_dept = st.session_state.get('faculty_department', 'All')
-        
-        if faculty_dept != 'All':
-            st.session_state.selected_department = faculty_dept
-            dept_name = f"{faculty_dept} - {DEPT_FULL_NAMES.get(faculty_dept, faculty_dept)}"
-            st.markdown(f"""
-            <div style="margin-bottom: 4px; font-size: 14px; color: var(--text-primary);">Department</div>
-            <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 14px; font-size: 14px; color: var(--text-primary); cursor: default; margin-bottom: 1rem;">
-                {dept_name}
-            </div>
-            """, unsafe_allow_html=True)
-        else:
-            dept_options = ["All"] + DEPARTMENTS
-            
-            def _on_dept_change():
-                st.session_state.selected_department = st.session_state._sidebar_dept
-                
-            if st.session_state.get('selected_department', 'All') not in dept_options:
-                st.session_state.selected_department = dept_options[0]
-    
-            st.selectbox(
-                "Department",
-                dept_options,
-                key="_sidebar_dept",
-                index=dept_options.index(st.session_state.get('selected_department', dept_options[0])),
-                on_change=_on_dept_change,
-                format_func=lambda x: f"All Departments" if x == "All" else f"{x} - {DEPT_FULL_NAMES.get(x, x)}",
-            )
-
-        sem_options = ["All"] + [str(s) for s in SEMESTERS]
-        def _on_sem_change():
-            st.session_state.selected_semester = st.session_state._sidebar_sem
-
-        st.selectbox(
-            "Semester",
-            sem_options,
-            key="_sidebar_sem",
-            index=sem_options.index(str(st.session_state.selected_semester)),
-            on_change=_on_sem_change,
-            format_func=lambda x: "All Semesters" if x == "All" else f"Semester {x}",
-        )
-
+        # Filters removed from here and moved to main area
         st.markdown("<hr style='border: 1px solid var(--border); margin: 12px 0;'>", unsafe_allow_html=True)
-
-
 
         # Navigation
         st.markdown(f"<h4 style='color: var(--text-primary); margin-bottom: 8px;'>Menu</h4>", unsafe_allow_html=True)

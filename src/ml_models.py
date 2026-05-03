@@ -84,8 +84,14 @@ def train_classification_models(df: pd.DataFrame):
     le.fit(GRADE_ORDER)
     y = le.transform(df[TARGET_CLF])
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2,
-                                                         random_state=42, stratify=y)
+    # Only stratify if all classes have at least 2 members
+    y_series = pd.Series(y)
+    can_stratify = (y_series.value_counts().min() >= 2) and (len(y_series.unique()) > 1)
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42, 
+        stratify=y if can_stratify else None
+    )
     scaler = StandardScaler()
     X_train_s = scaler.fit_transform(X_train)
     X_test_s  = scaler.transform(X_test)
