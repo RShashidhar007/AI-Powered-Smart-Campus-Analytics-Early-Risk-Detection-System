@@ -45,6 +45,18 @@ def render_settings_page():
             st.cache_data.clear()
             st.rerun()
 
+        # Theme Selection
+        theme_options = ["Dark", "Light"]
+        current_theme = st.session_state.get('theme_mode', 'Dark')
+        selected_theme = st.selectbox(
+            "Visual Theme",
+            options=theme_options,
+            index=theme_options.index(current_theme),
+            help="Switch between Dark and Light mode for the dashboard."
+        )
+        if selected_theme != current_theme:
+            st.session_state.theme_mode = selected_theme
+            st.rerun()
 
         st.markdown(f"#### {T.get('about_sys', 'About System')}")
         st.markdown("""

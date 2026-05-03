@@ -57,14 +57,14 @@ Two separate portals serve different audiences:
 ```text
 .
 ├── app.py                          # Streamlit entry point — routing, auth, layout
-├── main.py                         # Standalone CLI / batch runner (optional)
+├── main.py                         # Standalone CLI / batch runner 
 ├── requirements.txt                # Python dependencies
 ├── .env.example                    # Template for environment variables
 ├── .gitignore
 ├── LICENSE
 │
 ├── data/
-│   ├── campus_analytics.db         # SQLite database (auto-created on first run)
+│   ├── campus_analytics.db         # SQLite database 
 │   └── student_data.csv            # Primary student dataset
 │
 ├── scripts/

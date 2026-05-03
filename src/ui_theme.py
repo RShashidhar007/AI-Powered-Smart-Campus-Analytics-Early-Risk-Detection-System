@@ -22,26 +22,31 @@ DEPT_COL = {
 }
 
 # Plotly layout template
-PL = dict(
-    font=dict(family="Inter, sans-serif"),
-    title_font=dict(),
-    plot_bgcolor="rgba(0,0,0,0)",
-    paper_bgcolor="rgba(0,0,0,0)",
-    margin=dict(l=12, r=12, t=40, b=12),
-    xaxis=dict(
-        gridcolor="rgba(128, 128, 128, 0.15)",
-        zerolinecolor="rgba(128, 128, 128, 0.25)",
-        tickfont=dict(),
-        title=dict(),
-    ),
-    yaxis=dict(
-        gridcolor="rgba(128, 128, 128, 0.15)",
-        zerolinecolor="rgba(128, 128, 128, 0.25)",
-        tickfont=dict(),
-        title=dict(),
-    ),
-    legend=dict(bgcolor="rgba(0,0,0,0)", font=dict(size=11)),
-)
+def get_plotly_layout(theme_mode="Dark"):
+    text_color = "#F8FAFC" if theme_mode == "Dark" else "#172033"
+    grid_color = "rgba(255, 255, 255, 0.1)" if theme_mode == "Dark" else "rgba(0, 0, 0, 0.1)"
+    return dict(
+        font=dict(family="Inter, sans-serif", color=text_color),
+        title_font=dict(color=text_color),
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        margin=dict(l=12, r=12, t=40, b=12),
+        xaxis=dict(
+            gridcolor=grid_color,
+            zerolinecolor=grid_color,
+            tickfont=dict(color=text_color),
+            title=dict(font=dict(color=text_color)),
+        ),
+        yaxis=dict(
+            gridcolor=grid_color,
+            zerolinecolor=grid_color,
+            tickfont=dict(color=text_color),
+            title=dict(font=dict(color=text_color)),
+        ),
+        legend=dict(bgcolor="rgba(0,0,0,0)", font=dict(size=11, color=text_color)),
+    )
+
+PL = get_plotly_layout("Dark")
 
 THEME_TOKENS = {
     "Dark": {

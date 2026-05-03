@@ -45,9 +45,7 @@ set_page_config()
 
 # Initialize session state
 init_session_state()
-st.session_state.theme_mode = "Dark"
-if "theme_light_switch" in st.session_state:
-    del st.session_state["theme_light_switch"]
+
 
 if "reset" in st.query_params:
     st.session_state.page = TEXTS["English"]["nav_options"][0]
