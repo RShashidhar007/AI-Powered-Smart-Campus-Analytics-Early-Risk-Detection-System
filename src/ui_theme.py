@@ -27,10 +27,11 @@ def get_plotly_layout(theme_mode="Dark"):
     grid_color = "rgba(255, 255, 255, 0.1)" if theme_mode == "Dark" else "rgba(0, 0, 0, 0.1)"
     return dict(
         font=dict(family="Inter, sans-serif", color=text_color),
+        title=dict(text=""),
         title_font=dict(color=text_color),
         plot_bgcolor="rgba(0,0,0,0)",
         paper_bgcolor="rgba(0,0,0,0)",
-        margin=dict(l=12, r=12, t=40, b=12),
+        margin=dict(l=12, r=12, t=28, b=12),
         xaxis=dict(
             gridcolor=grid_color,
             zerolinecolor=grid_color,
