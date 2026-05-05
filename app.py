@@ -66,6 +66,25 @@ if st.session_state.get("user_role") == "student":
     T = TEXTS[st.session_state.language]
     set_styles()
 
+    # Hide sidebar completely for student portal
+    st.markdown("""
+    <style>
+        [data-testid="stSidebar"],
+        [data-testid="collapsedControl"],
+        [data-testid="stSidebarCollapsedControl"] {
+            display: none !important;
+            visibility: hidden !important;
+            width: 0 !important;
+            min-width: 0 !important;
+        }
+        .main .block-container {
+            max-width: 100% !important;
+            padding-left: 40px !important;
+            padding-right: 40px !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
     logo_b64 = get_base64_of_bin_file(os.path.join(os.path.dirname(__file__), 'assets', 'logo.png'))
 
     # Header
