@@ -6,6 +6,7 @@ import pandas as pd
 import pdfplumber
 import io
 import re
+from docx import Document
 
 
 # Expected columns in our dataset
@@ -87,7 +88,7 @@ def extract_tables_from_pdf(file_bytes: bytes) -> tuple[pd.DataFrame | None, str
     try:
         pdf = pdfplumber.open(io.BytesIO(file_bytes))
     except Exception as e:
-        return None, f" Could not open PDF: {e}"
+        return None, f" Could not open PDF: {e}", False
 
     all_rows = []
     header = None
@@ -120,11 +121,48 @@ def extract_tables_from_pdf(file_bytes: bytes) -> tuple[pd.DataFrame | None, str
     pdf.close()
 
     if not header or not all_rows:
-        return None, " No tables found in the PDF. Make sure the PDF contains tabular student data."
+        return None, " No tables found in the PDF. Make sure the PDF contains tabular student data.", False
 
     # Build DataFrame
     raw_df = pd.DataFrame(all_rows, columns=header)
     return _clean_and_map_dataframe(raw_df, "PDF")
+
+
+def extract_tables_from_docx(file_bytes: bytes) -> tuple[pd.DataFrame | None, str, bool]:
+    """
+    Extract student data from a Word document (.docx).
+    Reads all tables found in the document and combines them.
+    """
+    try:
+        doc = Document(io.BytesIO(file_bytes))
+    except Exception as e:
+        return None, f" Could not open Word document: {e}", False
+
+    if not doc.tables:
+        return None, " No tables found in the Word document. Make sure it contains tabular student data.", False
+
+    all_rows = []
+    header = None
+
+    for table in doc.tables:
+        for i, row in enumerate(table.rows):
+            cells = [cell.text.strip() for cell in row.cells]
+            if not any(cells):
+                continue
+            if header is None:
+                header = cells
+            else:
+                # Skip repeated header rows
+                if cells == header:
+                    continue
+                all_rows.append(cells)
+
+    if not header or not all_rows:
+        return None, " Could not extract data from Word document tables.", False
+
+    raw_df = pd.DataFrame(all_rows, columns=header)
+    return _clean_and_map_dataframe(raw_df, "Word Document")
+
 
 def process_uploaded_file(file_bytes: bytes, file_name: str) -> tuple[pd.DataFrame | None, str]:
     """
@@ -139,15 +177,17 @@ def process_uploaded_file(file_bytes: bytes, file_name: str) -> tuple[pd.DataFra
             raw_df = pd.read_csv(io.BytesIO(file_bytes))
             return _clean_and_map_dataframe(raw_df, "CSV")
         except Exception as e:
-            return None, f" Could not read CSV: {e}"
+            return None, f" Could not read CSV: {e}", False
     elif ext in ['xlsx', 'xls']:
         try:
             raw_df = pd.read_excel(io.BytesIO(file_bytes))
             return _clean_and_map_dataframe(raw_df, "Excel")
         except Exception as e:
-            return None, f" Could not read Excel: {e}"
+            return None, f" Could not read Excel: {e}", False
+    elif ext in ['docx', 'doc']:
+        return extract_tables_from_docx(file_bytes)
     else:
-        return None, f" Unsupported file type: {ext}"
+        return None, f" Unsupported file type: {ext}", False
 
 
 def _clean_and_map_dataframe(raw_df: pd.DataFrame, source_type: str) -> tuple[pd.DataFrame | None, str]:
@@ -160,7 +200,7 @@ def _clean_and_map_dataframe(raw_df: pd.DataFrame, source_type: str) -> tuple[pd
             f" Could not map any columns in the {source_type}. Found: **{', '.join(str(c) for c in header)}**\n\n"
             f"Expected columns like: usn, name, attendance, internal_marks, "
             f"assignment_score, quiz_score, lab_marks, semester_marks, study_hours"
-        )
+        ), False
 
     df = raw_df.rename(columns=col_mapping)
 
@@ -180,13 +220,27 @@ def _clean_and_map_dataframe(raw_df: pd.DataFrame, source_type: str) -> tuple[pd
     missing = [c for c in EXPECTED_COLUMNS if c not in mapped_cols]
     defaults = {
         'usn': 'UNKNOWN', 'name': 'Unknown Student',
-        'department': 'CSE', 'semester': 1,
+        'semester': 1,
         'attendance': 75.0, 'internal_marks': 30.0,
         'assignment_score': 30.0, 'quiz_score': 30.0,
         'lab_marks': 30.0, 'semester_marks': 140.0, 'study_hours': 3.0,
     }
     for col in missing:
         df[col] = defaults.get(col, 0)
+
+    # Flag if department is missing or has empty values — UI will ask the user to pick one
+    if 'department' in missing:
+        dept_missing = True
+    elif 'department' in df.columns:
+        # Column exists but values are empty/null
+        empty_dept = df['department'].isna() | (df['department'].astype(str).str.strip() == '') | (df['department'].astype(str).str.strip() == '0')
+        if empty_dept.any():
+            dept_missing = True
+            df.loc[empty_dept, 'department'] = ''
+        else:
+            dept_missing = False
+    else:
+        dept_missing = False
 
     # Auto-generate USN if missing
     if 'usn' in missing:
@@ -202,4 +256,4 @@ def _clean_and_map_dataframe(raw_df: pd.DataFrame, source_type: str) -> tuple[pd
         missing_str = ", ".join(f"`{c}`" for c in missing)
         status += f"\n\n Missing columns (filled with defaults): {missing_str}"
 
-    return df, status
+    return df, status, dept_missing

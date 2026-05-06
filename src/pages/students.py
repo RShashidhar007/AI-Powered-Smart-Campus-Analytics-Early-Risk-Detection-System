@@ -198,22 +198,31 @@ def render_students_page():
 
     # Upload File
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown('<div class="sh"> Upload Student Data (PDF, CSV, Excel)</div>', unsafe_allow_html=True)
-    st.caption("Upload a PDF, CSV, or Excel file containing student details in table format. "
+    st.markdown('<div class="sh"> Upload Student Data (PDF, CSV, Excel, Word)</div>', unsafe_allow_html=True)
+    st.caption("Upload a PDF, CSV, Excel, or Word file containing student details in table format. "
                "The system will auto-detect columns and fill defaults for any missing ones.")
 
     uploaded_file = st.file_uploader(
-        "Choose a file", type=["pdf", "csv", "xlsx", "xls"], key="file_uploader",
+        "Choose a file", type=["pdf", "csv", "xlsx", "xls", "docx", "doc"], key="file_uploader",
         help="The file should contain tables with columns like USN, Name, Department, Semester, Attendance, etc."
     )
 
     if uploaded_file is not None:
         with st.spinner("Processing file..."):
-            extracted_df, status_msg = process_uploaded_file(uploaded_file.read(), uploaded_file.name)
+            extracted_df, status_msg, dept_missing = process_uploaded_file(uploaded_file.read(), uploaded_file.name)
 
         st.markdown(status_msg)
 
         if extracted_df is not None and len(extracted_df) > 0:
+            # If department column was missing, ask the faculty to pick one
+            if dept_missing:
+                st.warning("The uploaded file does not have a **Department** column. Please select which department these students belong to.")
+                chosen_dept = st.selectbox(
+                    "Assign department", DEPARTMENTS,
+                    index=0, key="upload_dept_select",
+                )
+                extracted_df['department'] = chosen_dept
+
             st.markdown("**Preview of extracted data:**")
             st.dataframe(extracted_df, use_container_width=True, height=250)
 

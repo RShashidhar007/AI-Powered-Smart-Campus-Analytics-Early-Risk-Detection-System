@@ -42,7 +42,9 @@ def _get_groq_response(user_msg: str, chat_history: list) -> str:
     from config import DATA_PATH
     
     # Check session state first, then environment variable
-    api_key = st.session_state.get("groq_api_key", "") or os.environ.get("GROQ_API_KEY", "")
+    session_key = st.session_state.get("groq_api_key", "")
+    env_key = os.environ.get("GROQ_API_KEY", "")
+    api_key = session_key.strip() if session_key and session_key.strip() else env_key.strip()
     if not api_key:
         return _get_fallback_response(user_msg)
 
