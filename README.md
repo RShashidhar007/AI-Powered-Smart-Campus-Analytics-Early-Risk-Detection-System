@@ -13,7 +13,7 @@ Two separate portals serve different audiences:
 | Role | Access |
 |---|---|
 | **Faculty / Admin** | Full dashboard — predictions, reports, student management, year comparison, settings, and AI assistant |
-| **Student** | Read-only personal dashboard — own marks, attendance, risk level, and performance insights |
+| **Student** | Read-only personal dashboard — own marks, attendance, risk level, AI predictions, and personalized recommendations |
 
 ---
 
@@ -22,15 +22,21 @@ Two separate portals serve different audiences:
 - **Dual-role authentication** — Faculty log in with username/password (SHA-256 hashed, persisted in SQLite). Students log in with their USN. Faculty can self-register permanent accounts.
 - **Early risk detection** — Classifies students as *At Risk* or *On Track* using attendance, internal marks, assignments, study hours, and semester marks via a trained scikit-learn model (~92.4 % accuracy).
 - **SQLite persistence** — All student records, academic-year data, and faculty accounts are stored in `data/campus_analytics.db`. CSV fallback is supported automatically.
-- **Home dashboard KPIs** — Total students, at-risk count, on-track count, and model accuracy — all filtered by department and semester in real time.
+- **Home dashboard KPIs** — Total students, at-risk count, on-track count, and model accuracy — all filtered by department and semester via inline header controls.
 - **Interactive Plotly visualisations** — Risk distribution, grade spread, attendance tiers, marks correlation, department comparisons, academic drivers — all using Streamlit's native dark/light theme engine.
+- **Predictions & Insights** — Four-tab prediction engine:
+  - **Marks Predictor** — Regression models (Linear, Random Forest, Gradient Boosting) with scatter accuracy plots and error distributions.
+  - **Grade Forecast** — Classification models trained on the full student body to predict A–F grades, with confusion matrix and actual-vs-predicted comparisons.
+  - **Key Factors** — Feature importance analysis showing which academic metrics drive performance most.
+  - **Predict Student** — Interactive single-student predictor with radar charts, AI recommendations, and prediction history.
 - **Year-over-year comparison** — Compare KPIs, grade distributions, and risk tiers across any two academic years stored in the database.
-- **Multi-department support** — CSE, ECE, ME, CE, and ISE across Semesters 1–4.
+- **Multi-department support** — CSE, ECE, ME, CE, and ISE across Semesters 1–4. Department-scoped faculty accounts see only their assigned department's data.
+- **Student portal** — Personal dashboard with profile details, academic snapshot, class rank, risk drivers, marks breakdown with progress bars, and AI-powered performance predictions with personalized recommendations.
 - **Multilingual UI** — English, Hindi (हिन्दी), and Kannada (ಕನ್ನಡ) text mappings via `src/language.py`.
-- **Floating AI campus assistant** — Contextual analytics support on every page, powered by a Groq-compatible LLM API.
-- **Report exports** — Download analytics as Excel workbooks (`openpyxl`) or formatted PDF reports (`pdfplumber`, `reportlab`).
-- **Data ingestion** — Import student records from CSV, Excel, or PDF sources via `src/file_ingest.py`.
-- **Premium dark UI** — Glassmorphism-inspired design system with CSS variables, Plotly theming, and consistent typography — no logos, no clutter.
+- **Floating AI campus assistant** — Contextual analytics support on every page, powered by a Groq-compatible LLM API. API key can be configured via `.env` or the Settings page.
+- **Report exports** — Download analytics as Excel workbooks (`openpyxl`) or formatted PDF reports (`reportlab`).
+- **Data ingestion** — Import student records from CSV, Excel, PDF, or Word (.docx) sources via `src/file_ingest.py`. Intelligent column mapping handles common aliases (USN, roll_no, CIE, etc.) and auto-fills missing fields with sensible defaults.
+- **Premium dark UI** — Glassmorphism-inspired design system with institutional logo, CSS variables, Plotly theming, consistent typography, and mobile-responsive layout.
 
 ---
 
@@ -43,9 +49,10 @@ Two separate portals serve different audiences:
 | **Data processing** | pandas ≥ 2.1, numpy ≥ 1.26 |
 | **Machine learning** | scikit-learn ≥ 1.4 |
 | **Visualisation** | Plotly ≥ 5.18 |
-| **PDF reports** | pdfplumber ≥ 0.10 |
+| **PDF extraction** | pdfplumber ≥ 0.10 |
 | **Excel reports** | openpyxl ≥ 3.1 |
-| **AI assistant** | openai ≥ 1.14, groq (Groq-compatible API) |
+| **Word documents** | python-docx ≥ 1.1 |
+| **AI assistant** | openai ≥ 1.14, groq ≥ 0.4 |
 | **QR codes** | qrcode ≥ 7.4 |
 | **Environment** | python-dotenv ≥ 1.0 |
 | **HTTP** | requests ≥ 2.31 |
@@ -63,6 +70,9 @@ Two separate portals serve different audiences:
 ├── .gitignore
 ├── LICENSE
 │
+├── assets/
+│   └── logo.png                    # Institutional logo displayed in header
+│
 ├── data/
 │   ├── campus_analytics.db         # SQLite database 
 │   └── student_data.csv            # Primary student dataset
@@ -77,7 +87,6 @@ Two separate portals serve different audiences:
 ├── notebooks/                      # Exploration and training notebooks
 ├── outputs/                        # Generated report files
 ├── reports/                        # Static report templates / assets
-├── assets/                         # Static media assets
 │
 └── src/
     ├── ai_agent.py                 # Floating AI assistant (Groq LLM integration)
@@ -86,7 +95,7 @@ Two separate portals serve different audiences:
     ├── data_pro.py                 # Data cleaning and feature engineering pipeline
     ├── database.py                 # SQLite CRUD and query helpers
     ├── exel_repo.py                # Excel report generation (openpyxl)
-    ├── file_ingest.py              # CSV / Excel / PDF ingestion helpers
+    ├── file_ingest.py              # CSV / Excel / PDF / Word ingestion helpers
     ├── language.py                 # Multilingual UI text mappings
     ├── login.py                    # Faculty and student login/register UI
     ├── ml_models.py                # Model training, prediction, and risk scoring
@@ -96,10 +105,10 @@ Two separate portals serve different audiences:
     ├── visual.py                   # Reusable Plotly chart builders
     └── pages/
         ├── home.py                 # Campus overview dashboard
-        ├── predictions.py          # Individual and bulk risk prediction
+        ├── predictions.py          # Marks predictor, grade forecast, key factors, single-student predictor
         ├── reports.py              # Analytics reports page
         ├── settings.py             # App and profile settings
-        ├── student_dashboard.py    # Student-facing personal dashboard
+        ├── student_dashboard.py    # Student-facing personal dashboard with AI predictions
         ├── students.py             # Student record management
         └── year_comparison.py      # Academic year comparison dashboard
 ```
@@ -161,7 +170,7 @@ ADMIN_USERNAME=teacher
 ADMIN_PASSWORD=team07pro
 ```
 
-> **Note:** The AI assistant degrades gracefully if `GROQ_API_KEY` is missing — all other features remain fully functional.
+> **Note:** The AI assistant degrades gracefully if `GROQ_API_KEY` is missing — all other features remain fully functional. You can also set the API key later from the Settings page.
 
 ### 5. Populate the Database
 
@@ -196,7 +205,7 @@ Access the full analytics dashboard, predictions, student management, reports, a
 
 Faculty users can also create permanent accounts from the **Register** tab on the login screen. Registered accounts are stored in `campus_analytics.db` with SHA-256 hashed passwords.
 
-> Department-scoped faculty accounts see only their assigned department's data.
+> Department-scoped faculty accounts see only their assigned department's data. The department filter in the header locks to their assigned department automatically.
 
 ### Student Portal
 
@@ -207,7 +216,7 @@ Students authenticate with their USN.
 | **Username** | Student USN, e.g. `1RV21CSE1001` |
 | **Password** | Same as the USN (default) |
 
-Students see a read-only personal dashboard with their marks, attendance percentage, risk level, and semester trend.
+Students see a read-only personal dashboard with their marks, attendance percentage, risk level, class rank, AI-predicted marks/grade, and personalized improvement recommendations.
 
 ---
 
@@ -216,11 +225,11 @@ Students see a read-only personal dashboard with their marks, attendance percent
 | Page | Description |
 |---|---|
 | **Home** | KPI cards, risk distribution, grade spread, attendance tiers, and department comparisons |
-| **Predictions** | Run individual or bulk risk predictions with real-time feedback |
-| **Students** | Browse, filter, and manage all student records |
+| **Predictions** | Marks predictor, grade forecast, key factors analysis, and interactive single-student predictor |
+| **Students** | Browse, filter, and manage all student records; upload new data from CSV, Excel, PDF, or Word files |
 | **Reports** | Download Excel and PDF analytics reports |
 | **Year Comparison** | Side-by-side KPI and distribution comparison across academic years |
-| **Settings** | Update profile, department assignment, and app preferences |
+| **Settings** | Update profile, department assignment, AI API key, and app preferences |
 
 ---
 
@@ -243,6 +252,8 @@ Key constants in `src/config.py`:
 - Academic-year filtering is driven by `CURRENT_ACADEMIC_YEAR` in `src/config.py` — update this when the new year begins.
 - Multilingual labels are toggled live from the language selector in the top-right corner — no page reload required.
 - The floating AI assistant is available on every page and has access to the current filtered dataset context.
+- File uploads support CSV, Excel (.xlsx/.xls), PDF, and Word (.docx) formats with intelligent column mapping.
+- The dashboard is mobile-responsive with adjusted layouts for smaller screens.
 
 ---
 
