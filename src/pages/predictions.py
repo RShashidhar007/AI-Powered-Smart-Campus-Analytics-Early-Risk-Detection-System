@@ -37,11 +37,16 @@ def _train_reg(dept, sem):
     return train_regression_models(df)
 
 @st.cache_resource(show_spinner=False)
-def _train_clf(dept, sem):
+def _train_clf_filtered(dept, sem):
     df = filter_dataframe(_load_df(), dept, sem)
     if len(df) < 20:
         df = _load_df()
     return train_classification_models(df)
+
+@st.cache_resource(show_spinner=False)
+def _train_clf_all():
+    """Train classification on ALL students (used by Grade Forecast)."""
+    return train_classification_models(_load_df())
 
 def render_predictions_page():
     st.markdown(get_page_css(st.session_state.get('theme_mode', 'Dark')), unsafe_allow_html=True)
@@ -67,7 +72,8 @@ def render_predictions_page():
 
     with st.spinner("Training models (first load ~5 s)..."):
         reg = _train_reg(sel_dept, sel_sem)
-        clf = _train_clf(sel_dept, sel_sem)
+        clf = _train_clf_filtered(sel_dept, sel_sem)
+        clf_all = _train_clf_all()  # Grade Forecast uses all students
 
     tab_reg_name  = T.get('tab_reg', ' Marks Predictor')
     tab_clf_name  = T.get('tab_clf', ' Grade Forecast')
@@ -189,10 +195,11 @@ def render_predictions_page():
             std_err = sdf['error'].std()
             st.caption(f"On average, predictions are off by {abs(avg_err):.1f} marks")
 
-    # Classification — Grade Forecast
+    # Classification — Grade Forecast (uses ALL students)
     elif active_tab == tab_clf_name:
-        clf_results = clf['results']
-        best_c      = clf['best_model']
+        df_all = _load_df()  # Full dataset — all 2060 students
+        clf_results = clf_all['results']
+        best_c      = clf_all['best_model']
         best_acc    = clf_results[best_c]['Accuracy']
 
         # ── Section 1: Hero header ──
@@ -207,7 +214,7 @@ def render_predictions_page():
         )
         st.markdown(
             f"<div style='color:var(--text-muted);font-size:13px;margin-bottom:20px'>"
-            f"Predicting final grade (A–F) using {len(df)} students · {filter_str}</div>",
+            f"Predicting final grade (A–F) using {len(df_all)} students · All Departments</div>",
             unsafe_allow_html=True,
         )
 
@@ -218,10 +225,11 @@ def render_predictions_page():
             _kpi(cols2[i], f"{m['Accuracy']*100:.1f}%", name, "Top Pick" if ib else "Correct %",
                  "var(--accent-light)" if ib else "var(--text-muted)", ib)
 
+
         # ── Section 3: Per-grade accuracy breakdown ──
         st.markdown("<div class='sh' style='margin-top:28px'>Grade Accuracy</div>", unsafe_allow_html=True)
         best_report = clf_results[best_c]['Report']
-        grade_labels = clf.get('grade_classes', ['A', 'B', 'C', 'D', 'F'])
+        grade_labels = clf_all.get('grade_classes', ['A', 'B', 'C', 'D', 'F'])
         gcols = st.columns(len(grade_labels))
         for i, g in enumerate(grade_labels):
             g_data = best_report.get(g, {})
@@ -256,7 +264,7 @@ def render_predictions_page():
 
         with cm_col:
             best_cm = np.array(clf_results[best_c]['Confusion'])
-            classes = clf.get('grade_classes', ['A', 'B', 'C', 'D', 'F'])
+            classes = clf_all.get('grade_classes', ['A', 'B', 'C', 'D', 'F'])
             fcm = px.imshow(
                 best_cm, x=classes, y=classes,
                 color_continuous_scale=[[0, '#0F172A'], [0.5, '#6366F1'], [1, '#A855F7']],
@@ -274,14 +282,14 @@ def render_predictions_page():
             st.caption("Bright diagonal = AI got it right. Other cells = where the AI got confused.")
 
         with dist_col:
-            # Predicted vs Actual grade distribution
-            best_clf_m = clf['trained_models'][best_c]
+            # Predicted vs Actual grade distribution (all students)
+            best_clf_m = clf_all['trained_models'][best_c]
             is_log     = best_c == 'Logistic Regression'
-            X_all      = df[FEATURES]
-            X_in       = clf['scaler'].transform(X_all) if is_log else X_all
-            pred_labels = clf['label_encoder'].inverse_transform(best_clf_m.predict(X_in))
+            X_all      = df_all[FEATURES]
+            X_in       = clf_all['scaler'].transform(X_all) if is_log else X_all
+            pred_labels = clf_all['label_encoder'].inverse_transform(best_clf_m.predict(X_in))
 
-            actual_counts = df['grade_label'].value_counts().reindex(grade_labels).fillna(0)
+            actual_counts = df_all['grade_label'].value_counts().reindex(grade_labels).fillna(0)
             pred_counts   = pd.Series(pred_labels).value_counts().reindex(grade_labels).fillna(0)
 
             fig_dist = go.Figure()

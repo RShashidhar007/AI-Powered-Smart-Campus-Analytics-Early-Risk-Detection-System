@@ -222,7 +222,14 @@ if st.session_state.get("authenticated", True):
         faculty_dept = st.session_state.get('faculty_department', 'All')
         if faculty_dept != 'All':
             st.session_state.selected_department = faculty_dept
-            st.markdown(f"<div style='font-size:12px; color:var(--text-muted); margin-bottom:4px;'>Department</div><div style='background:rgba(255,255,255,0.05); border:1px solid var(--border); padding:8px 12px; border-radius:8px; font-size:14px;'>{faculty_dept}</div>", unsafe_allow_html=True)
+            # Styled to match Streamlit's native selectbox height (~42px) for alignment
+            st.markdown(
+                f"<div style='background:rgba(255,255,255,0.05); border:1px solid var(--border);"
+                f" padding:9px 14px; border-radius:8px; font-size:14px; line-height:1.4;"
+                f" margin-top:1px; height:42px; display:flex; align-items:center;'>"
+                f" {faculty_dept}</div>",
+                unsafe_allow_html=True,
+            )
         else:
             dept_options = ["All"] + DEPARTMENTS
             def _on_main_dept_change():
