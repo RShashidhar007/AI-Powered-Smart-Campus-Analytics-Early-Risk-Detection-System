@@ -94,7 +94,10 @@ def render_login_page():
                             st.session_state.authenticated = True
                             st.session_state.user_role = "teacher"
                             st.session_state.student_usn = None
-                            st.session_state.faculty_department = "All" if is_admin else faculty_dept
+                            fac_dept = "All" if is_admin else faculty_dept
+                            st.session_state.faculty_department = fac_dept
+                            st.session_state.selected_department = fac_dept
+                            st.session_state.selected_semester = "All"
                             st.success(T["login_success"])
                             time.sleep(1)
                             st.rerun()
@@ -114,6 +117,9 @@ def render_login_page():
                             st.session_state.authenticated = True
                             st.session_state.user_role = "teacher"
                             st.session_state.student_usn = None
+                            st.session_state.faculty_department = "All"
+                            st.session_state.selected_department = "All"
+                            st.session_state.selected_semester = "All"
                             st.success(T["otp_verified"])
                             time.sleep(1)
                             st.rerun()

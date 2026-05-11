@@ -42,20 +42,22 @@ Two separate portals serve different audiences:
 
 ## Technology Stack
 
-| Layer | Library / Tool |
-|---|---|
-| **Web framework** | [Streamlit](https://streamlit.io/) ≥ 1.32 |
-| **Database** | SQLite (via Python `sqlite3`) |
-| **Data processing** | pandas ≥ 2.1, numpy ≥ 1.26 |
-| **Machine learning** | scikit-learn ≥ 1.4 |
-| **Visualisation** | Plotly ≥ 5.18 |
-| **PDF extraction** | pdfplumber ≥ 0.10 |
-| **Excel reports** | openpyxl ≥ 3.1 |
-| **Word documents** | python-docx ≥ 1.1 |
-| **AI assistant** | openai ≥ 1.14, groq ≥ 0.4 |
-| **QR codes** | qrcode ≥ 7.4 |
-| **Environment** | python-dotenv ≥ 1.0 |
-| **HTTP** | requests ≥ 2.31 |
+### Frontend
+- **Framework**: [Streamlit](https://streamlit.io/) ≥ 1.32 (UI components, routing, and layout)
+- **Visualisation**: Plotly ≥ 5.18 (Interactive charts and graphs)
+- **Styling**: Custom CSS with a premium glassmorphism-inspired design system
+
+### Backend
+- **Core Language**: Python ≥ 3.10
+- **Data Processing**: pandas ≥ 2.1, numpy ≥ 1.26
+- **Machine Learning**: scikit-learn ≥ 1.4 (Classification and regression models)
+- **File Handling**: pdfplumber ≥ 0.10, openpyxl ≥ 3.1, python-docx ≥ 1.1
+- **AI Integration**: openai ≥ 1.14, groq ≥ 0.4
+- **Utilities**: qrcode ≥ 7.4, python-dotenv ≥ 1.0, requests ≥ 2.31
+
+### Database
+- **Primary Database**: SQLite (via Python `sqlite3`) for persistent storage of student records, faculty accounts, and settings
+- **Fallback/Ingestion**: CSV datasets supported automatically
 
 ---
 

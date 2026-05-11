@@ -118,6 +118,8 @@ if st.session_state.get("user_role") == "student":
             st.session_state.authenticated = False
             st.session_state.user_role = "teacher"
             st.session_state.student_usn = None
+            st.session_state.selected_department = "All"
+            st.session_state.selected_semester = "All"
             st.session_state.prediction_history = []
             st.rerun()
 
@@ -176,6 +178,8 @@ if st.session_state.get("authenticated", True):
             st.session_state.user_role = "teacher"
             st.session_state.student_usn = None
             st.session_state.faculty_department = "All"
+            st.session_state.selected_department = "All"
+            st.session_state.selected_semester = "All"
             st.session_state.prediction_history = []
             st.rerun()
 
@@ -196,13 +200,21 @@ if st.session_state.get("authenticated", True):
         return df
 
     full_df = _get_full_df()
+    
+    # Ensure selected_department matches faculty_department if it's not 'All'
+    faculty_dept = st.session_state.get('faculty_department', 'All')
+    if faculty_dept != 'All':
+        st.session_state.selected_department = faculty_dept
+        
     sel_dept = st.session_state.selected_department
     sel_sem  = st.session_state.selected_semester
     filtered_df = filter_dataframe(full_df, sel_dept, sel_sem)
     s_stats = get_summary_stats(filtered_df)
+    s_stats_global = get_summary_stats(full_df)
 
-    TOTAL_STUDENTS = s_stats['total_students']
-    AT_RISK_STUDENTS = s_stats['at_risk_count']
+    # Use global stats for the top System Status cards
+    TOTAL_STUDENTS = s_stats_global['total_students']
+    AT_RISK_STUDENTS = s_stats_global['at_risk_count']
     ON_TRACK_STUDENTS = TOTAL_STUDENTS - AT_RISK_STUDENTS
 
     # Show active filter label
