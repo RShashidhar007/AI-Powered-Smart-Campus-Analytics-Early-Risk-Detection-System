@@ -30,6 +30,7 @@ from language import TEXTS
 from styles import set_styles, set_login_styles
 from auth import render_login_page
 from ai_agent import render_ai_agent
+from student_ai_agent import render_student_ai_agent
 from pages import (
     render_home_page,
     render_predictions_page,
@@ -127,6 +128,9 @@ if st.session_state.get("user_role") == "student":
 
     # Render Student Dashboard
     render_student_dashboard()
+
+    # Floating AI Chatbot (personal data only)
+    render_student_ai_agent()
 
     st.markdown("<hr style='border: 1px solid var(--border);'>", unsafe_allow_html=True)
     st.caption(T["footer"])
