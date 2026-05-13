@@ -1,10 +1,3 @@
-"""
-CampusInsight: AI-Powered Student Performance Analytics & Prediction
-=============================================
-Run:      streamlit run app.py
-Install:  pip install -r requirements.txt
-"""
-
 import sys, os
 
 # Load environment variables from .env file (if present)
